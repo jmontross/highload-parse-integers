@@ -10,7 +10,10 @@ Champion metric: median-of-N wall-clock of `./prog < input.txt` on this box.
 - **v2** — `open-addressing set of EXACT 128-bit keys` (linear probing, 2^24 slots).
   A token ≤16 B with no NUL zero-pads to a unique 16-byte key → **exact, no
   hash-collision risk**, and no node allocation. **~0.70s median @10M ARM
-  (3.8× faster than the seed).** Judge time: _not yet submitted_.
+  (3.8× faster than the seed).**
+  **✅ JUDGE (submitted 2026-07-03, solution 37c45): SUCCESS — score 123,238**
+  (first try, correct; Joshua's RP 286.63 → 367.77). First REAL judge result —
+  prior "rank/ms" lines in this repo were agent estimates, not actual submissions.
 - v1 (seed) — owner's baseline: FNV-1a → `std::unordered_set<uint64_t>`. ~2.65s ARM.
   Superseded by v2 (also removes the tiny 64-bit collision risk).
 
