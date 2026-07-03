@@ -12,6 +12,27 @@ challenge.** You run every 2 hours. Make measurable progress each run, then comm
 - Judge build: `g++ 10.5` (also clang available), flags editable, `-O3 -march=native`.
 - Your environment is **x86 Linux with AVX2/AVX-512** — use it; it matches the judge better than the owner's ARM Mac.
 
+## The scoreboard target: crack RANK 18 🎯 — then keep climbing
+The [leaderboard](https://highload.fun/challenges/compute/parse_integers/leaderboard)
+is the real scoreboard. **Immediate goal: land at rank 18 or better.** As of the
+2026-07-03 snapshot the rank-18 wall-time bar is **≈ 69 ms** (olliecrow, score
+5,400); the top of the board is ≈ 53–65 ms. So the bar to clear is a full 50M-line
+parse in **≤ ~69 ms on x86 ≈ ~1.4 ns/line**. The scalar/SWAR champion (~11 ns/line)
+is ~8× short — **this is why the AVX2/AVX-512 block parse is the whole game.**
+
+`run.sh` regenerates **`index.html`** every run via `gen_index.py`: a
+HighLoad.fun-styled page that ranks our champion against a snapshot of ranks 11–21
+and shows the exact gap to rank 18. **Treat `index.html` as a deliverable** — it is
+committed each run so the owner can watch progress. When the leaderboard moves,
+update the `SNAPSHOT`/`TARGET_NS` constants at the top of `gen_index.py`.
+
+## Be ADAPTIVE — improve what is already winning
+Do NOT scatter unrelated one-off files. Each run, **start from the current champion
+and mutate the approach that is winning**: if SWAR won, push SWAR toward SIMD; if an
+AVX2 block parse won, tune its block size / reduction / prefetch. Kill dead branches
+fast (note them in SCOREBOARD) and pour the run's budget into the leading line of
+attack until it plateaus near the bandwidth floor. Breadth only when the leader stalls.
+
 ## The target: f(n)=n — approach the bandwidth floor
 The algorithm is already O(n), one pass. The remaining game is the **constant
 factor**: get as close as possible to the time it takes to merely *stream every
@@ -52,8 +73,13 @@ arrived — say so and stop chasing noise.
 4. `bash run.sh` again. Discard wrong/slow ones (leave the file but note it dead in SCOREBOARD).
 5. If a variant beats the champion: copy it to `champion/main.cpp`, re-verify with `RUNS=5`.
 6. Update `SCOREBOARD.md` (append a dated row per variant: name, time, correct?, kept?).
-7. `git add -A && git commit -m "run: <what you tried, best time>" && git push`.
-8. In your final message, report: new best time, what worked/didn't, next hypothesis.
+7. `run.sh` has already refreshed **`index.html`** — sanity-check it reflects the new
+   champion and gap to rank 18. Commit it too.
+8. `git add -A && git commit -m "run: <what you tried, best time>" && git push`
+   (this includes `index.html` — it is a tracked deliverable).
+9. In your final message, report: new best time, **ns/line and current gap to the
+   rank-18 bar (~1.4 ns/line)**, what worked/didn't, next hypothesis, and whether a
+   new champion is ready for the owner to submit.
 
 ## Creative directions (think wide — don't just retry the same thing)
 Scalar is **latency-bound on the serial `v=v*10+d` chain (~11 ns/line)** — micro-tweaks
