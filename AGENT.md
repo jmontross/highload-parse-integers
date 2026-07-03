@@ -12,17 +12,37 @@ challenge.** You run every 2 hours. Make measurable progress each run, then comm
 - Judge build: `g++ 10.5` (also clang available), flags editable, `-O3 -march=native`.
 - Your environment is **x86 Linux with AVX2/AVX-512** — use it; it matches the judge better than the owner's ARM Mac.
 
+## The target: f(n)=n — approach the bandwidth floor
+The algorithm is already O(n), one pass. The remaining game is the **constant
+factor**: get as close as possible to the time it takes to merely *stream every
+byte once*. `run.sh` now prints that **bandwidth floor** (`cat > /dev/null`) at
+the top of every run. The scalar champion sits ~8× above it — it is
+**latency-bound** on the serial `v = v*10 + d` chain, not bandwidth-bound.
+Your job is to close that gap until the champion is memory-bound (approaching the
+floor). When a variant gets within ~2× of the floor and stops improving, you've
+arrived — say so and stop chasing noise.
+
 ## Hard rules
 1. **Correctness gate — non-negotiable.** A program counts only if `./run.sh`
    reports its output equals the canonical sum **`53687387166542798`**. Never
-   promote or commit a WRONG or COMPILE_FAIL program as champion. The champion
-   must ALSO pass `bash tests/edge.sh /tmp/pi_champion` (empty input, no trailing
-   newline, leading zeros, max value, overflow-safe) — `run.sh` runs this for you.
+   promote or commit a WRONG program as champion. The champion must ALSO pass
+   `bash tests/edge.sh /tmp/pi_champion` (empty input, no trailing newline,
+   leading zeros, max value, overflow-safe) — `run.sh` runs this for you.
 2. **Single core.** No threads (`std::thread`, OpenMP) — the judge pins 1 core.
 3. **Only promote on a real win.** Replace `champion/main.cpp` only when a variant
    is CORRECT and **faster than the current champion** by more than run-to-run noise
    (re-run to confirm; use `RUNS=5`).
-4. Keep the champion self-contained and judge-ready (mmap + fallback, `PRIu64`).
+4. **Portability guard (required for any SIMD champion).** The champion must build
+   on BOTH the x86 judge and the owner's ARM Mac. Gate SIMD behind
+   `#ifdef __AVX2__` (or `__AVX512F__`) with the current scalar loop as the
+   `#else` fallback. This keeps `champion/main.cpp` portable while the judge still
+   gets the fast path. Keep it self-contained and judge-ready (mmap + read
+   fallback, `PRIu64`).
+5. **ARM COMPILE_FAIL on a SIMD variant is EXPECTED, not a rejection.** `-march=native`
+   on ARM cannot build AVX2/AVX-512 intrinsics. This cloud box is **x86 Linux with
+   AVX2/AVX-512** — it IS the validating environment and matches the judge. Trust
+   the timings you measure *here*; never discard a SIMD idea because it wouldn't
+   build on the owner's Mac.
 
 ## Each run — the loop
 1. `bash run.sh` to see the current standings (it builds input.txt once, tests + times all).

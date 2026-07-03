@@ -1,14 +1,10 @@
-// HighLoad.fun — parse_integers  (CHAMPION v2: SWAR number parse)
-// Sum 50,000,000 newline-separated uint32 values. Scored on wall-time.
-// Compiler: g++ 10.5.0   Flags: -O3 -march=native   Limits: 30s / 512MB / 1 core
-//
-// The previous scalar champion was latency-bound on the serial v=v*10+d chain
-// (one dependent multiply per DIGIT). SWAR (SIMD-within-a-register) parses a
-// whole <=8-digit number in a fixed, shallow tree of shifts/adds — one short
-// dependency chain per NUMBER instead of per digit. Fully portable (no
-// intrinsics): builds on both the x86 judge and the owner's ARM Mac. ~11%
-// faster than the scalar champion locally. Next step: AVX2 block parse
-// (gate behind #ifdef __AVX2__ per AGENT.md rule 4).
+// Variant: SWAR (SIMD-within-a-register) number parse.
+// Motivation: the scalar champion is latency-bound on the serial v=v*10+d chain
+// (one dependent multiply per DIGIT). SWAR parses a whole <=8-digit number in a
+// fixed, shallow tree of shifts/adds — one short dependency chain per NUMBER
+// instead of per digit. Fully portable (no intrinsics): builds & runs on ARM
+// too, so its CORRECTNESS is verifiable on the owner's Mac; the x86 routine
+// benchmarks it. Think of it as the scalar stepping stone before AVX2.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>

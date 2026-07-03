@@ -6,22 +6,35 @@ Champion metric: best-of-N wall-clock of `./prog < input.txt` on this Linux box.
 > The **judge** (highload.fun) is the real score — submit the champion and record its
 > reported time here. Local times are for relative ranking between runs.
 
+Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the ARM
+Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
+(done) when it approaches this.
+
 ## Champion
-- **v1** — `mmap + branch-light scalar` — local baseline ~11.4 ns/line (~0.57s @50M on ARM Mac; will differ on x86). Judge time: _not yet submitted_.
+- **v2** — `mmap + SWAR number parse` — parses a whole number in a short shift/add
+  tree instead of a serial multiply per digit. Portable (no intrinsics), ~**0.565s**
+  @50M ARM (~11% faster than v1). Still ~7× above the bandwidth floor → AVX2 next.
+  Judge time: _not yet submitted_.
+- v1 — `mmap + branch-light scalar` — latency-bound on serial `v=v*10+d` (~0.63s @50M ARM). Superseded by v2.
 
 ## Log
 | Date | Variant | Local time | Correct? | Kept? | Notes |
 |---|---|---|---|---|---|
 | 2026-07-02 | v0 original (fread + per-byte lambda + asserts) | — | ✓ | ✗ | replaced; per-byte call + asserts in hot loop |
-| 2026-07-02 | v1 mmap + branch-light scalar | ~0.57s @50M | ✓ | ✓ champion | current baseline |
+| 2026-07-02 | v1 mmap + branch-light scalar | ~0.63s @50M | ✓ | ✗ | superseded by v2 |
 | 2026-07-02 | branchless (cmov) | ~0.57s | ✓ | ✗ | no gain — latency-bound, not branch-bound |
-| 2026-07-02 | memchr boundaries | ~0.55s | ✓ | ~ | marginal; inner parse still serial |
+| 2026-07-02 | memchr boundaries | ~0.62s | ✓ | ✗ | marginal; inner parse still serial |
+| 2026-07-03 | v2 SWAR block parse (`swar_blockparse.cpp`) | ~0.565s @50M | ✓ (+9 edge) | ✓ champion | breaks the per-digit chain; portable, no intrinsics |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
 
 ## Next hypotheses (highest expected payoff first)
-1. AVX2 32-byte block parse with newline `movemask`.
-2. AVX-512 `vpdpbusd` digit×weight reduction.
-3. mmap hugepages + prefetch on top of the winning parser.
-4. Rust / Zig port of the winner.
+1. **AVX2 32-byte block parse** with newline `movemask` — the big one; gate behind
+   `#ifdef __AVX2__`, scalar SWAR as the `#else` (won't build on ARM — that's fine,
+   benchmark it on the x86 routine box).
+2. AVX-512 `vpdpbusd` digit×weight reduction (one multiply-add per block).
+3. SWAR without per-number `memchr`: derive newline offsets from a SWAR/`movemask`
+   compare so boundary-finding is vectorized too.
+4. mmap hugepages (`MADV_HUGEPAGE`) + `__builtin_prefetch` on top of the winner.
+5. Rust / Zig port of the winner.
