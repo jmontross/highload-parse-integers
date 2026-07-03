@@ -11,6 +11,11 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 (done) when it approaches this.
 
 ## Champion
+- **v4** — `SWAR nlfind + zero-reload hot path` — on the common 9–10 digit path,
+  reconstructs the low-8 parse chunk by shifting the two words already loaded for
+  the newline scan (w0,w1) instead of a third `memcpy` — one fewer load per
+  number. Portable. **best ~0.368s @50M ARM (~2.6% faster than v3)**, promoted
+  via the min-of-N gate (best AND median both lower; 9/9 edge). Judge: _not yet_.
 - **v3** — `mmap + SWAR newline-find + SWAR number parse` — drops the per-number
   `memchr` call; derives each newline offset with a SWAR compare over a 16-byte
   window (branch-light, inline). Portable (no intrinsics). **~0.40s @50M ARM
@@ -32,6 +37,8 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 | 2026-07-02 | memchr boundaries | ~0.62s | ✓ | ✗ | marginal; inner parse still serial |
 | 2026-07-03 | v2 SWAR block parse (`swar_blockparse.cpp`) | ~0.565s @50M | ✓ (+9 edge) | ✓ champion | breaks the per-digit chain; portable, no intrinsics |
 | 2026-07-03 | v3 SWAR newline-find (`swar_nlfind.cpp`) | ~0.40s @50M | ✓ (+9 edge) | ✓ champion | memchr-free boundary find; PROMOTE via significance gate (Δ=0.14s ≫ ±0.01 band) |
+| 2026-07-03 | swar_prefetch (reuse load + prefetch) | ~0.396s @50M | ✓ | ✗ dead | prefetch evicts more than it saves; mmap already streams |
+| 2026-07-03 | v4 swar_noreload (zero-reload hot path) | best ~0.368s @50M | ✓ (+9 edge) | ✓ champion | reconstruct low-8 chunk from w0/w1; ~2.6% win via min-of-N gate |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.

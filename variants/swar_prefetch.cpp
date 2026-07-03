@@ -1,18 +1,12 @@
-// HighLoad.fun — parse_integers  (CHAMPION v4: SWAR nlfind, zero-reload hot path)
-// Sum 50,000,000 newline-separated uint32 values. Scored on wall-time.
-// Compiler: g++ 10.5.0   Flags: -O3 -march=native   Limits: 30s / 512MB / 1 core
-//
-// Builds on v3 (SWAR newline-find). The MAJORITY of inputs are 9–10 digit
-// numbers (values up to 2^31), which take the len>8 path. v3 loads a THIRD time
-// there (memcpy at p+h) to get the low-8 window. But we already hold w0
-// (bytes 0–7) and w1 (bytes 8–15) from the newline scan, and every digit of a
-// <=10-digit number lives inside those 16 bytes — so we reconstruct the low-8
-// chunk by shifting w0/w1 together instead of touching memory again; the high
-// 1–2 digits come straight out of w0. Net: one fewer load per number on the hot
-// path, no new branches. ~2.6% faster than v3 (best 0.378→0.368s @50M ARM),
-// promoted through the min-of-N significance gate (best AND median lower;
-// 9/9 edge cases). Portable (no intrinsics): builds on the x86 judge + ARM Mac.
-// Next lever is still AVX2/AVX-512 (gate behind #ifdef __AVX2__ per AGENT.md #4).
+// HighLoad.fun — parse_integers  (VARIANT: SWAR nlfind + load reuse + prefetch)
+// Portable (no intrinsics). Builds on the v3 champion (SWAR newline-find) with
+// two micro-structural changes on the hot path:
+//   1. Reuse the 8-byte word already loaded for the newline scan (w0) as the
+//      parse chunk when the number fits in 8 digits — kills a redundant load
+//      per number (50M numbers → 50M fewer loads).
+//   2. Software-prefetch a cache line ahead so the sequential scan overlaps
+//      memory latency with compute (on top of mmap MAP_POPULATE/MADV_SEQUENTIAL).
+// Whether either helps on this ARM box is for the gate to decide.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -52,34 +46,31 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     uint64_t sum = 0;
 
     while (p < safe_end) {
+        __builtin_prefetch(p + 256, 0, 0);            // read, no temporal locality
         uint64_t w0;
         memcpy(&w0, p, 8);
         unsigned idx = nl_pos8(w0);
         uint64_t v;
-        if (idx < 8) {                                 // <=8 digits: w0 is the chunk
+        if (idx < 8) {                                 // number is <=8 digits: reuse w0
             v = parse_8(w0 << (8 * (8 - idx)));
-            sum += v;
-            p += idx + 1;
-        } else {                                       // 9–10 digits (the common case)
+        } else {
             uint64_t w1;
             memcpy(&w1, p + 8, 8);
             unsigned idx2 = nl_pos8(w1);
             if (idx2 == 8) break;                      // >16 chars w/o newline → tail
-            size_t len = 8 + idx2;                      // 8, 9 or 10 (newline at pos 8 => len 8)
-            size_t h = len - 8;                         // 0, 1 or 2 high digits
-            // Reconstruct the 8 bytes at p+h from w0/w1 — no memory touch.
-            // h==0 (exactly 8 digits): the chunk is w0 itself; shifting by 64
-            // would be UB, so special-case it.
-            uint64_t chunk = h ? ((w0 >> (8 * h)) | (w1 << (8 * (8 - h)))) : w0;
-            uint64_t high = 0;                          // high digits from w0's low bytes
-            if (h >= 1) {
-                high = (w0 & 0xff) - '0';
-                if (h == 2) high = high * 10 + (((w0 >> 8) & 0xff) - '0');
-            }
+            size_t len = 8 + idx2;
+            size_t h = len - 8;                        // 1 or 2 high digits (in w0)
+            uint64_t high = 0;
+            for (size_t k = 0; k < h; ++k) high = high * 10 + (p[k] - '0');
+            uint64_t chunk;
+            memcpy(&chunk, p + h, 8);
             v = high * 100000000ULL + parse_8(chunk);
             sum += v;
             p += len + 1;
+            continue;
         }
+        sum += v;
+        p += idx + 1;
     }
 
     uint64_t v = 0;

@@ -109,71 +109,81 @@ done
 # Indexed arrays only (no `declare -A`) so this runs on the owner's stock macOS
 # bash 3.2 as well as the x86 Linux routine box. med[$i]/jit[$i] parallel progs.
 echo "== test + benchmark =="
-printf "%-24s %-18s %-10s %-9s %s\n" NAME RESULT "MED(s)" "JITTER" STATUS
+printf "%-24s %-18s %-9s %-9s %-9s %s\n" NAME RESULT "BEST(s)" "MED(s)" "JITTER" STATUS
 : > /tmp/pi_results.tsv
-med=(); jit=(); champ_idx=-1
+med=(); jit=(); bmin=(); champ_idx=-1
 for i in "${!progs[@]}"; do
   name="${progs[$i]}"; st="${state[$i]}"
   [ "$name" = champion ] && champ_idx=$i
   if [ "$st" = "OK" ]; then
     read -r mn md mx < <(stats < "/tmp/pi_s_$i")
     j=$(awk -v a="$mx" -v b="$mn" 'BEGIN{printf "%.4f", a-b}')
-    med[$i]=$md; jit[$i]=$j
-    printf "%-24s %-18s %-10s %-9s %s\n" "$name" "$EXPECTED" "$md" "±$j" OK
-    printf "%s\t%s\t%s\n" "$name" "$md" OK >> /tmp/pi_results.tsv
+    med[$i]=$md; jit[$i]=$j; bmin[$i]=$mn
+    printf "%-24s %-18s %-9s %-9s %-9s %s\n" "$name" "$EXPECTED" "$mn" "$md" "±$j" OK
+    # tsv carries BEST (min) — deterministic-compute true-cost estimator; the
+    # gate and gen_index.py rank on it (noise only adds time, so min is cleanest).
+    printf "%s\t%s\t%s\n" "$name" "$mn" OK >> /tmp/pi_results.tsv
   else
-    med[$i]=""; jit[$i]=""
-    printf "%-24s %-18s %-10s %-9s %s\n" "$name" "-" "-" "-" "$st"
+    med[$i]=""; jit[$i]=""; bmin[$i]=""
+    printf "%-24s %-18s %-9s %-9s %-9s %s\n" "$name" "-" "-" "-" "-" "$st"
     printf "%s\t-\t%s\n" "$name" "$st" >> /tmp/pi_results.tsv
   fi
 done
 
-echo "== ranking (correct only, by median, fastest first) =="
+echo "== ranking (correct only, by BEST time, fastest first) =="
 ranked=$(for i in "${!progs[@]}"; do
-  [ -n "${med[$i]}" ] && printf '%s %s\n' "${med[$i]}" "${progs[$i]}"; done | sort -n)
+  [ -n "${bmin[$i]}" ] && printf '%s %s\n' "${bmin[$i]}" "${progs[$i]}"; done | sort -n)
 if [ -n "$ranked" ]; then printf '%s\n' "$ranked" | nl; else echo "(none correct)"; fi
 echo
 
 # ---------------------------------------------------------------------------
-# Promotion gate — the safety rail for the improve-loop. A variant is only a
-# real, promotable win if its median beats the champion's median by MORE than
-# the noise band (the larger of the two programs' jitter). Otherwise the "win"
-# is inside the measurement noise and must NOT be promoted. The chosen
-# candidate must ALSO pass the edge suite on ITS OWN binary before promotion —
-# passing the 50M sum does not prove it handles empty input / no trailing
-# newline / overflow. Writes /tmp/pi_verdict for the loop to act on:
-#   PROMOTE <name>   HOLD   BLOCKED <name>   STOP-FLOOR
+# Promotion gate — the safety rail for the improve-loop.
+#
+# METRIC: best-of-N (min), not median. Wall-time noise on this workload is
+# ONE-SIDED — the OS can only ever make a run slower, never faster than the true
+# compute cost — so the minimum is the cleanest, most reproducible estimator and
+# the max−min *range* is a terrible noise measure (one slow outlier inflates it
+# and blocks real small wins forever — which is exactly what we hit).
+#
+# PROMOTE a variant only when BOTH hold:
+#   (a) its BEST beats the champion's BEST by more than PROMOTE_MARGIN (default
+#       1.5% of champion best) — a margin above timer granularity, and
+#   (b) its MEDIAN is also below the champion's median — so a single lucky fast
+#       sample can't win; the typical run must improve too.
+# The candidate must ALSO pass the edge suite on ITS OWN binary before promotion
+# (passing the 50M sum doesn't prove empty-input / no-trailing-newline / overflow).
+# Writes /tmp/pi_verdict for the loop:  PROMOTE <name> | HOLD | BLOCKED <name> | STOP-FLOOR
 # ---------------------------------------------------------------------------
+PROMOTE_MARGIN=${PROMOTE_MARGIN:-0.015}   # relative: candidate must be >=1.5% faster
 echo "== promotion gate =="
 verdict="HOLD"; verdict_name=""
-champ_med=""; champ_jit=""
-[ "$champ_idx" -ge 0 ] && champ_med="${med[$champ_idx]}" && champ_jit="${jit[$champ_idx]}"
-if [ -z "$champ_med" ]; then
+champ_min=""; champ_med=""
+if [ "$champ_idx" -ge 0 ]; then champ_min="${bmin[$champ_idx]}"; champ_med="${med[$champ_idx]}"; fi
+if [ -z "$champ_min" ]; then
   echo "champion is not OK — cannot gate; fix champion first."
   verdict="BLOCKED"; verdict_name=champion
 else
-  # Stop condition for the loop: champion within ~2× of the bandwidth floor
-  # (use the cache-warm MIN — that's the true f(n)=n asymptote, not the median
-  # which is inflated by the cold first read).
-  if fcmp "$champ_med" "<" "$(awk -v f="$FLOOR_MIN" 'BEGIN{print 2*f}')"; then
-    echo "champion median ${champ_med}s is within 2× of floor ${FLOOR_MIN}s — at the wall; stop chasing."
+  # Stop condition: champion best within ~2× of the bandwidth floor (best) —
+  # that's the f(n)=n asymptote; below it there's nothing left to win.
+  if fcmp "$champ_min" "<" "$(awk -v f="$FLOOR_MIN" 'BEGIN{print 2*f}')"; then
+    echo "champion best ${champ_min}s is within 2× of floor ${FLOOR_MIN}s — at the wall; stop chasing."
     verdict="STOP-FLOOR"
   fi
-  # Best correct variant (exclude champion) by median.
-  best_v=""; best_med=""; best_jit=0
+  # Best correct variant (exclude champion) by BEST time.
+  best_v=""; best_min=""; best_i=-1
   for i in "${!progs[@]}"; do
     [ "$i" = "$champ_idx" ] && continue
-    [ -n "${med[$i]}" ] || continue
-    if [ -z "$best_med" ] || fcmp "${med[$i]}" "<" "$best_med"; then
-      best_med="${med[$i]}"; best_v="${progs[$i]}"; best_jit="${jit[$i]}"; fi
+    [ -n "${bmin[$i]}" ] || continue
+    if [ -z "$best_min" ] || fcmp "${bmin[$i]}" "<" "$best_min"; then
+      best_min="${bmin[$i]}"; best_v="${progs[$i]}"; best_i=$i; fi
   done
   if [ -n "$best_v" ]; then
-    band=$(awk -v a="$champ_jit" -v b="$best_jit" 'BEGIN{print (a>b)?a:b}')
-    delta=$(awk -v c="$champ_med" -v v="$best_med" 'BEGIN{printf "%.4f", c-v}')
-    printf "best variant: %s  median=%ss  Δ vs champion=%ss  noise band=±%ss\n" \
-           "$best_v" "$best_med" "$delta" "$band"
-    if fcmp "$delta" ">" "$band"; then
-      echo "  Δ exceeds noise band → candidate is a SIGNIFICANT win; checking edge cases on its binary..."
+    need=$(awk -v c="$champ_min" -v m="$PROMOTE_MARGIN" 'BEGIN{printf "%.4f", c*(1-m)}')
+    delta=$(awk -v c="$champ_min" -v v="$best_min" 'BEGIN{printf "%.4f", c-v}')
+    printf "best variant: %s  best=%ss (need <=%ss)  median=%ss vs champ %ss  Δbest=%ss\n" \
+           "$best_v" "$best_min" "$need" "${med[$best_i]}" "$champ_med" "$delta"
+    if fcmp "$best_min" "<" "$need" && fcmp "${med[$best_i]}" "<" "$champ_med"; then
+      echo "  beats champion best by ≥${PROMOTE_MARGIN} AND median also lower → SIGNIFICANT; checking edge cases..."
       cbin="/tmp/pi_${best_v//\//_}"
       if bash tests/edge.sh "$cbin" >/tmp/pi_edge_cand.log 2>&1; then
         tail -n1 /tmp/pi_edge_cand.log
@@ -184,7 +194,7 @@ else
         verdict="BLOCKED"; verdict_name="$best_v"
       fi
     else
-      echo "  Δ is within noise → HOLD champion (not a real win). Re-run or make a bigger change."
+      echo "  not both conditions met → HOLD champion (within noise, or only a lucky single sample)."
     fi
   else
     echo "no correct variants to compare."

@@ -1,18 +1,12 @@
-// HighLoad.fun — parse_integers  (CHAMPION v4: SWAR nlfind, zero-reload hot path)
-// Sum 50,000,000 newline-separated uint32 values. Scored on wall-time.
-// Compiler: g++ 10.5.0   Flags: -O3 -march=native   Limits: 30s / 512MB / 1 core
-//
-// Builds on v3 (SWAR newline-find). The MAJORITY of inputs are 9–10 digit
-// numbers (values up to 2^31), which take the len>8 path. v3 loads a THIRD time
-// there (memcpy at p+h) to get the low-8 window. But we already hold w0
-// (bytes 0–7) and w1 (bytes 8–15) from the newline scan, and every digit of a
-// <=10-digit number lives inside those 16 bytes — so we reconstruct the low-8
-// chunk by shifting w0/w1 together instead of touching memory again; the high
-// 1–2 digits come straight out of w0. Net: one fewer load per number on the hot
-// path, no new branches. ~2.6% faster than v3 (best 0.378→0.368s @50M ARM),
-// promoted through the min-of-N significance gate (best AND median lower;
-// 9/9 edge cases). Portable (no intrinsics): builds on the x86 judge + ARM Mac.
-// Next lever is still AVX2/AVX-512 (gate behind #ifdef __AVX2__ per AGENT.md #4).
+// HighLoad.fun — parse_integers  (VARIANT: SWAR nlfind, zero-reload hot path)
+// Portable (no intrinsics). Builds on v3 (SWAR newline-find). Key change: the
+// MAJORITY of inputs are 9–10 digit numbers (values up to 2^31), which take the
+// len>8 path. v3 loads a THIRD time there (memcpy at p+h) to get the low-8
+// window. But we already hold w0 (bytes 0–7) and w1 (bytes 8–15) from the
+// newline scan, and every digit of a <=10-digit number lives inside those 16
+// bytes — so we reconstruct the low-8 chunk by shifting w0/w1 together instead
+// of touching memory again. High 1–2 digits come straight out of w0. Net: one
+// fewer load per number on the hot path, no new branches.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
