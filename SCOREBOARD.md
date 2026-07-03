@@ -60,9 +60,13 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
   latency-capped at ~0.26s on ARM (~2.9× the bandwidth floor).
 
 ## Next hypotheses (highest expected payoff first)
-1. **AVX2 32-byte block parse** with newline `movemask` — the big one; gate behind
-   `#ifdef __AVX2__`, scalar SWAR as the `#else` (won't build on ARM — that's fine,
-   benchmark it on the x86 routine box).
+1. **AVX2 32-byte block parse** — WRITTEN as `variants/avx2_blockparse.cpp`, awaiting
+   x86 validation. One `vpcmpeqb`+`vpmovmskb` per 32 bytes yields all newline
+   positions at once (~3 numbers/load), breaking the serial per-number scan chain;
+   each number parsed with the v5 SWAR routine. Gated `#ifdef __AVX2__` with v5 as
+   the `#else`, so it builds+runs on ARM as plain v5 (verified: sum ✓, 9/9 edge) and
+   uses AVX2 on the x86 box. **x86 routine: build + gate this next.** Then AVX-512
+   (64-byte, native k-mask via `_mm512_cmpeq_epi8_mask`) is the follow-up.
 2. AVX-512 `vpdpbusd` digit×weight reduction (one multiply-add per block).
 3. SWAR without per-number `memchr`: derive newline offsets from a SWAR/`movemask`
    compare so boundary-finding is vectorized too.
