@@ -1,0 +1,50 @@
+bash run.sh
+== build generator & input ==
+== reference sum (exact) ==
+expected = 53687387166542798
+== bandwidth floor (f(n)=n target) ==
+floor (cat > /dev/null) = 0.1020s min / 0.1760s median  <- champion should approach this
+== build variants ==
+== timing (interleaved, RUNS=5) ==
+== test + benchmark ==
+NAME                     RESULT             BEST(s)   MED(s)    JITTER    STATUS
+champion                 53687387166542798  0.2820    0.2860    ±0.0580  OK
+variants/avx2_blockparse 53687387166542798  0.2850    0.2960    ±0.0470  OK
+variants/avx512_blockparse 53687387166542798  0.2800    0.2850    ±0.0110  OK
+variants/memchr          53687387166542798  0.5990    0.6230    ±0.0790  OK
+variants/swar_blockparse 53687387166542798  0.5420    0.5440    ±0.0230  OK
+variants/swar_branchless 53687387166542798  0.2860    0.2940    ±0.0370  OK
+variants/swar_nlfind     53687387166542798  0.4040    0.4100    ±0.1140  OK
+variants/swar_noreload   53687387166542798  0.3950    0.3980    ±0.0170  OK
+variants/swar_prefetch   53687387166542798  0.4140    0.4190    ±0.0120  OK
+variants/swar_unroll2    53687387166542798  0.3630    0.3700    ±0.0110  OK
+== ranking (correct only, by BEST time, fastest first) ==
+     1	0.2800 variants/avx512_blockparse
+     2	0.2820 champion
+     3	0.2850 variants/avx2_blockparse
+     4	0.2860 variants/swar_branchless
+     5	0.3630 variants/swar_unroll2
+     6	0.3950 variants/swar_noreload
+     7	0.4040 variants/swar_nlfind
+     8	0.4140 variants/swar_prefetch
+     9	0.5420 variants/swar_blockparse
+    10	0.5990 variants/memchr
+
+== promotion gate ==
+best variant: variants/avx512_blockparse  best=0.2800s (need <=0.2778s)  median=0.2850s vs champ 0.2860s  Δbest=0.0020s
+  not both conditions met → HOLD champion (within noise, or only a lucky single sample).
+verdict: HOLD   (written to /tmp/pi_verdict)
+
+== edge-case suite (champion) ==
+edge: pass=9 fail=0
+
+== compiler sweep (champion) ==
+  g++        -O3 -march=native                  best=0.2820s
+  g++        -Ofast -march=native -funroll-loops best=0.2840s
+  → submit under: g++ -O3 -march=native   (champion best 0.2820s here)
+
+== index.html (leaderboard view) ==
+wrote index.html (champion=282.0 ms, 4.1× off the rank 18 bar — need 282.0 ms → 69.3 ms)
+
+expected=53687387166542798  |  verdict=HOLD 
+loop: PROMOTE→copy candidate to champion/main.cpp & re-run; HOLD→make a bigger change; STOP-FLOOR→memory-bound, stop.`
