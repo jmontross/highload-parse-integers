@@ -50,9 +50,20 @@ arrived — say so and stop chasing noise.
    `bash tests/edge.sh /tmp/pi_champion` (empty input, no trailing newline,
    leading zeros, max value, overflow-safe) — `run.sh` runs this for you.
 2. **Single core.** No threads (`std::thread`, OpenMP) — the judge pins 1 core.
-3. **Only promote on a real win.** Replace `champion/main.cpp` only when a variant
-   is CORRECT and **faster than the current champion** by more than run-to-run noise
-   (re-run to confirm; use `RUNS=5`).
+3. **Only promote on a real win — trust the significance gate, not the raw ranking.**
+   `run.sh` reports each program's **median** over `RUNS=5` *interleaved* samples plus
+   a **jitter band** (max−min), and computes a machine-readable verdict in
+   `/tmp/pi_verdict` (also printed as `verdict: …`):
+   - `PROMOTE <name>` — variant beats champion median by MORE than the noise band AND
+     passes the edge suite on its own binary → copy it to `champion/main.cpp`, re-run
+     to confirm the verdict holds, then update `SCOREBOARD.md`.
+   - `HOLD` — fastest variant is within noise → **do NOT promote** (this is the trap:
+     a ~0.4% gap is noise, not a win). Make a *bigger* change next iteration.
+   - `BLOCKED <name>` — a significant variant FAILS edge cases, or champion itself is
+     broken → fix before anything else.
+   - `STOP-FLOOR` — champion is within ~2× of the bandwidth floor → memory-bound, the
+     game is over; stop chasing.
+   Never hand-pick a winner off the ranking table when the verdict says `HOLD`.
 4. **Portability guard (required for any SIMD champion).** The champion must build
    on BOTH the x86 judge and the owner's ARM Mac. Gate SIMD behind
    `#ifdef __AVX2__` (or `__AVX512F__`) with the current scalar loop as the
@@ -71,7 +82,9 @@ arrived — say so and stop chasing noise.
 3. **Invent 1–3 NEW variants** in `variants/` (see ideas below). One idea per file,
    named like `avx2_blockparse.cpp`, `avx512_dpbusd.cpp`.
 4. `bash run.sh` again. Discard wrong/slow ones (leave the file but note it dead in SCOREBOARD).
-5. If a variant beats the champion: copy it to `champion/main.cpp`, re-verify with `RUNS=5`.
+5. Act on the gate verdict (`/tmp/pi_verdict`): on `PROMOTE`, copy the candidate to
+   `champion/main.cpp` and re-run to confirm; on `HOLD`, keep the champion and try a
+   bigger change; on `STOP-FLOOR`, you're memory-bound — **stop the loop** and report.
 6. Update `SCOREBOARD.md` (append a dated row per variant: name, time, correct?, kept?).
 7. `run.sh` has already refreshed **`index.html`** — sanity-check it reflects the new
    champion and gap to rank 18. Commit it too.

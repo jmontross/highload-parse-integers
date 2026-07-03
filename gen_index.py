@@ -37,6 +37,104 @@ SNAPSHOT = [
 TARGET_RANK = 18
 TARGET_NS = 69_301_147  # olliecrow's shown wall-time — our bar to clear
 
+BASELINE_NSL = 11.2   # scalar/SWAR ns/line — the start of the climb
+TARGET_NSL   = 1.4    # ≈69 ms / 50M lines — the rank-18 bar (x86 PROXY, judge is truth)
+ARM_FLOOR_MS = 82     # `cat input.txt > /dev/null` on the owner's ARM Mac (observed)
+
+# The honest-win plan, rendered as a live checklist inside index.html.
+# auto rules — only UNAMBIGUOUS signals tick a box:
+#   "x86"       -> a cloud/x86 run has executed (proves the GitHub grant works)
+#   "committed" -> already in the champion (a fact, not a measurement)
+#   "nsle"      -> x86 champion ns/line <= target (a PROXY — confirm at the judge)
+#   "manual"    -> never auto-ticks; has a crisp human/agent done-criterion instead
+PLAN = [
+  {"id": 0, "owner": "you", "when": "DO THIS NOW", "auto": "x86", "open": True,
+   "title": "Unblock the cloud — grant the Claude GitHub App access to this repo",
+   "crit": "A routine run completes on the x86 cloud box (this page then shows x86 timings instead of ARM).",
+   "body": """
+   <p>The repo is <b>private</b>, so every 2-hour cloud run currently dies with
+   <code>HTTP 400 github_repo_access_denied</code> — the agent can't even clone it.
+   Re-authorizing your GitHub <i>login</i> does NOT fix this; a private repo needs the
+   Claude GitHub <b>App installation</b> granted access to this specific repo.</p>
+   <ol>
+     <li>Open <a href="https://github.com/settings/installations">github.com/settings/installations</a></li>
+     <li>Click <b>Configure</b> next to the <b>Claude</b> (Anthropic) app.</li>
+     <li>Under <b>Repository access</b>: choose <b>All repositories</b>, or
+         <b>Only select repositories</b> → add <code>jmontross/highload-parse-integers</code>.</li>
+     <li>Click the green <b>Save</b>.</li>
+     <li><b>App not listed?</b> It may be installed on an organization — check that org's
+         <i>Settings → GitHub Apps</i>, or reinstall from
+         <a href="https://claude.ai/settings/connectors">claude.ai → Settings → Connectors → GitHub</a>.</li>
+     <li><b>Verify:</b> ask Claude to re-trigger the routine — expect <code>HTTP 200</code>, not 400.
+         Once a cloud run completes, this box ticks itself.</li>
+   </ol>"""},
+
+  {"id": 1, "owner": "agent", "when": "done", "auto": "committed", "open": False,
+   "title": "SWAR number parse — break the per-digit latency chain",
+   "crit": "Committed as champion v2 (~11% over scalar, portable, no intrinsics).",
+   "body": """<p>The scalar champion is latency-bound on the serial <code>v = v*10 + d</code>
+   chain (~11 ns/line). SWAR parses a whole number in a short shift/add tree instead.
+   Modest but real, and it's the portable baseline the SIMD work builds on.</p>"""},
+
+  {"id": 2, "owner": "agent", "when": "FIRST, on x86", "auto": "manual", "open": False,
+   "title": "Read the bandwidth floor — set the honest ceiling before writing SIMD",
+   "crit": "run.sh's floor is recorded. If the x86 floor > 69 ms, rank 18 is UNREACHABLE on that box — report that, don't write more SIMD.",
+   "body": """<p><code>run.sh</code> prints a <b>bandwidth floor</b> (<code>cat &gt; /dev/null</code>) —
+   the time to merely stream every byte once. A correct parser can never beat it.</p>
+   <p>On the owner's ARM Mac that floor is <b>~82 ms &gt; the 69 ms target</b>, which is exactly
+   why the win cannot be shown locally. The agent's first job on the x86 box is to read the
+   floor there: if it's already above 69 ms, the honest finding is
+   <i>"bandwidth-bound below target on this hardware"</i> — a real result, not a failure.</p>"""},
+
+  {"id": 3, "owner": "agent", "when": "the main win", "auto": "manual", "open": False,
+   "title": "Hybrid AVX2 — find newlines with movemask, parse each span with SWAR",
+   "crit": "Correct (canonical sum + 9/9 edge cases) AND faster than the SWAR champion on x86, re-verified with RUNS=5, then promoted.",
+   "body": """<p>The realistic, gettable-correct first SIMD milestone — it captures most of the win:</p>
+   <ul>
+     <li>Load 32 bytes: <code>_mm256_loadu_si256</code>.</li>
+     <li>Newline mask: <code>_mm256_movemask_epi8(_mm256_cmpeq_epi8(v, '\\n'))</code> → a 32-bit mask.</li>
+     <li>Walk the set bits (<code>tzcnt</code>/<code>_tzcnt_u32</code>) to get each number's span, and parse
+         that span with the SWAR routine. This removes the per-byte branch that dominates the scalar loop.</li>
+     <li>Keep 2–4 independent <code>uint64</code> accumulators so the adds don't serialize.</li>
+     <li>Guard with <code>#ifdef __AVX2__</code>; keep the scalar loop as the <code>#else</code> fallback.</li>
+   </ul>
+   <p>ARM COMPILE_FAIL on this variant is expected — it's validated on the x86 cloud box, which matches the judge.</p>"""},
+
+  {"id": 4, "owner": "agent", "when": "stretch", "auto": "manual", "open": False,
+   "title": "Full vectorized digit-weight reduction (staged madd tree / AVX-512 VNNI)",
+   "crit": "Correct AND beats the hybrid champion. The variable-length boundary handling is the hard part — nail it against the correctness gate.",
+   "body": """<p>The math: <code>sum = Σ digit · 10^(distance to the number's end)</code>, summed over
+   <i>all</i> digit bytes — no need to isolate individual numbers, just weight each digit by its
+   distance to the next newline.</p>
+   <p><b>Direction, not gospel</b> (the agent nails the exact sequence empirically):</p>
+   <ul>
+     <li>You <b>cannot</b> do the whole reduction in one <code>vpdpbusd</code>/<code>maddubs</code> —
+         int8/int16 weights overflow past two digits (10² &gt; 127). The real technique is a
+         <b>staged tree</b>: <code>maddubs</code>[10,1] → <code>madd</code>[100,1] → <code>madd</code>[10000,1],
+         which only works on <b>fixed-width, known-alignment</b> chunks.</li>
+     <li>So the hard, valuable part is deriving per-byte 10^k weights from the newline mask and
+         handling numbers that straddle a block boundary (carry into the next block).</li>
+     <li>AVX-512: 64-byte loads, <code>__mmask64</code> from <code>_mm512_cmpeq_epi8_mask</code>,
+         <code>_mm512_dpbusd_epi32</code> (VNNI) for the staged dot-products. Guard with
+         <code>__AVX512F__/__AVX512BW__/__AVX512VNNI__</code> + scalar fallback.</li>
+   </ul>"""},
+
+  {"id": 5, "owner": "both", "when": "🎯 target", "auto": "nsle", "target": TARGET_NSL, "open": False,
+   "title": "Champion beats ~1.4 ns/line on the cloud box",
+   "crit": "x86 champion ≤ 1.4 ns/line — a PROXY for rank 18. Local hardware ≠ the judge; confirm only at the judge (next step).",
+   "body": """<p>This ticks automatically once the x86 champion crosses ~1.4 ns/line. Treat it as a
+   strong signal, not a standing — the cloud box is not the judge's exact hardware, so the real
+   position is only known after submitting.</p>"""},
+
+  {"id": 6, "owner": "you", "when": "ground truth", "auto": "manual", "open": False,
+   "title": "Submit the champion to the judge & record the real time",
+   "crit": "champion/main.cpp pasted into highload.fun, the judge's reported ns written into SCOREBOARD.md.",
+   "body": """<p>The agent cannot submit (needs your logged-in browser). When it flags a champion ready:
+   paste <code>champion/main.cpp</code> into the
+   <a href="https://highload.fun/challenges/compute/parse_integers">judge</a>, run it, and record the
+   real number in <code>SCOREBOARD.md</code>. That number — not any local time — is whether we hit rank 18.</p>"""},
+]
+
 
 def read_results(path):
     rows = []
@@ -68,6 +166,75 @@ def cur_time():
 
 def esc(s):
     return html.escape(str(s))
+
+
+def render_plan(champ_nsl, is_x86):
+    """Render the honest-win plan as a live checklist. Milestones auto-tick only
+    on unambiguous signals; engineering phases show a crisp done-criterion."""
+    owner_chip = {
+        "you":   ('👤 you',    '#f0b429'),
+        "agent": ('🤖 cloud agent', '#58a6ff'),
+        "both":  ('🤖+👤',     '#a970ff'),
+    }
+    done_count = 0
+    cards = []
+    for p in PLAN:
+        rule = p["auto"]
+        if rule == "x86":
+            done = is_x86
+        elif rule == "committed":
+            done = True
+        elif rule == "nsle":
+            done = bool(is_x86 and champ_nsl is not None and champ_nsl <= p["target"])
+        else:  # manual
+            done = False
+        if done:
+            done_count += 1
+        box = "☑" if done else "☐"
+        olabel, ocolor = owner_chip.get(p["owner"], ("?", "#8b949e"))
+        opendisp = " open" if p.get("open") else ""
+        cards.append(f"""
+      <div class="task {'done' if done else ''}">
+        <div class="thead">
+          <span class="box">{box}</span>
+          <span class="tnum">Phase {p['id']}</span>
+          <span class="ttitle">{esc(p['title'])}</span>
+          <span class="owner" style="color:{ocolor};border-color:{ocolor}55;background:{ocolor}18">{olabel}</span>
+          <span class="when">{esc(p['when'])}</span>
+        </div>
+        <div class="crit"><b>Done when:</b> {esc(p['crit'])}</div>
+        <details{opendisp}><summary>how</summary><div class="detail">{p['body']}</div></details>
+      </div>""")
+
+    # Progress toward the target — meaningful only on x86; labeled as a proxy.
+    if is_x86 and champ_nsl:
+        pct = max(0.0, min(100.0, (BASELINE_NSL - champ_nsl) / (BASELINE_NSL - TARGET_NSL) * 100))
+        bar = f"""
+      <div class="barwrap">
+        <div class="barlabel">climb: {champ_nsl:.2f} ns/line → {TARGET_NSL} ns/line target
+          <span class="dim">(x86 proxy — the judge is ground truth)</span></div>
+        <div class="bar"><div class="fill" style="width:{pct:.0f}%"></div></div>
+      </div>"""
+    else:
+        bar = f"""
+      <div class="barwrap">
+        <div class="barlabel dim">no x86 timing yet — progress is measured only on the cloud box.
+          On this ARM Mac, merely reading the input (~{ARM_FLOOR_MS} ms) already exceeds the
+          {TARGET_NS/1e6:.0f} ms target, so the win can't be shown here.</div>
+      </div>"""
+
+    return f"""
+  <h2>🏁 Plan to an honest rank {TARGET_RANK} — {done_count}/{len(PLAN)} done</h2>
+  <div class="reality">
+    <b>Reality check.</b> The rank-{TARGET_RANK} bar is ≈{TARGET_NS/1e6:.0f} ms for a full 50M-line parse
+    (~{TARGET_NSL} ns/line on x86). That is only physically reachable on the <b>x86 cloud box</b> —
+    on the owner's ARM Mac just <i>reading</i> the input (~{ARM_FLOOR_MS} ms) already costs more than
+    the whole target. And even on x86, local ns/line predicts leaderboard <i>position</i> only loosely:
+    the one ground-truth number is submitting to the <b>judge</b> (Phase 6). Everything below is honest
+    about which hardware proves what.
+  </div>
+  {bar}
+  <div class="tasks">{''.join(cards)}</div>"""
 
 
 def main():
@@ -170,6 +337,8 @@ def main():
         'These times are a local preview and are <b>not comparable</b> to the x86 leaderboard above. '
         'The real standing comes from the x86 cloud run.</div>')
 
+    plan_html = render_plan(champ_ns_per_line, is_x86)
+
     doc = f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -210,6 +379,32 @@ def main():
            padding:10px 14px; border-radius:8px; margin:14px 0; font-size:12.5px; }}
   a {{ color:#58a6ff; }}
   footer {{ color:var(--dim); font-size:11px; margin-top:30px; }}
+  /* --- plan / checklist --- */
+  .reality {{ background:#1f6feb14; border:1px solid #1f6feb44; border-radius:10px;
+              padding:12px 16px; font-size:12.5px; line-height:1.6; margin:6px 0 14px; }}
+  .barwrap {{ margin:6px 0 18px; }}
+  .barlabel {{ font-size:12px; margin-bottom:6px; }}
+  .barlabel .dim, .dim {{ color:var(--dim); }}
+  .bar {{ height:10px; background:#21262d; border-radius:6px; overflow:hidden; }}
+  .fill {{ height:100%; background:linear-gradient(90deg,#3fb950,#f0b429); }}
+  .tasks {{ display:flex; flex-direction:column; gap:10px; }}
+  .task {{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }}
+  .task.done {{ border-color:#3fb95055; background:#3fb9500c; }}
+  .thead {{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }}
+  .box {{ font-size:17px; }}
+  .task.done .box {{ color:#3fb950; }}
+  .tnum {{ color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }}
+  .ttitle {{ font-weight:700; flex:1; min-width:200px; }}
+  .owner {{ font-size:10px; padding:1px 7px; border-radius:20px; border:1px solid; white-space:nowrap; }}
+  .when {{ font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em; }}
+  .crit {{ font-size:12px; color:var(--dim); margin:7px 0 2px; }}
+  .crit b {{ color:var(--fg); }}
+  details {{ margin-top:6px; }}
+  summary {{ cursor:pointer; color:#58a6ff; font-size:12px; width:max-content; }}
+  .detail {{ font-size:12.5px; line-height:1.6; padding:8px 2px 2px; }}
+  .detail ol, .detail ul {{ margin:6px 0; padding-left:20px; }}
+  .detail li {{ margin:3px 0; }}
+  .detail code {{ background:#21262d; padding:1px 5px; border-radius:4px; }}
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank {TARGET_RANK} 🎯</h1>
@@ -227,6 +422,7 @@ def main():
       <div class="v {gap_cls}" style="font-size:14px">{esc(gap)}</div></div>
   </div>
   {banner}
+  {plan_html}
 
   <h2>Leaderboard — where we'd land</h2>
   <table>

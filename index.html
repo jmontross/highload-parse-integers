@@ -38,23 +38,194 @@
            padding:10px 14px; border-radius:8px; margin:14px 0; font-size:12.5px; }
   a { color:#58a6ff; }
   footer { color:var(--dim); font-size:11px; margin-top:30px; }
+  /* --- plan / checklist --- */
+  .reality { background:#1f6feb14; border:1px solid #1f6feb44; border-radius:10px;
+              padding:12px 16px; font-size:12.5px; line-height:1.6; margin:6px 0 14px; }
+  .barwrap { margin:6px 0 18px; }
+  .barlabel { font-size:12px; margin-bottom:6px; }
+  .barlabel .dim, .dim { color:var(--dim); }
+  .bar { height:10px; background:#21262d; border-radius:6px; overflow:hidden; }
+  .fill { height:100%; background:linear-gradient(90deg,#3fb950,#f0b429); }
+  .tasks { display:flex; flex-direction:column; gap:10px; }
+  .task { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .task.done { border-color:#3fb95055; background:#3fb9500c; }
+  .thead { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .box { font-size:17px; }
+  .task.done .box { color:#3fb950; }
+  .tnum { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+  .ttitle { font-weight:700; flex:1; min-width:200px; }
+  .owner { font-size:10px; padding:1px 7px; border-radius:20px; border:1px solid; white-space:nowrap; }
+  .when { font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em; }
+  .crit { font-size:12px; color:var(--dim); margin:7px 0 2px; }
+  .crit b { color:var(--fg); }
+  details { margin-top:6px; }
+  summary { cursor:pointer; color:#58a6ff; font-size:12px; width:max-content; }
+  .detail { font-size:12.5px; line-height:1.6; padding:8px 2px 2px; }
+  .detail ol, .detail ul { margin:6px 0; padding-left:20px; }
+  .detail li { margin:3px 0; }
+  .detail code { background:#21262d; padding:1px 5px; border-radius:4px; }
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-07-03 05:48 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-07-03 05:58 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
 
   <div class="goal">
     <div class="card"><div class="k">Champion wall-time</div>
-      <div class="v">591.5 ms</div></div>
+      <div class="v">561.0 ms</div></div>
     <div class="card"><div class="k">Per line</div>
-      <div class="v">11.83 ns</div></div>
+      <div class="v">11.22 ns</div></div>
     <div class="card"><div class="k">Target (rank 18)</div>
       <div class="v">69.3 ms</div></div>
     <div class="card"><div class="k">Gap</div>
-      <div class="v bad" style="font-size:14px">8.5× off the rank 18 bar — need 591.5 ms → 69.3 ms</div></div>
+      <div class="v bad" style="font-size:14px">8.1× off the rank 18 bar — need 561.0 ms → 69.3 ms</div></div>
   </div>
   <div class="warn">⚠ Measured on <b>arm64</b> (no AVX / not the judge core). These times are a local preview and are <b>not comparable</b> to the x86 leaderboard above. The real standing comes from the x86 cloud run.</div>
+  
+  <h2>🏁 Plan to an honest rank 18 — 1/7 done</h2>
+  <div class="reality">
+    <b>Reality check.</b> The rank-18 bar is ≈69 ms for a full 50M-line parse
+    (~1.4 ns/line on x86). That is only physically reachable on the <b>x86 cloud box</b> —
+    on the owner's ARM Mac just <i>reading</i> the input (~82 ms) already costs more than
+    the whole target. And even on x86, local ns/line predicts leaderboard <i>position</i> only loosely:
+    the one ground-truth number is submitting to the <b>judge</b> (Phase 6). Everything below is honest
+    about which hardware proves what.
+  </div>
+  
+      <div class="barwrap">
+        <div class="barlabel dim">no x86 timing yet — progress is measured only on the cloud box.
+          On this ARM Mac, merely reading the input (~82 ms) already exceeds the
+          69 ms target, so the win can't be shown here.</div>
+      </div>
+  <div class="tasks">
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 0</span>
+          <span class="ttitle">Unblock the cloud — grant the Claude GitHub App access to this repo</span>
+          <span class="owner" style="color:#f0b429;border-color:#f0b42955;background:#f0b42918">👤 you</span>
+          <span class="when">DO THIS NOW</span>
+        </div>
+        <div class="crit"><b>Done when:</b> A routine run completes on the x86 cloud box (this page then shows x86 timings instead of ARM).</div>
+        <details open><summary>how</summary><div class="detail">
+   <p>The repo is <b>private</b>, so every 2-hour cloud run currently dies with
+   <code>HTTP 400 github_repo_access_denied</code> — the agent can't even clone it.
+   Re-authorizing your GitHub <i>login</i> does NOT fix this; a private repo needs the
+   Claude GitHub <b>App installation</b> granted access to this specific repo.</p>
+   <ol>
+     <li>Open <a href="https://github.com/settings/installations">github.com/settings/installations</a></li>
+     <li>Click <b>Configure</b> next to the <b>Claude</b> (Anthropic) app.</li>
+     <li>Under <b>Repository access</b>: choose <b>All repositories</b>, or
+         <b>Only select repositories</b> → add <code>jmontross/highload-parse-integers</code>.</li>
+     <li>Click the green <b>Save</b>.</li>
+     <li><b>App not listed?</b> It may be installed on an organization — check that org's
+         <i>Settings → GitHub Apps</i>, or reinstall from
+         <a href="https://claude.ai/settings/connectors">claude.ai → Settings → Connectors → GitHub</a>.</li>
+     <li><b>Verify:</b> ask Claude to re-trigger the routine — expect <code>HTTP 200</code>, not 400.
+         Once a cloud run completes, this box ticks itself.</li>
+   </ol></div></details>
+      </div>
+      <div class="task done">
+        <div class="thead">
+          <span class="box">☑</span>
+          <span class="tnum">Phase 1</span>
+          <span class="ttitle">SWAR number parse — break the per-digit latency chain</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">done</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Committed as champion v2 (~11% over scalar, portable, no intrinsics).</div>
+        <details><summary>how</summary><div class="detail"><p>The scalar champion is latency-bound on the serial <code>v = v*10 + d</code>
+   chain (~11 ns/line). SWAR parses a whole number in a short shift/add tree instead.
+   Modest but real, and it's the portable baseline the SIMD work builds on.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 2</span>
+          <span class="ttitle">Read the bandwidth floor — set the honest ceiling before writing SIMD</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">FIRST, on x86</span>
+        </div>
+        <div class="crit"><b>Done when:</b> run.sh&#x27;s floor is recorded. If the x86 floor &gt; 69 ms, rank 18 is UNREACHABLE on that box — report that, don&#x27;t write more SIMD.</div>
+        <details><summary>how</summary><div class="detail"><p><code>run.sh</code> prints a <b>bandwidth floor</b> (<code>cat &gt; /dev/null</code>) —
+   the time to merely stream every byte once. A correct parser can never beat it.</p>
+   <p>On the owner's ARM Mac that floor is <b>~82 ms &gt; the 69 ms target</b>, which is exactly
+   why the win cannot be shown locally. The agent's first job on the x86 box is to read the
+   floor there: if it's already above 69 ms, the honest finding is
+   <i>"bandwidth-bound below target on this hardware"</i> — a real result, not a failure.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 3</span>
+          <span class="ttitle">Hybrid AVX2 — find newlines with movemask, parse each span with SWAR</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">the main win</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Correct (canonical sum + 9/9 edge cases) AND faster than the SWAR champion on x86, re-verified with RUNS=5, then promoted.</div>
+        <details><summary>how</summary><div class="detail"><p>The realistic, gettable-correct first SIMD milestone — it captures most of the win:</p>
+   <ul>
+     <li>Load 32 bytes: <code>_mm256_loadu_si256</code>.</li>
+     <li>Newline mask: <code>_mm256_movemask_epi8(_mm256_cmpeq_epi8(v, '\n'))</code> → a 32-bit mask.</li>
+     <li>Walk the set bits (<code>tzcnt</code>/<code>_tzcnt_u32</code>) to get each number's span, and parse
+         that span with the SWAR routine. This removes the per-byte branch that dominates the scalar loop.</li>
+     <li>Keep 2–4 independent <code>uint64</code> accumulators so the adds don't serialize.</li>
+     <li>Guard with <code>#ifdef __AVX2__</code>; keep the scalar loop as the <code>#else</code> fallback.</li>
+   </ul>
+   <p>ARM COMPILE_FAIL on this variant is expected — it's validated on the x86 cloud box, which matches the judge.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 4</span>
+          <span class="ttitle">Full vectorized digit-weight reduction (staged madd tree / AVX-512 VNNI)</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">stretch</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Correct AND beats the hybrid champion. The variable-length boundary handling is the hard part — nail it against the correctness gate.</div>
+        <details><summary>how</summary><div class="detail"><p>The math: <code>sum = Σ digit · 10^(distance to the number's end)</code>, summed over
+   <i>all</i> digit bytes — no need to isolate individual numbers, just weight each digit by its
+   distance to the next newline.</p>
+   <p><b>Direction, not gospel</b> (the agent nails the exact sequence empirically):</p>
+   <ul>
+     <li>You <b>cannot</b> do the whole reduction in one <code>vpdpbusd</code>/<code>maddubs</code> —
+         int8/int16 weights overflow past two digits (10² &gt; 127). The real technique is a
+         <b>staged tree</b>: <code>maddubs</code>[10,1] → <code>madd</code>[100,1] → <code>madd</code>[10000,1],
+         which only works on <b>fixed-width, known-alignment</b> chunks.</li>
+     <li>So the hard, valuable part is deriving per-byte 10^k weights from the newline mask and
+         handling numbers that straddle a block boundary (carry into the next block).</li>
+     <li>AVX-512: 64-byte loads, <code>__mmask64</code> from <code>_mm512_cmpeq_epi8_mask</code>,
+         <code>_mm512_dpbusd_epi32</code> (VNNI) for the staged dot-products. Guard with
+         <code>__AVX512F__/__AVX512BW__/__AVX512VNNI__</code> + scalar fallback.</li>
+   </ul></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 5</span>
+          <span class="ttitle">Champion beats ~1.4 ns/line on the cloud box</span>
+          <span class="owner" style="color:#a970ff;border-color:#a970ff55;background:#a970ff18">🤖+👤</span>
+          <span class="when">🎯 target</span>
+        </div>
+        <div class="crit"><b>Done when:</b> x86 champion ≤ 1.4 ns/line — a PROXY for rank 18. Local hardware ≠ the judge; confirm only at the judge (next step).</div>
+        <details><summary>how</summary><div class="detail"><p>This ticks automatically once the x86 champion crosses ~1.4 ns/line. Treat it as a
+   strong signal, not a standing — the cloud box is not the judge's exact hardware, so the real
+   position is only known after submitting.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 6</span>
+          <span class="ttitle">Submit the champion to the judge &amp; record the real time</span>
+          <span class="owner" style="color:#f0b429;border-color:#f0b42955;background:#f0b42918">👤 you</span>
+          <span class="when">ground truth</span>
+        </div>
+        <div class="crit"><b>Done when:</b> champion/main.cpp pasted into highload.fun, the judge&#x27;s reported ns written into SCOREBOARD.md.</div>
+        <details><summary>how</summary><div class="detail"><p>The agent cannot submit (needs your logged-in browser). When it flags a champion ready:
+   paste <code>champion/main.cpp</code> into the
+   <a href="https://highload.fun/challenges/compute/parse_integers">judge</a>, run it, and record the
+   real number in <code>SCOREBOARD.md</code>. That number — not any local time — is whether we hit rank 18.</p></div></details>
+      </div></div>
 
   <h2>Leaderboard — where we'd land</h2>
   <table>
@@ -145,7 +316,7 @@
         <td class="user">★ our champion <span class="tier" style="background:#f0b42922;color:#f0b429;border:1px solid #f0b42955">us</span></td>
         <td class="score">—</td>
         <td class="cc">Apple</td>
-        <td class="wall">591,537,959 ns<span class="sub">11.83 ns/line</span></td>
+        <td class="wall">561,000,000 ns<span class="sub">11.22 ns/line</span></td>
         <td class="mem">—</td>
       </tr>
       <tr class="">
@@ -164,20 +335,20 @@
     
       <tr>
         <td class="user">champion ★</td>
-        <td>591.5 ms</td>
-        <td>11.83 ns/line</td>
+        <td>561.0 ms</td>
+        <td>11.22 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/memchr</td>
-        <td>665.8 ms</td>
-        <td>13.32 ns/line</td>
+        <td>605.0 ms</td>
+        <td>12.10 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_blockparse</td>
-        <td>589.1 ms</td>
-        <td>11.78 ns/line</td>
+        <td>541.0 ms</td>
+        <td>10.82 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
   </table>
