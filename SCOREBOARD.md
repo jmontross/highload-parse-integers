@@ -66,12 +66,13 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
   latency-capped at ~0.26s on ARM (~2.9× the bandwidth floor).
 
 ## Next hypotheses (highest expected payoff first)
-1. **AVX2 32-byte block parse** — WRITTEN as `variants/avx2_blockparse.cpp`, awaiting
-   x86 validation. One `vpcmpeqb`+`vpmovmskb` per 32 bytes yields all newline
-   positions at once (~3 numbers/load), breaking the serial per-number scan chain;
-   each number parsed with the v5 SWAR routine. Gated `#ifdef __AVX2__` with v5 as
-   the `#else`, so it builds+runs on ARM as plain v5 (verified: sum ✓, 9/9 edge) and
-   uses AVX2 on the x86 box. Block algorithm VALIDATED on ARM via `-DBLOCK_SCALAR_SIM`.
+1. **AVX2 32-byte block parse** — `variants/avx2_blockparse.cpp`. One
+   `vpcmpeqb`+`vpmovmskb` per 32 bytes yields all newline positions at once
+   (~3 numbers/load), breaking the serial per-number scan chain; each number
+   parsed with the v5 SWAR routine. Gated `#ifdef __AVX2__` with v5 as `#else`.
+   **SUBMITTED & VALIDATED ON THE JUDGE (2026-07-03 18:00): Success, rank 119/900,
+   307 ms (306,675,659 ns), score 35,819 — up from v5's rank 167 / 392 ms / 46,107
+   (~22% faster).** Intrinsics + block algorithm proven on real x86.
 2. **AVX-512 64-byte block parse** — WRITTEN as `variants/avx512_blockparse.cpp`.
    Tiered: `__AVX512BW__`→64B native `_mm512_cmpeq_epi8_mask`, else `__AVX2__`→32B
    `vpmovmskb`, else v5 — one file auto-picks the widest SIMD the judge CPU has

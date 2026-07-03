@@ -41,7 +41,10 @@ TARGET_NS = 69_301_147  # olliecrow's shown wall-time — our bar to clear
 # These are REAL x86-judge results (not local ARM previews). Update after each
 # submit. wall_ns = the headline (first) figure shown on the leaderboard row.
 SUBMISSIONS = [
-    {"rank": 167, "of": 900, "score": 46_107, "version": "champion v5 (branchless SWAR)",
+    {"rank": 119, "of": 900, "score": 35_819, "version": "AVX2 block parse (first SIMD)",
+     "compiler": "g++10.5.0", "flags": "-O3 -march=native",
+     "wall_ns": 306_675_659, "mem": 2_113_536, "when": "2026-07-03 18:00"},
+    {"rank": 167, "of": 900, "score": 46_107, "version": "v5 (branchless SWAR, scalar)",
      "compiler": "g++10.5.0", "flags": "-O3 -march=native",
      "wall_ns": 392_122_665, "mem": 2_113_536, "when": "2026-07-03 16:50"},
     {"rank": 460, "of": 900, "score": 89_135, "version": "early baseline",

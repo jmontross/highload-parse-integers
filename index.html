@@ -69,21 +69,29 @@
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-07-03 17:51 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-07-03 18:04 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
 
   
   <div class="subs">
-    <h2 style="margin-top:0">✅ Submitted to the judge — currently rank #167 of 900</h2>
+    <h2 style="margin-top:0">✅ Submitted to the judge — currently rank #119 of 900</h2>
     <div class="meta">These are REAL highload.fun x86-judge results (not the ARM preview below).
-      Latest: <b>392.1 ms</b>, score <b>46,107</b>, built with
-      <code>g++10.5.0 -O3 -march=native</code> on 2026-07-03 16:50.</div>
+      Latest: <b>306.7 ms</b>, score <b>35,819</b>, built with
+      <code>g++10.5.0 -O3 -march=native</code> on 2026-07-03 18:00.</div>
     <table style="margin-top:10px">
       <tr><th>Rank</th><th>Version</th><th>Score</th><th>Judge wall</th><th>Compiler</th><th>When</th></tr>
       
         <tr>
+          <td><b>#119</b> <span style="color:var(--dim)">/ 900</span></td>
+          <td>AVX2 block parse (first SIMD) <span class="badge us">latest</span></td>
+          <td>35,819</td>
+          <td>306.7 ms</td>
+          <td>g++10.5.0 <span style="color:var(--dim)">-O3 -march=native</span></td>
+          <td style="color:var(--dim)">2026-07-03 18:00</td>
+        </tr>
+        <tr>
           <td><b>#167</b> <span style="color:var(--dim)">/ 900</span></td>
-          <td>champion v5 (branchless SWAR) <span class="badge us">latest</span></td>
+          <td>v5 (branchless SWAR, scalar)</td>
           <td>46,107</td>
           <td>392.1 ms</td>
           <td>g++10.5.0 <span style="color:var(--dim)">-O3 -march=native</span></td>
@@ -99,7 +107,7 @@
         </tr>
     </table>
     <div class="meta" style="margin-top:8px">Bar to clear: rank 18 ≈ 69.3 ms
-      (olliecrow). Current gap to rank 18: <b>5.7×</b> —
+      (olliecrow). Current gap to rank 18: <b>4.4×</b> —
       closed by the AVX2/AVX-512 block parse, not a faster scalar loop.</div>
   </div>
 
