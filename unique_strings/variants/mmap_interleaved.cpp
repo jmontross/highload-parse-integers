@@ -1,9 +1,10 @@
-// unique_strings — mmap + interleaved slots + DIRECT masked key load.
-// On top of interleaving (1 cache line/probe) and mmap (zero-copy), this drops
-// the per-token staging: instead of `kb[16]={0}; memcpy(kb,p,len); memcpy x2`,
-// it loads klo/khi straight from p and masks to `len` bytes — same zero-padded
-// 16-byte key, fewer instructions per token. A 16-byte tail guard routes the
-// last few tokens (and any without a trailing newline) through the safe path.
+// unique_strings — mmap input + INTERLEAVED 16-byte slots.
+// Two wins over champion v2:
+//  1) One flat array of {lo,hi} 16-byte slots → each probe touches ONE cache
+//     line, vs v2's separate lo[]/hi[] arrays = 2 misses per probe.
+//  2) mmap the whole input (zero-copy) instead of fread + leftover memmove.
+// Same exact 128-bit key encoding + fmix64 hash + linear probing → identical
+// (exact) result, just faster. Portable (mmap guarded; read() fallback).
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
@@ -16,7 +17,7 @@
 #define MAP_POPULATE 0
 #endif
 
-static inline uint64_t mix(uint64_t x) {
+static inline uint64_t mix(uint64_t x) {          // fmix64 (murmur3 finalizer)
     x ^= x >> 33; x *= 0xff51afd7ed558ccdULL;
     x ^= x >> 33; x *= 0xc4ceb9fe1a85ec53ULL;
     x ^= x >> 33; return x;
@@ -24,34 +25,26 @@ static inline uint64_t mix(uint64_t x) {
 
 struct Slot { uint64_t lo, hi; };
 
-static inline void keyize(const unsigned char* p, size_t len, uint64_t& klo, uint64_t& khi) {
-    memcpy(&klo, p, 8); memcpy(&khi, p + 8, 8);      // may over-read; masked below
-    if (len < 8) { klo &= (len ? ((1ULL << (8 * len)) - 1) : 0ULL); khi = 0; }
-    else if (len < 16) { khi &= ((1ULL << (8 * (len - 8))) - 1); }
-    // len == 16: both words full
-}
-
 static uint64_t solve(const unsigned char* data, size_t size) {
     const uint64_t BITS = 24, SIZE = 1ULL << BITS, MASK = SIZE - 1;
-    Slot* tab = (Slot*)calloc(SIZE, sizeof(Slot));
+    Slot* tab = (Slot*)calloc(SIZE, sizeof(Slot));   // 2^24 * 16B = 256 MB
     if (!tab) return 0;
     uint64_t count = 0;
     const unsigned char* p = data;
     const unsigned char* end = data + size;
-    const unsigned char* safe_end = (size >= 16) ? end - 16 : data;
-
     while (p < end) {
         const unsigned char* nl = (const unsigned char*)memchr(p, '\n', (size_t)(end - p));
-        if (!nl) break;
+        if (!nl) break;                              // spec: newline-terminated
         size_t len = (size_t)(nl - p);               // 1..16
+        unsigned char kb[16] = {0};
+        memcpy(kb, p, len);                          // zero-padded key (exact len, no over-read)
         uint64_t klo, khi;
-        if (p <= safe_end) keyize(p, len, klo, khi);
-        else { unsigned char kb[16] = {0}; memcpy(kb, p, len); memcpy(&klo, kb, 8); memcpy(&khi, kb + 8, 8); }
+        memcpy(&klo, kb, 8); memcpy(&khi, kb + 8, 8);
         uint64_t h = (mix(klo) ^ (mix(khi) + 0x9e3779b97f4a7c15ULL)) & MASK;
         while (true) {
             Slot& s = tab[h];
             if (s.lo == 0 && s.hi == 0) { s.lo = klo; s.hi = khi; count++; break; }
-            if (s.lo == klo && s.hi == khi) break;
+            if (s.lo == klo && s.hi == khi) break;   // duplicate
             h = (h + 1) & MASK;
         }
         p = nl + 1;

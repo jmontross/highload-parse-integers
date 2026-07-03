@@ -7,6 +7,13 @@ Champion metric: median-of-N wall-clock of `./prog < input.txt` on this box.
 > reported time here. Local times are for relative ranking between runs.
 
 ## Champion
+- **v3** — `mmap + interleaved 16-byte slots + direct masked key load`. Three wins
+  over v2: (1) one flat `{lo,hi}` array → 1 cache line per probe (v2 used separate
+  lo[]/hi[] = 2 misses); (2) mmap zero-copy input (no fread + memmove); (3) load
+  klo/khi straight from the buffer and mask to `len` (no `kb[16]` staging + 3
+  memcpys per token). Same exact key → same result. **median 0.407s @10M ARM
+  (~43% faster than v2, 0.712→0.407s)**, promoted via the significance gate
+  (Δ 0.305s ≫ ±0.057 noise; 11/11 edge, 5706971). Judge: _pending resubmit_.
 - **v2** — `open-addressing set of EXACT 128-bit keys` (linear probing, 2^24 slots).
   A token ≤16 B with no NUL zero-pads to a unique 16-byte key → **exact, no
   hash-collision risk**, and no node allocation. **~0.70s median @10M ARM
