@@ -11,6 +11,11 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 (done) when it approaches this.
 
 ## Champion
+- **v5** — `branchless high digits` — removes the one hostile branch (`h==2`,
+  a 10-vs-9-digit coin-flip mispredicting ~47%) by computing the high 0–2 digits
+  branchlessly from h∈{0,1,2}. Portable. **best ~0.264s @50M ARM (~28% faster
+  than v4)** — branch mispredict was the dominant cost. Promoted via min-of-N
+  gate (best AND median lower; 9/9 edge). Now ~2.9× off the bandwidth floor.
 - **v4** — `SWAR nlfind + zero-reload hot path` — on the common 9–10 digit path,
   reconstructs the low-8 parse chunk by shifting the two words already loaded for
   the newline scan (w0,w1) instead of a third `memcpy` — one fewer load per
@@ -39,6 +44,7 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 | 2026-07-03 | v3 SWAR newline-find (`swar_nlfind.cpp`) | ~0.40s @50M | ✓ (+9 edge) | ✓ champion | memchr-free boundary find; PROMOTE via significance gate (Δ=0.14s ≫ ±0.01 band) |
 | 2026-07-03 | swar_prefetch (reuse load + prefetch) | ~0.396s @50M | ✓ | ✗ dead | prefetch evicts more than it saves; mmap already streams |
 | 2026-07-03 | v4 swar_noreload (zero-reload hot path) | best ~0.368s @50M | ✓ (+9 edge) | ✓ champion | reconstruct low-8 chunk from w0/w1; ~2.6% win via min-of-N gate |
+| 2026-07-03 | v5 swar_branchless (branchless high digits) | best ~0.264s @50M | ✓ (+9 edge) | ✓ champion | kills the h==2 coin-flip mispredict — 28% win, biggest since v3 |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.

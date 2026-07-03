@@ -1,18 +1,12 @@
-// HighLoad.fun — parse_integers  (CHAMPION v5: branchless high digits)
-// Sum 50,000,000 newline-separated uint32 values. Scored on wall-time.
-// Compiler: g++ 10.5.0   Flags: -O3 -march=native   Limits: 30s / 512MB / 1 core
-//
-// Builds on v4 (SWAR nlfind, zero-reload). Profiling insight: on this input
-// almost every branch is predictable — 99.5% of values are 9–10 digits so the
-// `idx<8` (<=7 digit) path is ~never taken, and `idx2==8` (>=16 digit) never.
-// The ONE hostile branch was `if (h == 2)`, splitting 10-digit (~53%) from
-// 9-digit (~47%) numbers — a near coin-flip mispredicting ~47% of the time.
-// v5 computes the high-digit value branchlessly from h∈{0,1,2} (comparisons →
-// setcc, no jump), so the common path has no data-dependent branch left.
-// Measured ~28% faster than v4 (best 0.369→0.264s @50M ARM) — the branch
-// mispredict was the dominant remaining cost. Promoted through the min-of-N
-// gate (best AND median lower; 9/9 edge). Portable (no intrinsics): x86 + ARM.
-// Next lever remains AVX2/AVX-512 (gate behind #ifdef __AVX2__ per AGENT.md #4).
+// HighLoad.fun — parse_integers  (VARIANT: v4 hot path, branchless high digits)
+// Portable (no intrinsics). Builds on champion v4 (SWAR nlfind, zero-reload).
+// Profiling insight: on this input almost every branch is predictable — 99.5% of
+// values are 9–10 digits so the `idx<8` (<=7 digit) path is ~never taken, and
+// `idx2==8` (>=16 digit) never. The ONE hostile branch is `if (h == 2)`, which
+// splits 10-digit (~53%) from 9-digit (~47%) numbers — a near coin-flip that
+// mispredicts ~47% of the time. Here the high-digit value is computed
+// branchlessly from h∈{0,1,2} (comparisons → setcc, no jump), so the common
+// 9/10-digit path has no data-dependent branch left.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
