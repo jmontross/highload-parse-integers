@@ -45,9 +45,19 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 | 2026-07-03 | swar_prefetch (reuse load + prefetch) | ~0.396s @50M | ✓ | ✗ dead | prefetch evicts more than it saves; mmap already streams |
 | 2026-07-03 | v4 swar_noreload (zero-reload hot path) | best ~0.368s @50M | ✓ (+9 edge) | ✓ champion | reconstruct low-8 chunk from w0/w1; ~2.6% win via min-of-N gate |
 | 2026-07-03 | v5 swar_branchless (branchless high digits) | best ~0.264s @50M | ✓ (+9 edge) | ✓ champion | kills the h==2 coin-flip mispredict — 28% win, biggest since v3 |
+| 2026-07-03 | swar_unroll2 (2 numbers/iter, dual accum) | best ~0.342s @50M | ✓ | ✗ dead | slower than v5 — serial boundary scans leave little to overlap; tail machinery + helper defeated -O3's own scheduling |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
+- `__builtin_prefetch` ahead of the scan (`swar_prefetch`) — prefetch evicts more
+  than it saves; mmap MAP_POPULATE/MADV_SEQUENTIAL already streams optimally.
+- 2 numbers/iter with dual accumulators (`swar_unroll2`) — slower; the per-number
+  boundary scans are serial (number 2 starts where number 1 ends) so there's no
+  independent work to fill the OOO window, and the manual unroll defeated -O3.
+  A real latency-hiding win needs a block newline **bitmask** (find all newlines
+  in a 32-byte window in one shot, then parse with boundaries already known) —
+  which is essentially the AVX2/AVX-512 path. Portable single-thread looks
+  latency-capped at ~0.26s on ARM (~2.9× the bandwidth floor).
 
 ## Next hypotheses (highest expected payoff first)
 1. **AVX2 32-byte block parse** with newline `movemask` — the big one; gate behind
