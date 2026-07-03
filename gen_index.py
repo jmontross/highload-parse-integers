@@ -37,6 +37,18 @@ SNAPSHOT = [
 TARGET_RANK = 18
 TARGET_NS = 69_301_147  # olliecrow's shown wall-time — our bar to clear
 
+# --- Actual submissions to the real judge (highload.fun), newest first.
+# These are REAL x86-judge results (not local ARM previews). Update after each
+# submit. wall_ns = the headline (first) figure shown on the leaderboard row.
+SUBMISSIONS = [
+    {"rank": 167, "of": 900, "score": 46_107, "version": "champion v5 (branchless SWAR)",
+     "compiler": "g++10.5.0", "flags": "-O3 -march=native",
+     "wall_ns": 392_122_665, "mem": 2_113_536, "when": "2026-07-03 16:50"},
+    {"rank": 460, "of": 900, "score": 89_135, "version": "early baseline",
+     "compiler": "g++10.5.0", "flags": "-O3 -march=native",
+     "wall_ns": 749_261_857, "mem": 2_113_536, "when": "2026-07-03 04:25"},
+]
+
 BASELINE_NSL = 11.2   # scalar/SWAR ns/line — the start of the climb
 TARGET_NSL   = 1.4    # ≈69 ms / 50M lines — the rank-18 bar (x86 PROXY, judge is truth)
 ARM_FLOOR_MS = 82     # `cat input.txt > /dev/null` on the owner's ARM Mac (observed)
@@ -337,6 +349,37 @@ def main():
         'These times are a local preview and are <b>not comparable</b> to the x86 leaderboard above. '
         'The real standing comes from the x86 cloud run.</div>')
 
+    # Real judge submissions — the thing that actually counts. Newest first.
+    subs_html = ""
+    if SUBMISSIONS:
+        latest = SUBMISSIONS[0]
+        rows_html = ""
+        for i, s in enumerate(SUBMISSIONS):
+            tag = ' <span class="badge us">latest</span>' if i == 0 else ""
+            rows_html += f"""
+        <tr>
+          <td><b>#{s['rank']}</b> <span style="color:var(--dim)">/ {s['of']}</span></td>
+          <td>{esc(s['version'])}{tag}</td>
+          <td>{s['score']:,}</td>
+          <td>{s['wall_ns']/1e6:.1f} ms</td>
+          <td>{esc(s['compiler'])} <span style="color:var(--dim)">{esc(s['flags'])}</span></td>
+          <td style="color:var(--dim)">{esc(s['when'])}</td>
+        </tr>"""
+        subs_html = f"""
+  <div class="subs">
+    <h2 style="margin-top:0">✅ Submitted to the judge — currently rank #{latest['rank']} of {latest['of']}</h2>
+    <div class="meta">These are REAL highload.fun x86-judge results (not the ARM preview below).
+      Latest: <b>{latest['wall_ns']/1e6:.1f} ms</b>, score <b>{latest['score']:,}</b>, built with
+      <code>{esc(latest['compiler'])} {esc(latest['flags'])}</code> on {esc(latest['when'])}.</div>
+    <table style="margin-top:10px">
+      <tr><th>Rank</th><th>Version</th><th>Score</th><th>Judge wall</th><th>Compiler</th><th>When</th></tr>
+      {rows_html}
+    </table>
+    <div class="meta" style="margin-top:8px">Bar to clear: rank {TARGET_RANK} ≈ {TARGET_NS/1e6:.1f} ms
+      (olliecrow). Current gap to rank {TARGET_RANK}: <b>{latest['wall_ns']/TARGET_NS:.1f}×</b> —
+      closed by the AVX2/AVX-512 block parse, not a faster scalar loop.</div>
+  </div>"""
+
     plan_html = render_plan(champ_ns_per_line, is_x86)
 
     doc = f"""<!doctype html>
@@ -345,6 +388,8 @@ def main():
 <title>parse_integers — our run vs leaderboard</title>
 <style>
   :root {{ --bg:#0d1117; --panel:#161b22; --line:#21262d; --fg:#e6edf3; --dim:#8b949e; --us:#f0b429; }}
+  .subs {{ background:linear-gradient(180deg,#132b1a,#0f1f15); border:1px solid #1f6f3f;
+           border-radius:10px; padding:16px 18px; margin:18px 0; }}
   * {{ box-sizing:border-box; }}
   body {{ margin:0; background:var(--bg); color:var(--fg);
          font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }}
@@ -410,6 +455,8 @@ def main():
   <h1>parse_integers — chasing rank {TARGET_RANK} 🎯</h1>
   <div class="meta">Autonomous optimizer · updated {esc(when)} · sum <code>{esc(expected)}</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
+
+  {subs_html}
 
   <div class="goal">
     <div class="card"><div class="k">Champion wall-time</div>

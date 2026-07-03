@@ -16,6 +16,12 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
   branchlessly from h∈{0,1,2}. Portable. **best ~0.264s @50M ARM (~28% faster
   than v4)** — branch mispredict was the dominant cost. Promoted via min-of-N
   gate (best AND median lower; 9/9 edge). Now ~2.9× off the bandwidth floor.
+  **Judge (submitted 2026-07-03): rank 167/900, 392 ms, score 46,107, g++10.5.0
+  `-O3 -march=native`** (up from an early baseline at rank 460 / 749 ms). ~5.7×
+  off the rank-18 bar (69 ms) — the AVX2/AVX-512 block parse is what closes it.
+  AVX2 block algorithm now VALIDATED on ARM via `-DBLOCK_SCALAR_SIM`
+  (`variants/avx2_blockparse.cpp`): same block loop, scalar mask → 50M sum ✓ +
+  9/9 edge; only the `vpmovmskb` intrinsic is unexercised locally.
 - **v4** — `SWAR nlfind + zero-reload hot path` — on the common 9–10 digit path,
   reconstructs the low-8 parse chunk by shifting the two words already loaded for
   the newline scan (w0,w1) instead of a third `memcpy` — one fewer load per

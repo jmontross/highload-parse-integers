@@ -4,6 +4,8 @@
 <title>parse_integers — our run vs leaderboard</title>
 <style>
   :root { --bg:#0d1117; --panel:#161b22; --line:#21262d; --fg:#e6edf3; --dim:#8b949e; --us:#f0b429; }
+  .subs { background:linear-gradient(180deg,#132b1a,#0f1f15); border:1px solid #1f6f3f;
+           border-radius:10px; padding:16px 18px; margin:18px 0; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--fg);
          font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
@@ -67,18 +69,49 @@
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-07-03 05:58 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-07-03 17:51 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
+
+  
+  <div class="subs">
+    <h2 style="margin-top:0">✅ Submitted to the judge — currently rank #167 of 900</h2>
+    <div class="meta">These are REAL highload.fun x86-judge results (not the ARM preview below).
+      Latest: <b>392.1 ms</b>, score <b>46,107</b>, built with
+      <code>g++10.5.0 -O3 -march=native</code> on 2026-07-03 16:50.</div>
+    <table style="margin-top:10px">
+      <tr><th>Rank</th><th>Version</th><th>Score</th><th>Judge wall</th><th>Compiler</th><th>When</th></tr>
+      
+        <tr>
+          <td><b>#167</b> <span style="color:var(--dim)">/ 900</span></td>
+          <td>champion v5 (branchless SWAR) <span class="badge us">latest</span></td>
+          <td>46,107</td>
+          <td>392.1 ms</td>
+          <td>g++10.5.0 <span style="color:var(--dim)">-O3 -march=native</span></td>
+          <td style="color:var(--dim)">2026-07-03 16:50</td>
+        </tr>
+        <tr>
+          <td><b>#460</b> <span style="color:var(--dim)">/ 900</span></td>
+          <td>early baseline</td>
+          <td>89,135</td>
+          <td>749.3 ms</td>
+          <td>g++10.5.0 <span style="color:var(--dim)">-O3 -march=native</span></td>
+          <td style="color:var(--dim)">2026-07-03 04:25</td>
+        </tr>
+    </table>
+    <div class="meta" style="margin-top:8px">Bar to clear: rank 18 ≈ 69.3 ms
+      (olliecrow). Current gap to rank 18: <b>5.7×</b> —
+      closed by the AVX2/AVX-512 block parse, not a faster scalar loop.</div>
+  </div>
 
   <div class="goal">
     <div class="card"><div class="k">Champion wall-time</div>
-      <div class="v">561.0 ms</div></div>
+      <div class="v">251.0 ms</div></div>
     <div class="card"><div class="k">Per line</div>
-      <div class="v">11.22 ns</div></div>
+      <div class="v">5.02 ns</div></div>
     <div class="card"><div class="k">Target (rank 18)</div>
       <div class="v">69.3 ms</div></div>
     <div class="card"><div class="k">Gap</div>
-      <div class="v bad" style="font-size:14px">8.1× off the rank 18 bar — need 561.0 ms → 69.3 ms</div></div>
+      <div class="v bad" style="font-size:14px">3.6× off the rank 18 bar — need 251.0 ms → 69.3 ms</div></div>
   </div>
   <div class="warn">⚠ Measured on <b>arm64</b> (no AVX / not the judge core). These times are a local preview and are <b>not comparable</b> to the x86 leaderboard above. The real standing comes from the x86 cloud run.</div>
   
@@ -316,7 +349,7 @@
         <td class="user">★ our champion <span class="tier" style="background:#f0b42922;color:#f0b429;border:1px solid #f0b42955">us</span></td>
         <td class="score">—</td>
         <td class="cc">Apple</td>
-        <td class="wall">561,000,000 ns<span class="sub">11.22 ns/line</span></td>
+        <td class="wall">251,000,000 ns<span class="sub">5.02 ns/line</span></td>
         <td class="mem">—</td>
       </tr>
       <tr class="">
@@ -335,20 +368,56 @@
     
       <tr>
         <td class="user">champion ★</td>
-        <td>561.0 ms</td>
-        <td>11.22 ns/line</td>
+        <td>251.0 ms</td>
+        <td>5.02 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_blockparse</td>
+        <td>249.0 ms</td>
+        <td>4.98 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/memchr</td>
-        <td>605.0 ms</td>
-        <td>12.10 ns/line</td>
+        <td>570.0 ms</td>
+        <td>11.40 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_blockparse</td>
-        <td>541.0 ms</td>
-        <td>10.82 ns/line</td>
+        <td>508.0 ms</td>
+        <td>10.16 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/swar_branchless</td>
+        <td>254.0 ms</td>
+        <td>5.08 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/swar_nlfind</td>
+        <td>372.0 ms</td>
+        <td>7.44 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/swar_noreload</td>
+        <td>361.0 ms</td>
+        <td>7.22 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/swar_prefetch</td>
+        <td>381.0 ms</td>
+        <td>7.62 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/swar_unroll2</td>
+        <td>320.0 ms</td>
+        <td>6.40 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
   </table>

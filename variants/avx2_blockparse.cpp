@@ -1,19 +1,21 @@
 // HighLoad.fun — parse_integers  (VARIANT: AVX2 block newline-mask parse)
-// This is the FIRST SIMD variant — the lever the scalar/SWAR champions can't
-// reach. It targets the one thing left after v5: the per-number boundary scan
-// is SERIAL (number N+1 starts where number N's newline is), so newline-finding
-// latency is on the critical path for all 50M numbers.
+// The first SIMD variant — the lever the scalar/SWAR champions can't reach.
+// After v5 the bottleneck is the SERIAL per-number boundary scan (number N+1
+// starts where N's newline is, so newline-find latency is on the critical path
+// for all 50M numbers). AVX2 breaks it: one `vpcmpeqb`+`vpmovmskb` over 32 bytes
+// yields ALL newline positions in the block at once (~3 numbers/load), so the
+// per-number parses (verified v5 SWAR routine) pipeline instead of waiting on
+// the next scan.
 //
-// AVX2 breaks that: one `vpcmpeqb` + `vpmovmskb` over 32 bytes yields a 32-bit
-// mask of ALL newline positions in the block at once (~3 numbers per load), so
-// every boundary in the block is known from a single instruction and the
-// per-number parses can pipeline instead of waiting on the next scan. Each
-// number is still parsed with the verified v5 SWAR routine (parse_num).
-//
-// Portable: gated behind #ifdef __AVX2__ with the v5 scalar loop as the #else
-// fallback, so it builds AND runs everywhere (on ARM it's just v5; on the x86
-// judge/routine box it uses AVX2). AVX-512 (64-byte, native k-mask) is the
-// obvious next step once this is validated on x86.
+// THREE build modes of the SAME block algorithm — so the tricky boundary logic
+// is testable on ARM even though AVX2 isn't:
+//   • x86 (default):            real _mm256 movemask   → the fast path
+//   • ARM/x86 -DBLOCK_SCALAR_SIM: identical loop, newline mask built by a scalar
+//                                 byte loop → validates the ALGORITHM anywhere
+//   • ARM (no flag):            plain champion v5 (#else fallback)
+// If the SCALAR_SIM build passes the 50M sum + edge suite, the only thing the
+// AVX2 build adds is the standard movemask intrinsic. AVX-512 (64-byte native
+// k-mask) is the follow-up once this validates on the judge.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -21,7 +23,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#ifdef __AVX2__
+#if defined(__AVX2__) && !defined(BLOCK_SCALAR_SIM)
 #include <immintrin.h>
 #endif
 
@@ -62,8 +64,6 @@ static inline uint64_t parse_num(const unsigned char* p, size_t len) {
     return high * 100000000ULL + parse_8(chunk);
 }
 
-// Scalar tail shared by both paths: byte-accumulate to the end. Handles the
-// last partial block, no-trailing-newline, and tiny inputs correctly.
 static inline uint64_t scalar_tail(const unsigned char* p, const unsigned char* end, uint64_t sum) {
     uint64_t v = 0;
     for (; p < end; ++p) {
@@ -74,22 +74,34 @@ static inline uint64_t scalar_tail(const unsigned char* p, const unsigned char* 
     return sum + v;
 }
 
-#ifdef __AVX2__
+// Which build has the block path?  nl_mask32(p) returns a 32-bit mask: bit i set
+// iff p[i]=='\n' (exactly what vpmovmskb(vpcmpeqb) yields).
+#if defined(__AVX2__) && !defined(BLOCK_SCALAR_SIM)
+  #define HAVE_BLOCK 1
+  static inline uint32_t nl_mask32(const unsigned char* p) {
+      __m256i v = _mm256_loadu_si256((const __m256i*)p);
+      return (uint32_t)_mm256_movemask_epi8(_mm256_cmpeq_epi8(v, _mm256_set1_epi8('\n')));
+  }
+#elif defined(BLOCK_SCALAR_SIM)
+  #define HAVE_BLOCK 1
+  static inline uint32_t nl_mask32(const unsigned char* p) {   // portable emulation for testing
+      uint32_t m = 0;
+      for (int i = 0; i < 32; ++i) if (p[i] == '\n') m |= (uint32_t)1 << i;
+      return m;
+  }
+#endif
+
+#ifdef HAVE_BLOCK
 static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    const __m256i nl = _mm256_set1_epi8('\n');
-    // Guard: load 32 at p, and parse_num over-reads up to 16 from a number start
-    // that can sit near the block end → keep 64 bytes of slack.
     if (size >= 64) {
-        const unsigned char* safe_end = end - 64;
+        const unsigned char* safe_end = end - 64;      // 32B load + 16B parse over-read slack
         while (p < safe_end) {
-            __m256i v = _mm256_loadu_si256((const __m256i*)p);
-            uint32_t mask = (uint32_t)_mm256_movemask_epi8(_mm256_cmpeq_epi8(v, nl));
-            if (!mask) break;                          // no newline in 32B (never for valid ≤10-digit input)
+            uint32_t m = nl_mask32(p);
+            if (!m) break;                             // no newline in 32B (never for valid ≤10-digit input)
             const unsigned char* base = p;
-            uint32_t m = mask;
             do {
                 unsigned nlpos = (unsigned)__builtin_ctz(m);
                 const unsigned char* nlp = p + nlpos;
@@ -98,7 +110,7 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                 base = nlp + 1;
                 m &= m - 1;
             } while (m);
-            p = base;                                  // start of the next (possibly cross-block) number
+            p = base;                                  // start of next (possibly cross-block) number
         }
     }
     return scalar_tail(p, end, sum);
