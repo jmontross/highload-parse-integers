@@ -54,4 +54,10 @@ done
 echo "== ranking (correct only, fastest first) =="
 if [ ${#results[@]} -gt 0 ]; then printf '%s\n' "${results[@]}" | sort -n | nl; else echo "(none correct)"; fi
 echo
+
+echo "== edge-case suite (champion) =="
+if [ -x /tmp/pi_champion ]; then
+  bash tests/edge.sh /tmp/pi_champion || echo "!! CHAMPION FAILS EDGE CASES — do NOT submit or promote"
+fi
+echo
 echo "expected=$EXPECTED  |  promote fastest correct into champion/main.cpp, then update SCOREBOARD.md."

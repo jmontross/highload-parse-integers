@@ -15,7 +15,9 @@ challenge.** You run every 2 hours. Make measurable progress each run, then comm
 ## Hard rules
 1. **Correctness gate — non-negotiable.** A program counts only if `./run.sh`
    reports its output equals the canonical sum **`53687387166542798`**. Never
-   promote or commit a WRONG or COMPILE_FAIL program as champion.
+   promote or commit a WRONG or COMPILE_FAIL program as champion. The champion
+   must ALSO pass `bash tests/edge.sh /tmp/pi_champion` (empty input, no trailing
+   newline, leading zeros, max value, overflow-safe) — `run.sh` runs this for you.
 2. **Single core.** No threads (`std::thread`, OpenMP) — the judge pins 1 core.
 3. **Only promote on a real win.** Replace `champion/main.cpp` only when a variant
    is CORRECT and **faster than the current champion** by more than run-to-run noise
