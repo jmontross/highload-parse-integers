@@ -209,6 +209,49 @@ if [ -x /tmp/pi_champion ]; then
   bash tests/edge.sh /tmp/pi_champion || echo "!! CHAMPION FAILS EDGE CASES — do NOT submit or promote"
 fi
 echo
+
+# ---------------------------------------------------------------------------
+# Compiler sweep (champion) — the judge lets you PICK the compiler per submit,
+# and the leaderboard's top ranks span g++ 10.5/13.3/14.2 AND clang++ 18, so
+# there's no a-priori best one: MEASURE it. Builds the champion under each
+# available compiler × flag set, times best-of-N, prints the fastest so you know
+# exactly how to submit. Set SWEEP=0 to skip. Locally (ARM Mac) only Apple clang
+# exists so it's a near no-op; on the x86 routine box it does the real work.
+# ---------------------------------------------------------------------------
+if [ "${SWEEP:-1}" = "1" ] && [ "$champ_idx" -ge 0 ] && [ -n "${med[$champ_idx]}" ]; then
+  echo "== compiler sweep (champion) =="
+  SWEEP_CXX=${SWEEP_CXX:-"g++ g++-13 g++-14 g++-10 clang++ clang++-18 clang++-17"}
+  SWEEP_FLAGS=${SWEEP_FLAGS:-"-O3 -march=native|-Ofast -march=native -funroll-loops"}
+  sweep_best=999999; sweep_combo=""
+  seen_ver=""
+  for cxx in $SWEEP_CXX; do
+    command -v "$cxx" >/dev/null 2>&1 || continue
+    ver=$($cxx --version 2>/dev/null | head -1)
+    case "$seen_ver" in *"[$ver]"*) continue;; esac   # skip dup toolchains (e.g. g++→clang alias)
+    seen_ver="$seen_ver[$ver]"
+    IFS='|' read -ra FSETS <<< "$SWEEP_FLAGS"
+    for fs in "${FSETS[@]}"; do
+      if $cxx $fs champion/main.cpp -o /tmp/pi_sweep 2>/dev/null; then
+        /tmp/pi_sweep < input.txt > /tmp/out.txt 2>/dev/null
+        if [ "$(cat /tmp/out.txt)" = "$EXPECTED" ]; then
+          : > /tmp/pi_sweep_s
+          for _ in $(seq "$RUNS"); do { timeit /tmp/pi_sweep; echo; } >> /tmp/pi_sweep_s; done
+          read -r smin _ _ < <(stats < /tmp/pi_sweep_s)
+          printf "  %-10s %-34s best=%ss\n" "$cxx" "$fs" "$smin"
+          if fcmp "$smin" "<" "$sweep_best"; then sweep_best=$smin; sweep_combo="$cxx $fs"; fi
+        else
+          printf "  %-10s %-34s WRONG (skip)\n" "$cxx" "$fs"
+        fi
+      fi
+    done
+  done
+  if [ -n "$sweep_combo" ]; then
+    echo "  → submit under: $sweep_combo   (champion best ${sweep_best}s here)"
+  else
+    echo "  (no working compiler found for the sweep)"
+  fi
+  echo
+fi
 echo "== index.html (leaderboard view) =="
 python3 gen_index.py /tmp/pi_results.tsv index.html "$EXPECTED" || echo "(gen_index.py failed — non-fatal)"
 echo

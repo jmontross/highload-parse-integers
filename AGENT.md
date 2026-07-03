@@ -10,6 +10,13 @@ challenge.** You run every 2 hours. Make measurable progress each run, then comm
 - Output: the `uint64` sum as a decimal string + newline.
 - Judge limits: **30s, 512MB, 1 CPU core**, scored on wall-time.
 - Judge build: `g++ 10.5` (also clang available), flags editable, `-O3 -march=native`.
+  **You PICK the compiler per submission.** Leaderboard top ranks span g++ 10.5 /
+  13.3 / 14.2 AND clang++ 18 — no single winner, so don't guess: `run.sh` ends
+  with a **compiler sweep** that builds the champion under every available
+  compiler × flag set and prints `→ submit under: <cxx> <flags>`. Submit the
+  champion built that way. (`SWEEP=0` skips it; `SWEEP_CXX`/`SWEEP_FLAGS` override
+  the lists.) Compiler is a 2nd-order effect — the big gap to rank 18 is
+  algorithmic (AVX-512 block parse), not a compiler you're missing.
 - Your environment is **x86 Linux with AVX2/AVX-512** — use it; it matches the judge better than the owner's ARM Mac.
 
 ## The scoreboard target: crack RANK 18 🎯 — then keep climbing
