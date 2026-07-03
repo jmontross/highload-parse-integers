@@ -71,8 +71,13 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
    positions at once (~3 numbers/load), breaking the serial per-number scan chain;
    each number parsed with the v5 SWAR routine. Gated `#ifdef __AVX2__` with v5 as
    the `#else`, so it builds+runs on ARM as plain v5 (verified: sum ✓, 9/9 edge) and
-   uses AVX2 on the x86 box. **x86 routine: build + gate this next.** Then AVX-512
-   (64-byte, native k-mask via `_mm512_cmpeq_epi8_mask`) is the follow-up.
+   uses AVX2 on the x86 box. Block algorithm VALIDATED on ARM via `-DBLOCK_SCALAR_SIM`.
+2. **AVX-512 64-byte block parse** — WRITTEN as `variants/avx512_blockparse.cpp`.
+   Tiered: `__AVX512BW__`→64B native `_mm512_cmpeq_epi8_mask`, else `__AVX2__`→32B
+   `vpmovmskb`, else v5 — one file auto-picks the widest SIMD the judge CPU has
+   (and sidesteps AVX-512 downclock on CPUs without AVX512BW). Block algorithm
+   VALIDATED on ARM via `-DBLOCK_SCALAR_SIM` (BLK=64): sum ✓, 9/9 edge. Only the
+   intrinsics themselves are unexercised locally — the judge is their x86 test.
 2. AVX-512 `vpdpbusd` digit×weight reduction (one multiply-add per block).
 3. SWAR without per-number `memchr`: derive newline offsets from a SWAR/`movemask`
    compare so boundary-finding is vectorized too.
