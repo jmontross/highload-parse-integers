@@ -1,0 +1,7 @@
+input.txt
+gen
+bench_parsers
+/tmp/
+*.o
+*.out
+.expected_*
