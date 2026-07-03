@@ -1,15 +1,12 @@
-// HighLoad.fun — parse_integers  (CHAMPION v3: SWAR newline-find, memchr-free)
-// Sum 50,000,000 newline-separated uint32 values. Scored on wall-time.
-// Compiler: g++ 10.5.0   Flags: -O3 -march=native   Limits: 30s / 512MB / 1 core
-//
-// v2 called memchr() once PER NUMBER to find each newline — a function call +
-// byte scan on the critical path. v3 derives the newline offset with a SWAR
-// compare over a 16-byte window (covers any valid <=10-digit number plus its
-// newline), so boundary-finding is branch-light and fully inline. Same SWAR
-// digit parse as v2. Measured ~26% faster @50M on ARM (0.533s → 0.395s),
-// promoted through the significance gate (Δ ≫ noise band; 9/9 edge cases).
-// Fully portable (no intrinsics): builds on both the x86 judge and the ARM Mac.
-// Next: AVX2/AVX-512 block parse (gate behind #ifdef __AVX2__ per AGENT.md #4).
+// HighLoad.fun — parse_integers  (VARIANT: SWAR newline-find, memchr-free)
+// Portable (no intrinsics; builds on ARM + x86). Hypothesis #3 from SCOREBOARD:
+// the champion calls memchr() once PER NUMBER to find each newline — a function
+// call + byte scan on the critical path. Here we derive the newline offset with
+// a SWAR compare over a 16-byte window (covers any valid <=10-digit number plus
+// its newline), so boundary-finding is branch-light and inline. Same SWAR digit
+// parse as the champion. Whether this actually beats memchr is for the gate to
+// decide — on ARM it likely lands within noise (HOLD); the point is a correct,
+// buildable variant that exercises the loop end-to-end.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>

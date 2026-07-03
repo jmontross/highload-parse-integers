@@ -11,6 +11,12 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 (done) when it approaches this.
 
 ## Champion
+- **v3** — `mmap + SWAR newline-find + SWAR number parse` — drops the per-number
+  `memchr` call; derives each newline offset with a SWAR compare over a 16-byte
+  window (branch-light, inline). Portable (no intrinsics). **~0.40s @50M ARM
+  (~24% faster than v2, 0.533→0.405s)**, promoted through the significance gate
+  (Δ ≫ noise band; 9/9 edge cases). Still ~5–6× above the bandwidth floor → AVX2
+  is still the next big lever. Judge time: _not yet submitted_.
 - **v2** — `mmap + SWAR number parse` — parses a whole number in a short shift/add
   tree instead of a serial multiply per digit. Portable (no intrinsics), ~**0.565s**
   @50M ARM (~11% faster than v1). Still ~7× above the bandwidth floor → AVX2 next.
@@ -25,6 +31,7 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 | 2026-07-02 | branchless (cmov) | ~0.57s | ✓ | ✗ | no gain — latency-bound, not branch-bound |
 | 2026-07-02 | memchr boundaries | ~0.62s | ✓ | ✗ | marginal; inner parse still serial |
 | 2026-07-03 | v2 SWAR block parse (`swar_blockparse.cpp`) | ~0.565s @50M | ✓ (+9 edge) | ✓ champion | breaks the per-digit chain; portable, no intrinsics |
+| 2026-07-03 | v3 SWAR newline-find (`swar_nlfind.cpp`) | ~0.40s @50M | ✓ (+9 edge) | ✓ champion | memchr-free boundary find; PROMOTE via significance gate (Δ=0.14s ≫ ±0.01 band) |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
