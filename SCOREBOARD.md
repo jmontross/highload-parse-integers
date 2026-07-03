@@ -8,9 +8,24 @@ Champion metric: best-of-N wall-clock of `./prog < input.txt` on this Linux box.
 
 Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the ARM
 Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
-(done) when it approaches this.
+(done) when it approaches this. On x86 cloud the floor is noisy (0.2–0.5s); real
+floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
 
 ## Champion
+- **avx2_maddubs** — `AVX2 64b block + SSE PMADDUBSW pair-parse` — combines three
+  improvements over avx2_blockparse: (1) 64-byte dual-load mask (halves outer
+  iterations), (2) fastload parse_num (loads tail-8 digits from `p+len-8`, eliminating
+  the two variable-count shifts that bottleneck port 0), (3) SSE PMADDUBSW pair-parse
+  processes TWO numbers simultaneously: pack 2 × 8-byte digit tails into a 128-bit
+  register, then MADDUBS (levels 1+2) + MULLO + HADD (level 3) produces both 8-digit
+  values in ~10 cycles (vs 14 cycles × 2 = 28 scalar). For cnt==6, three independent
+  parse_pair calls overlap fully via OOO. **best 0.246s x86 = 4.9 ns/line (23% faster
+  than avx2_64b at 0.318s). Submit: `g++ -O3 -march=native`.**
+  Local x86: 0.246–0.256s, 3.7× off rank-18 bar (69 ms). Requires AVX2+SSSE3+SSE4.1
+  (all implied by __AVX2__). ARM falls back to scalar parse_num.
+- **avx2_64b** — `AVX2 64-byte dual-load + count-unroll` — superseded by avx2_maddubs.
+  Was champion at 0.318s x86 (10% over avx2_blockparse). Submitted via predecessor at
+  rank 119/307ms.
 - **v5** — `branchless high digits` — removes the one hostile branch (`h==2`,
   a 10-vs-9-digit coin-flip mispredicting ~47%) by computing the high 0–2 digits
   branchlessly from h∈{0,1,2}. Portable. **best ~0.264s @50M ARM (~28% faster
@@ -52,6 +67,13 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
 | 2026-07-03 | v4 swar_noreload (zero-reload hot path) | best ~0.368s @50M | ✓ (+9 edge) | ✓ champion | reconstruct low-8 chunk from w0/w1; ~2.6% win via min-of-N gate |
 | 2026-07-03 | v5 swar_branchless (branchless high digits) | best ~0.264s @50M | ✓ (+9 edge) | ✓ champion | kills the h==2 coin-flip mispredict — 28% win, biggest since v3 |
 | 2026-07-03 | swar_unroll2 (2 numbers/iter, dual accum) | best ~0.342s @50M | ✓ | ✗ dead | slower than v5 — serial boundary scans leave little to overlap; tail machinery + helper defeated -O3's own scheduling |
+| 2026-07-03 | avx2_blockparse (AVX2 32B movemask block) | 0.357s x86 | ✓ (+9 edge) | ✓ champion | SUBMITTED rank 119/900, 307ms — AVX2 block scan breaks serial newline-find chain |
+| 2026-07-03 | avx2_unroll (stride-32 + count-unroll) | 0.319s x86 | ✓ | ✗ dead | popcount-based unroll (cnt==2,3) eliminates while(m) mispredicts; tied with avx2_64b |
+| 2026-07-03 | avx2_64b (64B dual-load + cnt==5/6 unroll) | 0.318s x86 | ✓ (+9 edge) | ✓ champion | 2× wider scan window; stride-64; fast paths cnt==6,5; ~10% over avx2_blockparse |
+| 2026-07-03 | avx2_parse3 (explicit OOO parallel vars) | 0.317s x86 | ✓ | ✗ dead | tied with avx2_64b; explicit v0/v1/v2 before sum+= did not change measured IPC |
+| 2026-07-03 | avx2_cmov (fixed-shift + cmov in parse_num) | 0.423s x86 | ✓ | ✗ dead | 33% SLOWER — computing both 9d/10d chunks doubles port-0 shift ops; cmov adds latency |
+| 2026-07-03 | avx2_fastload (load p+len-8, no variable shift) | 0.290s x86 | ✓ | ✗ dead | eliminates variable shifts by loading last-8 digits directly; 8.8% win; superseded by maddubs |
+| 2026-07-03 | avx2_maddubs (PMADDUBSW pair-parse) | 0.246s x86 | ✓ (+9 edge) | ✓ champion | SIMD 2-at-a-time via SSE MADDUBS+MULLO+HADD; 23% over avx2_64b; submit: g++ -O3 -march=native |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -64,23 +86,28 @@ Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-b
   in a 32-byte window in one shot, then parse with boundaries already known) —
   which is essentially the AVX2/AVX-512 path. Portable single-thread looks
   latency-capped at ~0.26s on ARM (~2.9× the bandwidth floor).
+- **Fixed-shift + cmov in parse_num** (`avx2_cmov`) — computing BOTH 9-digit and
+  10-digit chunks and selecting with cmov costs MORE port-0 pressure than one variable
+  shift. 33% slower (0.42s vs 0.32s). Don't retry.
+- **MADV_HUGEPAGE on file-backed mmap** — THP only works on anonymous mappings;
+  MAP_PRIVATE file mmap stays on 4KB page-cache pages regardless. Dead end.
+- **avx2_fastload alone** (variable-shift elimination) — 8.8% win, but fully subsumed
+  by avx2_maddubs which includes fastload + SIMD pair-parse.
 
 ## Next hypotheses (highest expected payoff first)
-1. **AVX2 32-byte block parse** — `variants/avx2_blockparse.cpp`. One
-   `vpcmpeqb`+`vpmovmskb` per 32 bytes yields all newline positions at once
-   (~3 numbers/load), breaking the serial per-number scan chain; each number
-   parsed with the v5 SWAR routine. Gated `#ifdef __AVX2__` with v5 as `#else`.
-   **SUBMITTED & VALIDATED ON THE JUDGE (2026-07-03 18:00): Success, rank 119/900,
-   307 ms (306,675,659 ns), score 35,819 — up from v5's rank 167 / 392 ms / 46,107
-   (~22% faster).** Intrinsics + block algorithm proven on real x86.
-2. **AVX-512 64-byte block parse** — WRITTEN as `variants/avx512_blockparse.cpp`.
-   Tiered: `__AVX512BW__`→64B native `_mm512_cmpeq_epi8_mask`, else `__AVX2__`→32B
-   `vpmovmskb`, else v5 — one file auto-picks the widest SIMD the judge CPU has
-   (and sidesteps AVX-512 downclock on CPUs without AVX512BW). Block algorithm
-   VALIDATED on ARM via `-DBLOCK_SCALAR_SIM` (BLK=64): sum ✓, 9/9 edge. Only the
-   intrinsics themselves are unexercised locally — the judge is their x86 test.
-2. AVX-512 `vpdpbusd` digit×weight reduction (one multiply-add per block).
-3. SWAR without per-number `memchr`: derive newline offsets from a SWAR/`movemask`
-   compare so boundary-finding is vectorized too.
-4. mmap hugepages (`MADV_HUGEPAGE`) + `__builtin_prefetch` on top of the winner.
-5. Rust / Zig port of the winner.
+1. **AVX2 MADDUBS 4-at-a-time (256-bit)** — extend avx2_maddubs to process FOUR
+   numbers simultaneously using a 256-bit register (two 128-bit `parse_pair` results
+   packed into one `__m256i`). VPMADDUBSW on 256 bits processes 2 pairs at once,
+   halving SIMD instruction count vs current approach. Expected: ~0.18–0.20s.
+2. **VPDPBUSD (AVX-512 VNNI) digit×weight** — a single `vpdpbusd` sums `uint8 × int8`
+   products into int32 accumulators in one instruction. Could reduce the MADDUBS+MADD
+   two-level tree to one instruction per 4 digits. Requires checking for `__AVX512VNNI__`.
+3. **Rust port of avx2_maddubs** — `core::arch::x86_64::_mm_maddubs_epi16` etc.
+   Rust's optimizer sometimes schedules SIMD better than GCC for VMOVD/VPINSRQ paths.
+4. **Overlap newline-scan with parse from previous block** — schedule nl_mask64(p+64)
+   BEFORE parse_pair calls for current block so the AVX2 scan and SSE parse pipelines
+   interleave (both use different execution units). This is software pipelining / 2-block
+   interleave.
+5. **Submit avx2_maddubs to judge** — local 0.246s vs judge rank 18 bar 69ms. Expected
+   judge time: ~180–220ms (our x86 cloud is slower than the judge's hardware). Likely
+   rank ~50–70; then avx2_maddubs_4way could push to rank 18.
