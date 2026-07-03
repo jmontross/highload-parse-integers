@@ -7,15 +7,18 @@ Champion metric: median-of-N wall-clock of `./prog < input.txt` on this box.
 > reported time here. Local times are for relative ranking between runs.
 
 ## Champion
-- **v1 (seed)** — owner's baseline: FNV-1a hash → `std::unordered_set<uint64_t>`,
-  print set size. Correct on the generated input (matches exact count, no collision).
-  Counts distinct *hashes* — a 64-bit collision would undercount (see AGENT.md).
-  Judge time: _not yet submitted_.
+- **v2** — `open-addressing set of EXACT 128-bit keys` (linear probing, 2^24 slots).
+  A token ≤16 B with no NUL zero-pads to a unique 16-byte key → **exact, no
+  hash-collision risk**, and no node allocation. **~0.70s median @10M ARM
+  (3.8× faster than the seed).** Judge time: _not yet submitted_.
+- v1 (seed) — owner's baseline: FNV-1a → `std::unordered_set<uint64_t>`. ~2.65s ARM.
+  Superseded by v2 (also removes the tiny 64-bit collision risk).
 
 ## Log
 | Date | Variant | Local median | Correct? | Kept? | Notes |
 |---|---|---|---|---|---|
-| 2026-07-03 | v1 seed (FNV-1a + std::unordered_set) | _first run pending_ | ✓ (matches 5706971, +11 edge) | ✓ champion | owner's baseline; asserts active under -O3 |
+| 2026-07-03 | v1 seed (FNV-1a + std::unordered_set) | ~2.65s @10M | ✓ (matches 5706971, +11 edge) | ✗ | owner's baseline; asserts active under -O3, node-based set |
+| 2026-07-03 | v2 open_addr_u128 (exact 128-bit open-addressing) | ~0.70s @10M | ✓ (5706971, +11 edge) | ✓ champion | 3.8× faster; exact (no collision); ±0.04s jitter, Δ≫noise |
 
 ## Tried & dead (don't repeat without a new angle)
 _(none yet)_
