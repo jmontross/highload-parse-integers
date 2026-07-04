@@ -8,10 +8,22 @@ Champion metric: best-of-N wall-clock of `./prog < input.txt` on this Linux box.
 
 Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the ARM
 Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
-(done) when it approaches this. On x86 cloud the floor is noisy (0.2–0.5s); real
-floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
+(done) when it approaches this. On x86 cloud the floor is noisy (0.2–0.5s, mmap+page-cache
+can beat `cat` since it bypasses the read path); real floor is ~0.20s.
+Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 
 ## Champion
+- **avx2_parse_quad** — `AVX2 256-bit parse_quad + nohadd (single-shuffle) + cnt==4,5,6,7 paths`
+  — upgrades avx2_maddubs by processing FOUR numbers at a time via 256-bit AVX2 MADDUBS
+  instead of two 128-bit SSE pairs. For cnt==6 (dominant case): 1×parse_quad + 1×parse_pair
+  = 2 SIMD batches vs the previous 3×parse_pair = 3 batches, a 33% reduction in mullo/hadd
+  throughput pressure. Additional improvements: (1) len>=8 fix — changes fallback from len<=8
+  to len<8, enabling SIMD parse for 8-digit numbers; (2) single-shuffle+add replaces PHADDD,
+  using 1 port-5 shuffle vs 2 in avx512_cnt47's two-shuffle approach; (3) cnt==4/7 fast paths
+  avoid the serial while(m) loop. **best 0.197–0.200s x86 = 4.0 ns/line (≈17% faster than
+  avx2_maddubs at 0.237s). Submit: `clang++ -O3 -march=native`.**
+  Local x86: 0.192–0.200s (clang), 2.9× off rank-18 bar (69 ms). Requires AVX2+SSSE3+SSE4.1
+  (all implied by __AVX2__). ARM falls back to scalar parse_num.
 - **avx2_maddubs** — `AVX2 64b block + SSE PMADDUBSW pair-parse` — combines three
   improvements over avx2_blockparse: (1) 64-byte dual-load mask (halves outer
   iterations), (2) fastload parse_num (loads tail-8 digits from `p+len-8`, eliminating
@@ -20,8 +32,8 @@ floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
   register, then MADDUBS (levels 1+2) + MULLO + HADD (level 3) produces both 8-digit
   values in ~10 cycles (vs 14 cycles × 2 = 28 scalar). For cnt==6, three independent
   parse_pair calls overlap fully via OOO. **best 0.246s x86 = 4.9 ns/line (23% faster
-  than avx2_64b at 0.318s). Submit: `g++ -O3 -march=native`.**
-  Local x86: 0.246–0.256s, 3.7× off rank-18 bar (69 ms). Requires AVX2+SSSE3+SSE4.1
+  than avx2_64b at 0.318s). Superseded by avx2_parse_quad.**
+  Local x86: 0.237–0.256s, 3.4× off rank-18 bar (69 ms). Requires AVX2+SSSE3+SSE4.1
   (all implied by __AVX2__). ARM falls back to scalar parse_num.
 - **avx2_64b** — `AVX2 64-byte dual-load + count-unroll` — superseded by avx2_maddubs.
   Was champion at 0.318s x86 (10% over avx2_blockparse). Submitted via predecessor at
@@ -77,6 +89,8 @@ floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
 | 2026-07-04 | avx2_nohadd (PSHUFD+PADDD replaces PHADDD) | best 0.238s, med 0.250s x86 | ✓ (+9 edge) | ✗ HOLD | shuffle+add (2-cy) vs hadd (3-cy): best 3% faster but median within noise; HOLD — not both conditions met. Hadd likely not the bottleneck. |
 | 2026-07-04 | avx512_maddubs (AVX-512BW scan + nohadd) | best 0.247s, med 0.264s x86 | ✓ (+9 edge) | ✗ dead | AVX-512 frequency downclocking on this Xeon (Cascade Lake) adds ~10% overhead, outweighing the 5-instruction scan savings. DO NOT use on CPUs with AVX-512 frequency penalty. |
 | 2026-07-04 | avx512_cnt47 (AVX-512 scan + cnt==4/7 fast paths) | best 0.247s, med 0.252s x86 | ✓ (+9 edge) | ✗ HOLD | cnt==4/7 paths correct but not triggered frequently enough; within noise of champion. |
+| 2026-07-04 | avx2_nohadd47 (AVX2 + single-shuffle nohadd + cnt==4/7) | best 0.222s, med 0.232s x86 | ✓ (+9 edge) | ✗ superseded | Pure-AVX2 (no frequency penalty), nohadd halves port-5 pressure, cnt==4/7 paths; superseded by parse_quad same run. |
+| 2026-07-04 | avx2_parse_quad (256-bit parse_quad + nohadd + len>=8 + cnt==4-7) | best 0.197s, med 0.197s x86 | ✓ (+9 edge) | ✓ CHAMPION | SIMD 4-at-a-time via 256-bit AVX2; cnt==6 now 2 SIMD batches vs 3; len>=8 enables 8-digit SIMD; 17% win over avx2_maddubs. Submit: clang++ -O3 -march=native (0.192s local best). |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -107,27 +121,23 @@ floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
   where AVX-512 doesn't downscale frequency.
 - **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
 
-## Status: STOP-FLOOR (2026-07-04)
-Champion (avx2_maddubs) best=0.243s on local x86 vs bandwidth floor min=0.193s → 1.26× the floor.
-The run.sh STOP-FLOOR gate is triggered (champion < 2× floor). Algorithmic improvements are
-exhausted on this hardware. The remaining 26% gap is either compute-inherent overhead or
-floor measurement noise. **Submit the champion to the judge to see the real rank.**
-- Best submission: `clang++ -O3 -march=native` → 0.242s local best
-- Champion is bandwidth-near-bound; on the judge's faster hardware this should translate to
-  a much lower absolute time (potentially near rank 18 if judge bandwidth is ~3-4× ours).
+## Status: STOP-FLOOR (2026-07-04, updated)
+Champion (avx2_parse_quad) best=0.197–0.200s on local x86 vs bandwidth floor ~0.20s → ~1.0× floor.
+The x86 cloud floor is noisy (mmap+page-cache can beat `cat`); champion appears bandwidth-bound.
+Algorithmic improvements may be exhausted. **Submit the new champion to the judge.**
+- Best local: `clang++ -O3 -march=native` → 0.192s
+- Previous champion avx2_maddubs was ~0.237s local (3.4× rank-18 bar); avx2_parse_quad at ~0.197s
+  is ~2.9× the rank-18 bar. With judge bandwidth scaling, could land close to rank 18.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_maddubs to judge** — local 0.242s (clang). Expected judge time unknown
-   (depends on hardware). Previous submission was avx2_blockparse at 307ms/rank119. The
-   23% improvement since then should push significantly higher.
-2. **AVX2 MADDUBS 4-at-a-time (256-bit parse_quad)** — if we're still compute-bound on
-   faster hardware, processing FOUR numbers per 256-bit MADDUBS halves decode pressure.
-   Note: adds 3-cycle serial dependency (vinserti128); may or may not help.
-3. **VPDPBUSD (AVX-512 VNNI)** — VNNI is present on this CPU (avx512_vnni flag confirmed).
-   Could replace MADDUBSW+MADDWD two-level tree. BUT DPBUSD weights max out at int8 (127),
-   while digit place values need up to 10000000 — multi-stage DPBUSD needed. Complex.
-   Only worth attempting on judge hardware WITHOUT AVX-512 frequency penalty (Ice Lake Server).
-4. **Rust port of avx2_maddubs** — Rust's codegen may schedule SIMD loads better.
-5. **Reduce newline-scan overhead differently**: instead of AVX-512, try interleaving two
-   independent 32-byte scan + parse chains to keep both load ports busy (manual software
-   pipelining with 128-byte stride).
+1. **Submit avx2_parse_quad to judge** — local 0.192s (clang). Expected to be significantly
+   faster than avx2_maddubs (307ms/rank119 old submission). 17% local improvement → judge
+   may show proportional gain.
+2. **128-byte window + 3×parse_quad** — double the scan window to process ~12 numbers in
+   3 parse_quad calls; halves outer loop iterations and the ctz-chain overhead (~24 cy for 6
+   ctz ops is now ~2× the effective compute bottleneck).
+3. **VPDPBUSD (AVX-512 VNNI)** — VNNI present on this CPU; could replace MADDUBSW+MADDWD.
+   BUT: digit weights need up to 10000000 > int8 (127) max; multi-stage DPBUSD needed.
+   Complex; only worth on judge without AVX-512 frequency penalty (Ice Lake Server).
+4. **Rust port of avx2_parse_quad** — Rust's codegen may schedule SIMD loads better.
+5. **All-cnt paths (cnt==8,9,10)** — covering rare cases that fall to while(m); marginal gain.

@@ -1,29 +1,15 @@
-// HighLoad.fun — parse_integers  (VARIANT: avx2_parse_quad)
-// avx2_nohadd47 + 256-bit parse_quad: processes FOUR numbers simultaneously
-// using a 256-bit MADDUBS/MADD/MULLO pipeline instead of two 128-bit pairs.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_nohadd47)
+// avx2_maddubs + two improvements, NO AVX-512 (avoids Cascade Lake frequency penalty):
+//   1. PSHUFD+PADDD replaces PHADDD in parse_pair (halves port-5 pressure):
+//      3 independent pairs need 3 shuffles (port 5) + 3 adds (port 0/1/5)
+//      vs 6 shuffles (port 5) in the nohadd47 two-shuffle approach, or
+//      6 hadd-cycles (port 5) in the hadd approach.  Single-shuffle halves
+//      port-5 load: 3 cy vs 6 cy for the hadd/2-shuffle approaches.
+//   2. cnt==4 and cnt==7 fast paths (avoid the serial while(m) loop for
+//      ~15% of blocks that fall through in avx2_maddubs).
 //
-// MOTIVATION:
-//   avx2_maddubs processes numbers in pairs (2-at-a-time) via SSE 128-bit:
-//     cnt==6 → 3 × parse_pair = 3 × (mullo + hadd + …)
-//   parse_quad uses 256-bit AVX2 to process 4 numbers at a time:
-//     cnt==6 → 1 × parse_quad (4 nums) + 1 × parse_pair (2 nums) = 2 calls
-//     cnt==5 → 1 × parse_quad + 1 × parse_num = 2 calls
-//     cnt==7 → 1 × parse_quad + 1 × parse_pair + 1 × parse_num = 3 calls
-//     cnt==4 → 1 × parse_quad = 1 call
-//
-//   At the hot cnt==6 case: 3 mullo_epi32 → 2 mullo; 3 hadd → 2 (1×256b+1×128b).
-//   Port-5 pressure from shuffle+add:
-//     Before: 3 × 1 shuffle = 3 cy (port 5)
-//     After:  1 × 1 shuffle (256b) + 1 × 1 shuffle (128b) = 2 cy (port 5)
-//   ~33% reduction in bottleneck ops.
-//
-// Handles len==8 (8-digit numbers) in the SIMD fast path:
-//   parse_pair fallback changed from len<=8 → len<8.
-//   parse_quad also falls back only for len<8.
-//   For len==8: load from p+0 is valid; high digit = 0 (branchless).
-//
-// No AVX-512 used — consistent timing, no Cascade Lake frequency penalty.
-// Portability: AVX2+SSSE3+SSE4.1 (all implied by __AVX2__); ARM falls back.
+// Portability: AVX2+SSSE3+SSE4.1 (all implied by __AVX2__); ARM falls back
+// to scalar.  No AVX-512 used — consistent timing on all x86 targets.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -79,13 +65,11 @@ static inline uint64_t scalar_tail(const unsigned char* p, const unsigned char* 
 
 #if defined(__AVX2__) && !defined(BLOCK_SCALAR_SIM)
 
-// parse_pair: updated to handle len>=8 (changed fallback from <=8 to <8).
-// For len==8: load from p+0 is valid; a_is9=0 and a_is10=0 → a_high=0 → correct.
 static inline uint64_t parse_pair(
     const unsigned char* __restrict__ p_a, size_t len_a,
     const unsigned char* __restrict__ p_b, size_t len_b)
 {
-    if (__builtin_expect(len_a < 8 || len_b < 8, 0))
+    if (__builtin_expect(len_a <= 8 || len_b <= 8, 0))
         return parse_num(p_a, len_a) + parse_num(p_b, len_b);
 
     __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
@@ -100,98 +84,24 @@ static inline uint64_t parse_pair(
     const __m128i W3 = _mm_set_epi32(1, 10000, 1, 10000);
     __m128i l3 = _mm_mullo_epi32(l2, W3);
 
-    // nohadd: single shuffle (0xB1 swaps adjacent pairs) + add
+    // Single-shuffle + add: uses 1 port-5 op (vs 2 for avx512_cnt47's 2-shuffle,
+    // vs 1 for hadd but hadd is port-5-only throughput-2).
     // l3 = [a_hi4*10000, a_lo4, b_hi4*10000, b_lo4]
-    // l3s = [a_lo4, a_hi4*10000, b_lo4, b_hi4*10000]
-    // l4  = [a_8d,  a_8d,        b_8d,  b_8d]
+    // After 0xB1 swap-adjacent: [a_lo4, a_hi4*10000, b_lo4, b_hi4*10000]
+    // Sum: [a_8d, a_8d, b_8d, b_8d]  (positions 0,1 are a, positions 2,3 are b)
     __m128i l3s = _mm_shuffle_epi32(l3, 0xB1);
     __m128i l4  = _mm_add_epi32(l3, l3s);
     uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(l4);
     uint32_t b8 = (uint32_t)_mm_extract_epi32(l4, 2);
 
-    // Branchless high digits: works for len=8 (high=0), 9, 10
     uint64_t a0 = (uint64_t)(unsigned char)p_a[0] - '0';
     uint64_t b0 = (uint64_t)(unsigned char)p_b[0] - '0';
-    uint64_t a_is9=(len_a==9), a_is10=(len_a==10);
-    uint64_t b_is9=(len_b==9), b_is10=(len_b==10);
+    uint64_t a_is10 = (len_a == 10), b_is10 = (len_b == 10);
     uint64_t a1 = (uint64_t)(unsigned char)p_a[1] - '0';
     uint64_t b1 = (uint64_t)(unsigned char)p_b[1] - '0';
-    uint64_t a_high = a0*a_is9 + (a0*10+a1)*a_is10;
-    uint64_t b_high = b0*b_is9 + (b0*10+b1)*b_is10;
+    uint64_t a_high = a0 * (1 + 9 * a_is10) + a_is10 * a1;
+    uint64_t b_high = b0 * (1 + 9 * b_is10) + b_is10 * b1;
     return (a_high * 100000000ULL + a8) + (b_high * 100000000ULL + b8);
-}
-
-// parse_quad: 4 numbers at once via 256-bit AVX2.
-// Fast path for all 4 numbers having len >= 8.
-// Layout: lo128=[a,b], hi128=[c,d] packed into ymm.
-static inline uint64_t parse_quad(
-    const unsigned char* __restrict__ p_a, size_t len_a,
-    const unsigned char* __restrict__ p_b, size_t len_b,
-    const unsigned char* __restrict__ p_c, size_t len_c,
-    const unsigned char* __restrict__ p_d, size_t len_d)
-{
-    if (__builtin_expect(len_a < 8 || len_b < 8 || len_c < 8 || len_d < 8, 0))
-        return parse_pair(p_a,len_a,p_b,len_b) + parse_pair(p_c,len_c,p_d,len_d);
-
-    // Load last-8-byte tails of each number; pack [a,b] in lo128, [c,d] in hi128.
-    __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
-    __m128i cb = _mm_loadl_epi64((__m128i const*)(p_b + len_b - 8));
-    __m128i lo128 = _mm_unpacklo_epi64(ca, cb);
-    __m128i cc = _mm_loadl_epi64((__m128i const*)(p_c + len_c - 8));
-    __m128i cd = _mm_loadl_epi64((__m128i const*)(p_d + len_d - 8));
-    __m128i hi128 = _mm_unpacklo_epi64(cc, cd);
-    __m256i chunks = _mm256_set_m128i(hi128, lo128);
-
-    chunks = _mm256_sub_epi8(chunks, _mm256_set1_epi8('0'));
-
-    // 256-bit MADDUBS/MADD/MULLO tree — operates independently within each
-    // 128-bit lane (a,b in lane 0; c,d in lane 1).
-    const __m256i W1 = _mm256_broadcastsi128_si256(
-        _mm_set_epi8(1,10,1,10,1,10,1,10, 1,10,1,10,1,10,1,10));
-    __m256i l1 = _mm256_maddubs_epi16(chunks, W1);
-
-    const __m256i W2 = _mm256_broadcastsi128_si256(
-        _mm_set_epi16(1,100,1,100, 1,100,1,100));
-    __m256i l2 = _mm256_madd_epi16(l1, W2);
-
-    // l2 = [a_hi4, a_lo4, b_hi4, b_lo4, c_hi4, c_lo4, d_hi4, d_lo4]
-    const __m256i W3 = _mm256_set_epi32(1,10000,1,10000, 1,10000,1,10000);
-    __m256i l3 = _mm256_mullo_epi32(l2, W3);
-    // l3 = [a_hi4*10000, a_lo4, b_hi4*10000, b_lo4, c_hi4*10000, c_lo4, d_hi4*10000, d_lo4]
-
-    // nohadd: 256-bit single-shuffle (0xB1 within each lane) + add
-    // After shuffle: [a_lo4, a_hi4*10000, b_lo4, b_hi4*10000, ...]
-    // After add:     [a_8d,  a_8d,        b_8d,  b_8d,        c_8d, c_8d, d_8d, d_8d]
-    __m256i l3s = _mm256_shuffle_epi32(l3, 0xB1);
-    __m256i l4  = _mm256_add_epi32(l3, l3s);
-
-    __m128i lo4 = _mm256_castsi256_si128(l4);
-    __m128i hi4 = _mm256_extracti128_si256(l4, 1);
-    uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(lo4);
-    uint32_t b8 = (uint32_t)_mm_extract_epi32(lo4, 2);
-    uint32_t c8 = (uint32_t)_mm_cvtsi128_si32(hi4);
-    uint32_t d8 = (uint32_t)_mm_extract_epi32(hi4, 2);
-
-    // Branchless high digits for len=8 (high=0), 9, 10
-    uint64_t a0=(uint64_t)(unsigned char)p_a[0]-'0';
-    uint64_t b0=(uint64_t)(unsigned char)p_b[0]-'0';
-    uint64_t c0=(uint64_t)(unsigned char)p_c[0]-'0';
-    uint64_t d0=(uint64_t)(unsigned char)p_d[0]-'0';
-    uint64_t a_is9=(len_a==9), a_is10=(len_a==10);
-    uint64_t b_is9=(len_b==9), b_is10=(len_b==10);
-    uint64_t c_is9=(len_c==9), c_is10=(len_c==10);
-    uint64_t d_is9=(len_d==9), d_is10=(len_d==10);
-    uint64_t a1=(uint64_t)(unsigned char)p_a[1]-'0';
-    uint64_t b1=(uint64_t)(unsigned char)p_b[1]-'0';
-    uint64_t c1=(uint64_t)(unsigned char)p_c[1]-'0';
-    uint64_t d1=(uint64_t)(unsigned char)p_d[1]-'0';
-    uint64_t ah = a0*a_is9 + (a0*10+a1)*a_is10;
-    uint64_t bh = b0*b_is9 + (b0*10+b1)*b_is10;
-    uint64_t ch = c0*c_is9 + (c0*10+c1)*c_is10;
-    uint64_t dh = d0*d_is9 + (d0*10+d1)*d_is10;
-
-    return (ah*100000000ULL+a8) + (bh*100000000ULL+b8)
-         + (ch*100000000ULL+c8) + (dh*100000000ULL+d8);
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -216,7 +126,6 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         int cnt = __builtin_popcountll(m);
 
         if (__builtin_expect(cnt == 6, 1)) {
-            // 6 numbers: 1 quad (n0-n3) + 1 pair (n4-n5)
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -227,16 +136,14 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             n5=__builtin_ctzll(mm);
             const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                                 *nl3=p+n3,*nl4=p+n4,*nl5=p+n5;
-            const unsigned char *s0=base, *s1=nl0+1, *s2=nl1+1, *s3=nl2+1,
-                                *s4=nl3+1, *s5=nl4+1;
-            size_t l0=(size_t)(nl0-base),  l1=(size_t)(nl1-nl0-1);
-            size_t l2=(size_t)(nl2-nl1-1), l3=(size_t)(nl3-nl2-1);
-            size_t l4=(size_t)(nl4-nl3-1), l5=(size_t)(nl5-nl4-1);
-            sum += parse_quad(s0,l0, s1,l1, s2,l2, s3,l3)
-                 + parse_pair(s4,l4, s5,l5);
+            const unsigned char *s0=base,*s1=nl0+1,*s2=nl1+1,
+                                *s3=nl2+1,*s4=nl3+1,*s5=nl4+1;
+            size_t l0=(size_t)(nl0-base), l1=(size_t)(nl1-nl0-1);
+            size_t l2=(size_t)(nl2-nl1-1),l3=(size_t)(nl3-nl2-1);
+            size_t l4=(size_t)(nl4-nl3-1),l5=(size_t)(nl5-nl4-1);
+            sum += parse_pair(s0,l0,s1,l1) + parse_pair(s2,l2,s3,l3) + parse_pair(s4,l4,s5,l5);
             base = nl5+1;
         } else if (__builtin_expect(cnt == 5, 1)) {
-            // 5 numbers: 1 quad (n0-n3) + 1 scalar (n4)
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -246,14 +153,14 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             n4=__builtin_ctzll(mm);
             const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                                 *nl3=p+n3,*nl4=p+n4;
-            const unsigned char *s0=base, *s1=nl0+1, *s2=nl1+1, *s3=nl2+1, *s4=nl3+1;
-            size_t l0=(size_t)(nl0-base),  l1=(size_t)(nl1-nl0-1);
-            size_t l2=(size_t)(nl2-nl1-1), l3=(size_t)(nl3-nl2-1);
+            const unsigned char *s0=base,*s1=nl0+1,*s2=nl1+1,
+                                *s3=nl2+1,*s4=nl3+1;
+            size_t l0=(size_t)(nl0-base), l1=(size_t)(nl1-nl0-1);
+            size_t l2=(size_t)(nl2-nl1-1),l3=(size_t)(nl3-nl2-1);
             size_t l4=(size_t)(nl4-nl3-1);
-            sum += parse_quad(s0,l0, s1,l1, s2,l2, s3,l3) + parse_num(s4,l4);
+            sum += parse_pair(s0,l0,s1,l1) + parse_pair(s2,l2,s3,l3) + parse_num(s4,l4);
             base = nl4+1;
         } else if (__builtin_expect(cnt == 7, 0)) {
-            // 7 numbers: 1 quad (n0-n3) + 1 pair (n4-n5) + 1 scalar (n6)
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -263,19 +170,18 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             n4=__builtin_ctzll(mm); mm&=mm-1;
             n5=__builtin_ctzll(mm); mm&=mm-1;
             n6=__builtin_ctzll(mm);
-            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
-                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6;
-            const unsigned char *s0=base, *s1=nl0+1, *s2=nl1+1, *s3=nl2+1,
-                                *s4=nl3+1, *s5=nl4+1, *s6=nl5+1;
-            size_t l0=(size_t)(nl0-base),  l1=(size_t)(nl1-nl0-1);
-            size_t l2=(size_t)(nl2-nl1-1), l3=(size_t)(nl3-nl2-1);
-            size_t l4=(size_t)(nl4-nl3-1), l5=(size_t)(nl5-nl4-1);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
+                                *nl3=p+n3,*nl4=p+n4,*nl5=p+n5,*nl6=p+n6;
+            const unsigned char *s0=base,*s1=nl0+1,*s2=nl1+1,
+                                *s3=nl2+1,*s4=nl3+1,*s5=nl4+1,*s6=nl5+1;
+            size_t l0=(size_t)(nl0-base), l1=(size_t)(nl1-nl0-1);
+            size_t l2=(size_t)(nl2-nl1-1),l3=(size_t)(nl3-nl2-1);
+            size_t l4=(size_t)(nl4-nl3-1),l5=(size_t)(nl5-nl4-1);
             size_t l6=(size_t)(nl6-nl5-1);
-            sum += parse_quad(s0,l0, s1,l1, s2,l2, s3,l3)
-                 + parse_pair(s4,l4, s5,l5) + parse_num(s6,l6);
+            sum += parse_pair(s0,l0,s1,l1) + parse_pair(s2,l2,s3,l3)
+                 + parse_pair(s4,l4,s5,l5) + parse_num(s6,l6);
             base = nl6+1;
         } else if (__builtin_expect(cnt == 4, 0)) {
-            // 4 numbers: 1 quad
             uint64_t mm = m;
             unsigned n0,n1,n2,n3;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -283,10 +189,10 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             n2=__builtin_ctzll(mm); mm&=mm-1;
             n3=__builtin_ctzll(mm);
             const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3;
-            const unsigned char *s0=base, *s1=nl0+1, *s2=nl1+1, *s3=nl2+1;
-            size_t l0=(size_t)(nl0-base),  l1=(size_t)(nl1-nl0-1);
-            size_t l2=(size_t)(nl2-nl1-1), l3=(size_t)(nl3-nl2-1);
-            sum += parse_quad(s0,l0, s1,l1, s2,l2, s3,l3);
+            const unsigned char *s0=base,*s1=nl0+1,*s2=nl1+1,*s3=nl2+1;
+            size_t l0=(size_t)(nl0-base), l1=(size_t)(nl1-nl0-1);
+            size_t l2=(size_t)(nl2-nl1-1),l3=(size_t)(nl3-nl2-1);
+            sum += parse_pair(s0,l0,s1,l1) + parse_pair(s2,l2,s3,l3);
             base = nl3+1;
         } else {
             while (m) {
