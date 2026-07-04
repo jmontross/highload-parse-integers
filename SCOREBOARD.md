@@ -73,7 +73,10 @@ floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
 | 2026-07-03 | avx2_parse3 (explicit OOO parallel vars) | 0.317s x86 | ✓ | ✗ dead | tied with avx2_64b; explicit v0/v1/v2 before sum+= did not change measured IPC |
 | 2026-07-03 | avx2_cmov (fixed-shift + cmov in parse_num) | 0.423s x86 | ✓ | ✗ dead | 33% SLOWER — computing both 9d/10d chunks doubles port-0 shift ops; cmov adds latency |
 | 2026-07-03 | avx2_fastload (load p+len-8, no variable shift) | 0.290s x86 | ✓ | ✗ dead | eliminates variable shifts by loading last-8 digits directly; 8.8% win; superseded by maddubs |
-| 2026-07-03 | avx2_maddubs (PMADDUBSW pair-parse) | 0.246s x86 | ✓ (+9 edge) | ✓ champion | SIMD 2-at-a-time via SSE MADDUBS+MULLO+HADD; 23% over avx2_64b; submit: g++ -O3 -march=native |
+| 2026-07-03 | avx2_maddubs (PMADDUBSW pair-parse) | 0.246s x86 | ✓ (+9 edge) | ✓ champion | SIMD 2-at-a-time via SSE MADDUBS+MULLO+HADD; 23% over avx2_64b; submit: clang++ -O3 -march=native |
+| 2026-07-04 | avx2_nohadd (PSHUFD+PADDD replaces PHADDD) | best 0.238s, med 0.250s x86 | ✓ (+9 edge) | ✗ HOLD | shuffle+add (2-cy) vs hadd (3-cy): best 3% faster but median within noise; HOLD — not both conditions met. Hadd likely not the bottleneck. |
+| 2026-07-04 | avx512_maddubs (AVX-512BW scan + nohadd) | best 0.247s, med 0.264s x86 | ✓ (+9 edge) | ✗ dead | AVX-512 frequency downclocking on this Xeon (Cascade Lake) adds ~10% overhead, outweighing the 5-instruction scan savings. DO NOT use on CPUs with AVX-512 frequency penalty. |
+| 2026-07-04 | avx512_cnt47 (AVX-512 scan + cnt==4/7 fast paths) | best 0.247s, med 0.252s x86 | ✓ (+9 edge) | ✗ HOLD | cnt==4/7 paths correct but not triggered frequently enough; within noise of champion. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -93,21 +96,38 @@ floor is ~0.20s. Champion at 0.246s is ~1.2× the real floor.
   MAP_PRIVATE file mmap stays on 4KB page-cache pages regardless. Dead end.
 - **avx2_fastload alone** (variable-shift elimination) — 8.8% win, but fully subsumed
   by avx2_maddubs which includes fastload + SIMD pair-parse.
+- **PHADDD→PSHUFD+PADDD replacement** (`avx2_nohadd`) — HOLD, not a measurable win.
+  HADD is 3-cycle lat/2-cycle tput on Skylake; shuffle+add is 2-cycle lat/1-cycle tput.
+  But the 3 independent parse_pairs already saturate OOO; hadd is not the bottleneck.
+  Even if hadd is slightly better, the difference is within noise at our current throughput.
+- **AVX-512 scan** (`avx512_maddubs`, `avx512_cnt47`) — DEAD on Skylake-SP/Cascade Lake.
+  `_mm512_cmpeq_epi8_mask` triggers AVX-512 heavy-use frequency downclocking on this Xeon
+  (2.80 GHz → ~2.5 GHz), losing ~10% clock speed. The 5-instruction scan savings (~5%)
+  cannot recoup the 10% frequency penalty. Do NOT retry unless on Ice Lake Server or Zen4
+  where AVX-512 doesn't downscale frequency.
+- **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
 
-## Next hypotheses (highest expected payoff first)
-1. **AVX2 MADDUBS 4-at-a-time (256-bit)** — extend avx2_maddubs to process FOUR
-   numbers simultaneously using a 256-bit register (two 128-bit `parse_pair` results
-   packed into one `__m256i`). VPMADDUBSW on 256 bits processes 2 pairs at once,
-   halving SIMD instruction count vs current approach. Expected: ~0.18–0.20s.
-2. **VPDPBUSD (AVX-512 VNNI) digit×weight** — a single `vpdpbusd` sums `uint8 × int8`
-   products into int32 accumulators in one instruction. Could reduce the MADDUBS+MADD
-   two-level tree to one instruction per 4 digits. Requires checking for `__AVX512VNNI__`.
-3. **Rust port of avx2_maddubs** — `core::arch::x86_64::_mm_maddubs_epi16` etc.
-   Rust's optimizer sometimes schedules SIMD better than GCC for VMOVD/VPINSRQ paths.
-4. **Overlap newline-scan with parse from previous block** — schedule nl_mask64(p+64)
-   BEFORE parse_pair calls for current block so the AVX2 scan and SSE parse pipelines
-   interleave (both use different execution units). This is software pipelining / 2-block
-   interleave.
-5. **Submit avx2_maddubs to judge** — local 0.246s vs judge rank 18 bar 69ms. Expected
-   judge time: ~180–220ms (our x86 cloud is slower than the judge's hardware). Likely
-   rank ~50–70; then avx2_maddubs_4way could push to rank 18.
+## Status: STOP-FLOOR (2026-07-04)
+Champion (avx2_maddubs) best=0.243s on local x86 vs bandwidth floor min=0.193s → 1.26× the floor.
+The run.sh STOP-FLOOR gate is triggered (champion < 2× floor). Algorithmic improvements are
+exhausted on this hardware. The remaining 26% gap is either compute-inherent overhead or
+floor measurement noise. **Submit the champion to the judge to see the real rank.**
+- Best submission: `clang++ -O3 -march=native` → 0.242s local best
+- Champion is bandwidth-near-bound; on the judge's faster hardware this should translate to
+  a much lower absolute time (potentially near rank 18 if judge bandwidth is ~3-4× ours).
+
+## Next hypotheses (if STOP-FLOOR lifts or new hardware)
+1. **Submit avx2_maddubs to judge** — local 0.242s (clang). Expected judge time unknown
+   (depends on hardware). Previous submission was avx2_blockparse at 307ms/rank119. The
+   23% improvement since then should push significantly higher.
+2. **AVX2 MADDUBS 4-at-a-time (256-bit parse_quad)** — if we're still compute-bound on
+   faster hardware, processing FOUR numbers per 256-bit MADDUBS halves decode pressure.
+   Note: adds 3-cycle serial dependency (vinserti128); may or may not help.
+3. **VPDPBUSD (AVX-512 VNNI)** — VNNI is present on this CPU (avx512_vnni flag confirmed).
+   Could replace MADDUBSW+MADDWD two-level tree. BUT DPBUSD weights max out at int8 (127),
+   while digit place values need up to 10000000 — multi-stage DPBUSD needed. Complex.
+   Only worth attempting on judge hardware WITHOUT AVX-512 frequency penalty (Ice Lake Server).
+4. **Rust port of avx2_maddubs** — Rust's codegen may schedule SIMD loads better.
+5. **Reduce newline-scan overhead differently**: instead of AVX-512, try interleaving two
+   independent 32-byte scan + parse chains to keep both load ports busy (manual software
+   pipelining with 128-byte stride).
