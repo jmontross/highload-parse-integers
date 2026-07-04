@@ -11,9 +11,16 @@ and **[SCOREBOARD.md](SCOREBOARD.md)** for standings.
 
 ## 📌 PICK UP HERE (paused 2026-07-03)
 
-**Current best on the judge: rank 119 / 900** — AVX2 block parse, 307 ms, score 35,819,
-`g++10.5.0 -O3 -march=native`. Your rank can only go *up*: highload.fun keeps your **best**
-submission, so a slower one never displaces it.
+**Current best on the judge: rank 77 / 900** — `avx2_maddubs` (SSE PMADDUBSW pair-parse),
+199 ms, score 22,889, `g++10.5.0 -O3 -march=native` (submitted 2026-07-04). Progression:
+#460 (749ms) → #167 (392ms, v5 scalar) → #119 (307ms, AVX2 block) → **#77 (199ms, maddubs)**.
+Your rank can only go *up*: highload.fun keeps your **best** submission, so a slower one
+never displaces it.
+
+**Next levers to climb past #77** (the cloud routine is hunting these; re-run `run.sh` on
+x86 to measure before submitting): AVX-512 **VNNI `vpdpbusd`** digit×weight reduction (the
+top-tier technique), wider multi-number-per-vector parsing, and a **compiler swap** — many
+neighbors at this tier use clang++18/20 rather than g++10.5.
 
 ### The one open decision
 `variants/avx512_blockparse.cpp` (AVX-512, tiered AVX512BW→AVX2→scalar) is written and its
