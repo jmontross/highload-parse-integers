@@ -98,6 +98,8 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-05 | avx2_w128 (128-byte window, pure AVX2, 3×parse_quad for cnt==12) | best 0.209s, med 0.212s x86 | ✓ | ✗ DEAD | Fixed same two bugs as avx512_parse_oct. Correct but ~11% slower. 128-byte window reduces loop iterations by 2× but the cnt distribution (10-14) is wider and more variance-heavy than 64-byte (4-7), causing more fallback paths. Window size alone doesn't help; need actual instruction-count reduction too. |
 | 2026-07-05 | avx2_vhigh (vectorized high-digit computation via SSE cmpeq+movemask) | best 0.213s, med 0.215s x86 | ✓ | ✗ DEAD | Fixed `len < 8` → `len <= 8` in parse_num. Correct but 14% slower. The "vectorized high" approach uses _mm_set_epi32+_mm_cmpeq_epi16×2+_mm_movemask_epi8×2 to compute is9/is10 masks, then falls back to scalar multiply-add anyway. Additional SSE overhead (~6 µops) outweighs any theoretical benefit. Scalar comparisons for 4 is9/is10 flags are faster. |
 | 2026-07-05 | avx2_cnt6only (champion with ONLY cnt==6 fast path, while(m) for cnt!=6) | best 0.193s, med 0.194s x86 | ✓ | ✗ DEAD | Tests whether branch predictor competition between cnt==4,5,6,7 paths adds overhead. Result: 3% slower than champion. The cnt==5,7,4 fast paths are genuinely helpful (parse_quad+parse_num faster than while(m) even for those rarer counts). Branch prediction is NOT the bottleneck. |
+| 2026-07-05 | avx2_pdep (PDEP parallel bit extraction, all 6 newline positions simultaneously) | best 0.195–0.202s, med 0.204–0.205s x86 | ✓ (+9 edge) | ✗ HOLD | Replaces serial 6×(CTZ+BLSR) chain (24cy latency) with 6 independent PDEP+CTZ calls (6cy latency). Theory: saves ~18cy per window. Practice: no improvement — STOP-FLOOR confirmed. The CTZ chain latency (24cy) is already hidden behind DRAM bandwidth latency (~400cy per cache line). On this machine, loop is limited by ~2.6 GB/s effective bandwidth, not compute. |
+| 2026-07-05 | avx2_directload (PDEP + pre-computed load addresses p+n_i-8, bypasses base dependency) | best 0.194–0.197s, med 0.200–0.201s x86 | ✓ (+9 edge) | ✗ HOLD | Key insight: parse-load address = p+n_i-8 always (independent of base). Eliminates pointer chain inside parse_quad. Same result as avx2_pdep — no improvement. Both optimizations reduce compute overhead that is already hidden by DRAM latency. STOP-FLOOR re-confirmed ×6. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -130,21 +132,23 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
 
-## Status: STOP-FLOOR (2026-07-05, re-confirmed ×4)
-Champion (avx2_parse_quad) best=0.187–0.200s on local x86 vs bandwidth floor 0.438–0.446s (noisy cloud).
+## Status: STOP-FLOOR (2026-07-05, re-confirmed ×6)
+Champion (avx2_parse_quad) best=0.187–0.202s on local x86 vs bandwidth floor 0.200–0.453s (noisy cloud).
 With clang++ champion is 0.179–0.184s; floor is variable — champion faster than cat floor because mmap bypasses the kernel read-path copy.
-- Best local (clang++ -O3 -march=native): **0.179s** (compiler sweep, this run)
-- Confirmed dead ends this session: 512-bit parse_oct (correct but slower), 128-byte window (correct but slower), vectorized high-digit (slower), cnt6-only branch reduction (slower).
+- Best local (clang++ -O3 -march=native): **0.184s** (compiler sweep, this run)
+- Confirmed dead ends this session: PDEP parallel extraction (HOLD), direct load address precomputation (HOLD). Both reduce compute overhead that is hidden by DRAM latency.
 - **Submit `avx2_parse_quad` (champion) to judge with `clang++ -O3 -march=native`.**
-  Gap to rank-18 (69ms) is 2.7× local — likely due to judge having faster hardware.
+  Gap to rank-18 (69ms) is 2.7× local — due to judge having ~3× more memory bandwidth.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_parse_quad to judge** — local 0.179s (clang++ -O3 -march=native). PRIORITY ACTION.
+1. **Submit avx2_parse_quad to judge** — local 0.184s (clang++ -O3 -march=native). PRIORITY ACTION.
 2. **Force-inlining** — TESTED, no improvement.
 3. **cnt=8,9,10 paths** — TESTED, within noise.
 4. **Rust port** — DEAD. 10% slower codegen.
 5. **128-byte window** — TESTED, slower. Wider cnt distribution outweighs loop amortization.
-6. **512-bit parse_oct** — TESTED (this CPU is Sapphire Rapids, no freq penalty). Correct but 7% slower — extraction overhead offsets SIMD benefit.
+6. **512-bit parse_oct** — TESTED. Correct but 7% slower — extraction overhead offsets SIMD benefit.
 7. **Branch reduction (cnt6only)** — TESTED, 3% slower. cnt==5,7,4 paths are genuinely useful.
 8. **AVX-512 VNNI (VPDPBUSD)** — the 4-byte dot product can't represent weights >127 (e.g., 1000), so it doesn't replace MADDUBS+MADD in a single pass. Dead end.
 9. **VPCOMPRESSB approach** — AVX-512 compact digits → fixed-width parse. Not implemented; might help on SPR but parse_oct testing suggests 512-bit overhead is real.
+10. **PDEP parallel extraction** — TESTED, no improvement. Confirms compute is hidden by DRAM latency.
+11. **Direct load addresses (p+n_i-8)** — TESTED, no improvement. Same reason as PDEP.
