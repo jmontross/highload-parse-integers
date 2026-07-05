@@ -1,17 +1,15 @@
-// HighLoad.fun — parse_integers  (VARIANT: avx2_triple_window)
-// Process 3 consecutive 64-byte windows per outer-loop iteration.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_quad_window)
+// Process 4 consecutive 64-byte windows per outer-loop iteration.
 //
-// Extends avx2_dual_window: load 3 independent nl_mask64 values before
-// processing any of them, giving OOO more ILP. The 3 loads are:
-//   m0 = nl_mask64(p)       -- no dependency
-//   m1 = nl_mask64(p + 64)  -- no dependency on m0
-//   m2 = nl_mask64(p + 128) -- no dependency on m0 or m1
-// All 3 loads can overlap in the OOO window before any dispatch begins.
-// Theoretical extra savings: ~4-6 more cycles/iteration vs dual-window,
-// from hiding m2's load latency behind m0+m1's processing.
+// Extends avx2_triple_window: load 4 independent nl_mask64 values before
+// processing any of them. The 4 loads overlap in OOO. This tests whether
+// OOO look-ahead saturates at 3 or extends to 4 windows.
 //
-// Cost: same base-pointer threading serial dependency as dual-window;
-// process_window(p0) must complete before process_window(p1) to update base.
+// If OOO engine saturates at 3 windows (confirmed HOLD for triple vs dual
+// in some runs), this should show no improvement. If not yet saturated,
+// there is measurable gain.
+//
+// safe_end offset: 4×64 + 32 safety = 288 bytes before end.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -147,7 +145,6 @@ static inline uint64_t parse_quad(
           +(ch*100000000ULL+c8)+(dh*100000000ULL+d8);
 }
 
-// Process one 64-byte window: updates base, returns partial sum
 static inline uint64_t process_window(
     const unsigned char* __restrict__ p,
     const unsigned char* __restrict__ & base,
@@ -299,22 +296,23 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 320) return scalar_tail(p, end, sum);
+    if (size < 384) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 224; // 3 windows (192) + safety (32)
+    const unsigned char* safe_end = end - 288; // 4 windows (256) + safety (32)
 
-    // Triple-window loop: load 3 masks before processing any window.
-    // The 3 nl_mask64 loads are mutually independent and overlap in OOO.
+    // Quad-window loop: load 4 masks before processing any window.
     while (p < safe_end) {
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         uint64_t m2 = nl_mask64(p + 128);
+        uint64_t m3 = nl_mask64(p + 192);
         sum += process_window(p,       base, m0);
         sum += process_window(p + 64,  base, m1);
         sum += process_window(p + 128, base, m2);
-        p += 192;
+        sum += process_window(p + 192, base, m3);
+        p += 256;
     }
-    // Tail: process remaining windows one at a time
+    // Single-window tail
     while (p + 96 < end) {
         uint64_t m = nl_mask64(p);
         sum += process_window(p, base, m);

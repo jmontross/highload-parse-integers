@@ -8,16 +8,23 @@ Champion metric: best-of-N wall-clock of `./prog < input.txt` on this Linux box.
 
 Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the ARM
 Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
-(done) when it approaches this. On x86 cloud the floor is noisy (0.2–0.5s, mmap+page-cache
-can beat `cat` since it bypasses the read path); real floor is ~0.20s.
-Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
+(done) when it approaches this. On x86 cloud the floor is noisy (0.175–0.47s, mmap+page-cache
+can beat `cat` since it bypasses the read path); real floor is ~0.17s.
+Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_cnt12** — `avx2_cnt8910 + explicit cnt==11,12 paths (3×parse_quad for cnt==12)`
+- **avx2_triple_window** — `triple 64-byte window per outer loop iteration (3 independent nl_mask64 loads)`
+  — promoted 2026-07-05 (this run). Run 1: avx2_triple_window 0.164s/0.169s median vs avx2_cnt12 0.184s/0.187s
+  → PROMOTE gate (10.9% margin, both conditions). Confirmation run: champion 0.158s/0.166s median, floor 0.470s
+  (noisy VM), STOP-FLOOR. Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.155s local best**.
+  Loads 3 nl_mask64 masks before processing any window, giving OOO more ILP to hide DRAM latency.
+  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~45–60ms (rank 10–15 territory).
+- **avx2_cnt12 (previous champion)** — `avx2_cnt8910 + explicit cnt==11,12 paths (3×parse_quad for cnt==12)`
   — re-promoted 2026-07-05 (2nd promotion after noise reversal). avx2_dual_window measured
   0.225s this run vs cnt12's 0.211s → PROMOTE gate passed. RUNS=5 confirm: 0.212s best,
   clang++ -O3 -march=native **0.204s**. Handles cnt==4..12 explicitly; no while(m) for cnt<=12.
-  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Edge suite 9/9. **Was submit candidate; now superseded by avx2_triple_window.**
   Expected judge time ~50–65ms (rank 12–16 territory). STOP-FLOOR ×14.
 - **avx2_dual_window (reverted)** — `dual 64-byte window per outer loop iteration`
   — promoted then reverted due to VM noise. Measured 0.186s vs cnt12's 0.208s in one run;
@@ -129,6 +136,9 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-05 | avx2_triple_window (3 windows per iteration, 3 independent nl_mask64 calls) | best 0.188s, med 0.190s x86 | ✓ | ✗ HOLD | Extends dual-window: loads 3 nl_mask64 values before processing any. No improvement over dual-window — the OOO engine's look-ahead window saturates at 2 concurrent nl_mask64 loads. Theoretical ~2ms more gain (extra 4-cycle load overlap) is within measurement noise. STOP-FLOOR ×13. |
 | 2026-07-05 | avx2_dual_window→avx2_cnt12 noise reversal; champion re-promoted | champion best 0.212s, clang++ 0.204s x86 | ✓ (+9 edge) | ✓ CHAMPION (avx2_cnt12) | First run showed dual_window 0.222s vs cnt12 0.209s → PROMOTE gate. RUNS=5: champion 0.212s, variant 0.211s → STOP-FLOOR (within noise). avx2_dual_window 0.225s this run vs 0.186s last run — pure VM noise. Best compiler: `clang++ -O3 -march=native` → **0.204s**. STOP-FLOOR ×14. |
 | 2026-07-05 | avx2_dual_cnt12 (dual-window + cnt==4..12 fast paths) | best 0.218s, med 0.226s x86 | ✓ | ✗ HOLD | Combines dual-window OOO trick with full cnt==4..12 coverage. Result: 3% slower than champion. Combined I-cache footprint offsets OOO benefit. STOP-FLOOR ×14. |
+| 2026-07-05 | avx2_triple_window (PROMOTED to champion) | best 0.158s / 0.155s g++-Ofast, med 0.166s x86 | ✓ (+9 edge) | ✓ CHAMPION | Run 1: avx2_triple_window 0.164s/0.169s median vs avx2_cnt12 0.184s/0.187s → PROMOTE gate (10.9% margin). Confirmation (RUNS=5): champion 0.158s/0.166s, floor 0.470s (noisy VM), STOP-FLOOR. Compiler sweep: `g++ -Ofast -march=native -funroll-loops` → **0.155s local best**. Supersedes avx2_cnt12. STOP-FLOOR ×15. |
+| 2026-07-05 | avx2_quad_window (4 windows per outer loop iteration) | best 0.156s, med 0.163s x86 | ✓ | ✗ HOLD | Extends triple-window to 4 independent nl_mask64 calls. Marginally faster best (0.156 vs 0.158s, 1.3%) but gate requires ≥1.5%; median 0.163s vs champion 0.166s (lower but insufficient margin on best). OOO look-ahead appears to saturate at ~3 windows. STOP-FLOOR ×16. |
+| 2026-07-05 | avx2_clzbase (CLZ-based last-newline extraction for fast base update) | best 0.163s, med 0.165s x86 | ✓ | ✗ HOLD | Uses 63-CLZ(m) to get last newline position in 1 cycle (vs CTZ×N serial chain at ~18 cycles). Theory: base dependency chain shrinks from ~18 to ~2 cycles, allowing earlier OOO scheduling of next window. Practice: no improvement (0.163s vs 0.158s champion). The OOO engine already schedules the base update alongside parse_quad; CLZ doesn't help because compute is hidden by bandwidth. STOP-FLOOR ×17. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -160,23 +170,23 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 - **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
+- **CLZ-based base update** (`avx2_clzbase`) — HOLD. Using `63-CLZ(m)` to get last newline position in 1 cycle (vs CTZ×N chain at N×3 cycles) should make next base available earlier to OOO. Theory: base dependency chain shrinks from ~18 to ~2 cycles. Practice: no improvement. OOO already schedules the CTZ chain and parse operations concurrently; the base update (needed only for the FIRST argument of parse_quad) was not the scheduling bottleneck. Confirms bandwidth-bound ×15.
+- **Quad-window loop** (`avx2_quad_window`) — HOLD. 4 nl_mask64 loads before processing any window. Marginally faster (0.156s best vs 0.158s champion) but within noise (1.3% margin, gate requires ≥1.5%). OOO window appears to saturate at ~3 windows of look-ahead. Confirms bandwidth-bound ×16.
 
-## Status: STOP-FLOOR (2026-07-05, re-confirmed ×14)
-Champion (avx2_cnt12, re-promoted) best=0.212s / 0.204s clang++ on local x86 vs floor 0.526s (noisy cloud).
-Champion is FASTER than cat — mmap bypasses the kernel read-path copy so there is no room left.
-- Best local (clang++ -O3 -march=native): **0.204s** (this run)
-- avx2_cnt12 and avx2_dual_window oscillate within ±0.02s noise — both equally fast.
-- Champion has never been submitted to judge — last submission was rank 119 (avx2_blockparse 307ms).
-- **SUBMIT `champion/main.cpp` (avx2_cnt12) to judge with `clang++ -O3 -march=native`.**
-  Expected judge time: ~50–65ms (rank 12–16 territory). Floor on judge hardware is ~52ms.
-- avx2_dual_cnt12 (NEW this run): HOLD — combining dual-window + cnt==11,12 paths gives 0.218s,
-  worse than champion. Combined I-cache footprint offsets OOO benefit.
-- Compute budget analysis: fully at the bandwidth ceiling. No algorithmic change can help.
+## Status: STOP-FLOOR (2026-07-05, confirmed ×16)
+Champion (avx2_triple_window) best=0.158s / 0.155s g++-Ofast on local x86 vs floor 0.175–0.47s (noisy cloud).
+Champion is FASTER than cat in most runs — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
+- Best local (g++ -Ofast -march=native -funroll-loops): **0.155s** (this run)
+- avx2_triple_window, avx2_quad_window, avx2_clzbase all within ±0.01s noise.
+- Champion (avx2_triple_window) has never been submitted to judge — last submission rank 119 (avx2_blockparse 307ms).
+- **SUBMIT `champion/main.cpp` (avx2_triple_window) to judge with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~45–60ms (rank 10–15 territory).
+- All compute and I/O angles exhausted. No algorithmic change can help.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_cnt12, local best 0.204s (clang++ -O3 -march=native). PRIORITY ACTION. Expected ~50–65ms on judge hardware.
+1. **Submit champion to judge** — avx2_triple_window, local best 0.155s (g++ -Ofast -march=native -funroll-loops). **PRIORITY ACTION.** Expected ~45–60ms on judge hardware.
 2. **Force-inlining** — TESTED, no improvement.
-3. **cnt=8,9,10 paths** — TESTED, within noise.
+3. **cnt=8,9,10,11,12 paths** — TESTED, within noise (avx2_cnt8910, avx2_cnt12).
 4. **Rust port** — DEAD. 10% slower codegen.
 5. **128-byte window** — TESTED, slower. Wider cnt distribution outweighs loop amortization.
 6. **512-bit parse_oct** — TESTED. Correct but 7% slower — extraction overhead offsets SIMD benefit.
@@ -185,9 +195,10 @@ Champion is FASTER than cat — mmap bypasses the kernel read-path copy so there
 9. **VPCOMPRESSB approach** — AVX-512 compact digits → fixed-width parse. Not implemented; might help on SPR but parse_oct testing suggests 512-bit overhead is real. Not worth trying on Cascade Lake.
 10. **PDEP parallel extraction** — TESTED, no improvement. Confirms compute is hidden by DRAM latency.
 11. **Direct load addresses (p+n_i-8)** — TESTED, no improvement. Same reason as PDEP.
-12. **PGO (profile-guided optimization)** — TESTED (g++). No improvement (0.212–0.220s vs 0.221s). clang PGO unavailable on this system.
-13. **Compiler tuning (-march=cascadelake, -fno-plt, -Ofast -funroll-loops)** — TESTED. Best already: clang++ -Ofast -march=native -funroll-loops at 0.210s.
-14. **THP/huge pages for mmap** — kernel already uses huge folios for file cache (FileHugePages=380MB seen in /proc/meminfo). Already optimal.
-15. **Gather-based tail loads (vpgatherdq)** — would load 4×8-byte tails in one VPGATHERDQ; but gather on Cascade Lake is ~20cy vs 4×L1-hit-loadl ~4cy. Slower.
-16. **Triple-window loop unrolling** (`avx2_triple_window`) — 3 nl_mask64 calls before processing any window. No improvement over dual-window; OOO saturates at 2-window depth. HOLD.
-17. **64-bit SIMD multiply for high digits** — AVX2 has no mullo_epi64; _mm256_mul_epu32 could vectorize h×10^8 but h×10^8 result fits in 64-bit only, requiring extract. OOO already issues 4 independent scalar IMULQ simultaneously; no gain possible.
+12. **PGO (profile-guided optimization)** — TESTED (g++). No improvement. clang PGO unavailable.
+13. **Compiler tuning** — TESTED. Best: g++ -Ofast -march=native -funroll-loops at 0.155s. clang++ -O3 -march=native at 0.158s.
+14. **THP/huge pages for mmap** — kernel already uses huge folios for file cache. Already optimal.
+15. **Gather-based tail loads (vpgatherdq)** — gather on Cascade Lake is ~20cy vs 4×L1-hit-loadl ~4cy. Slower.
+16. **CLZ-based base update** (`avx2_clzbase`) — TESTED, no improvement. OOO already handles the base dependency.
+17. **Quad-window loop** (`avx2_quad_window`) — TESTED, within noise of triple-window. OOO saturates at ~3 windows.
+18. **64-bit SIMD multiply for high digits** — AVX2 has no mullo_epi64; OOO already issues 4 independent scalar IMULQ simultaneously; no gain possible.
