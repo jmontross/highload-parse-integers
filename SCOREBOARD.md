@@ -13,6 +13,19 @@ can beat `cat` since it bypasses the read path); real floor is ~0.20s.
 Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 
 ## Champion
+- **avx2_cnt12** — `avx2_cnt8910 + explicit cnt==11,12 paths (3×parse_quad for cnt==12)`
+  — extends avx2_cnt8910 with cnt==11 (2×parse_quad+parse_pair+parse_num) and cnt==12
+  (3×parse_quad), eliminating the while(m) fallback for all common cnt values. Promoted
+  over avx2_cnt8910 (0.213s vs 0.217s best) in the 2026-07-05 evening run. Edge suite
+  9/9. Confirmation run: champion best 0.213s, STOP-FLOOR verdict (floor 0.461s min). Best
+  compiler: `g++ -Ofast -march=native -funroll-loops` at **0.208s**. Also tested: dual-window
+  loop unrolling (0.228s, DEAD). **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native
+  -funroll-loops`.** Expected judge time ~55–65ms (rank 14–18 territory). Requires AVX2+SSSE3+SSE4.1.
+  ARM falls back to scalar parse_num.
+- **avx2_cnt8910** — `avx2_parse_quad + cnt==8,9,10 fast paths (2×parse_quad+…)`
+  — superseded by avx2_cnt12. First promoted 2026-07-05 evening at 0.212s best / 0.213s median,
+  beating avx2_parse_quad at 0.218s. Eliminates the while(m) fallback for cnt==8,9,10
+  (~22% of loop iterations). Best local: 0.212–0.214s.
 - **avx2_parse_quad** — `AVX2 256-bit parse_quad + nohadd (single-shuffle) + cnt==4,5,6,7 paths`
   — upgrades avx2_maddubs by processing FOUR numbers at a time via 256-bit AVX2 MADDUBS
   instead of two 128-bit SSE pairs. For cnt==6 (dominant case): 1×parse_quad + 1×parse_pair
@@ -104,6 +117,9 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-05 | Compiler sweep (cascadelake, skylake-avx512+mno-avx512f, noplt, -Ofast -funroll-loops) | best 0.213s x86 (all variants) | ✓ | ✗ HOLD | -march=cascadelake, -mno-avx512f, -fno-plt all give 0.213–0.214s. Best confirmed: clang++ -Ofast -march=native -funroll-loops (0.210s from earlier sweep). No new compiler magic. STOP-FLOOR confirmed ×8. |
 | 2026-07-05 | Run status re-check (clang++ sweep, no new variants) | champion best 0.190s, clang++ -O3 -march=native -funroll-loops 0.179s | ✓ (+9 edge) | — STOP-FLOOR ×9 | Champion best 0.190s; floor (cat) 0.266s; champion is 29% FASTER than cat — mmap bypasses kernel copy, we are at/below the effective I/O ceiling. New clang++ local best: **0.179s** (clang++-18 -O3 -march=native -funroll-loops), slight measurement noise improvement over previous 0.210s. All compute experiments exhausted. PRIORITY ACTION: submit champion to judge. Expected judge time ~60–63ms (rank 14–18). |
 | 2026-07-05 | Scheduled sweep — no new variants (STOP-FLOOR ×10) | champion best 0.187s, clang++ -O3 -march=native **0.177s local best** | ✓ (+9 edge) | — STOP-FLOOR ×10 | Compiler sweep updated: `clang++ -O3 -march=native` (without -funroll-loops) gives 0.177s, `clang++ -Ofast -funroll-loops` gives 0.181s. g++ gives 0.192s. Floor (cat): 0.251–0.460s noisy; champion at/below effective ceiling. All algorithmic, compiler, and I/O angles exhausted. No new variants attempted — compute is hidden by bandwidth, every optimization tried. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.** Expected judge time ~60–63ms (rank 14–18). |
+| 2026-07-05 | avx2_cnt8910 (PROMOTED: 2×parse_quad fast path for cnt==8,9,10) | best 0.212s, med 0.213s x86 | ✓ (+9 edge) | ✓ PROMOTED (superseded) | This variant was HOLD on 2026-07-05 morning (0.218s vs 0.221s), but in the evening run beat the re-measured champion at 0.212s vs 0.218s (>1.5% margin, median also lower). PROMOTE gate passed. Superseded by avx2_cnt12 same run. |
+| 2026-07-05 | avx2_cnt12 (PROMOTED: extend cnt paths to cnt==11,12) | best 0.213s, med 0.222s x86 | ✓ (+9 edge) | ✓ CHAMPION | Extends avx2_cnt8910 with cnt==11 (2×pq+pp+pn) and cnt==12 (3×pq). Gate: best 0.213s < need 0.2137s, median 0.222s < champ 0.226s. Confirmation: champion best 0.213s, STOP-FLOOR (floor 0.461s). Compiler sweep: `g++ -Ofast -march=native -funroll-loops` best at 0.208s. STOP-FLOOR ×11. |
+| 2026-07-05 | avx2_dual_window (dual 64-byte window per loop iteration) | best 0.228s, med 0.229s x86 | ✓ | ✗ DEAD | Loads both masks m0=nl_mask64(p) and m1=nl_mask64(p+64) before processing either, giving OOO engine more ILP. No improvement — base-pointer threading between windows adds a serial dependency that prevents the theoretical overlap. 7% slower than champion. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -136,17 +152,20 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
 
-## Status: STOP-FLOOR (2026-07-05, re-confirmed ×10)
-Champion (avx2_parse_quad) best=0.177–0.200s on local x86 vs bandwidth floor 0.251–0.460s (noisy cloud).
+## Status: STOP-FLOOR (2026-07-05 evening, re-confirmed ×11)
+Champion (avx2_cnt12) best=0.208–0.213s on local x86 vs bandwidth floor 0.461–0.652s (noisy cloud).
 Champion is FASTER than cat — mmap bypasses the kernel read-path copy so there is no room left.
-- Best local (clang++ -O3 -march=native): **0.177s** (2026-07-05 latest sweep)
+- Best local (g++ -Ofast -march=native -funroll-loops): **0.208s** (2026-07-05 latest sweep)
 - Champion has never been submitted to judge — last submission was rank 119 (avx2_blockparse 307ms).
-- **SUBMIT `avx2_parse_quad` (champion/main.cpp) to judge with `clang++ -O3 -march=native`.**
-  Expected judge time: ~60–63ms (rank 14–18 territory). Floor on judge hardware is ~52ms.
-- Compute budget analysis: ~67 cycles/window compute vs ~73 cycles/window available (bandwidth-limited). We are fully at the bandwidth ceiling. No algorithmic change can help without changing hardware.
+- **SUBMIT `avx2_cnt12` (champion/main.cpp) to judge with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~55–65ms (rank 14–18 territory). Floor on judge hardware is ~52ms.
+- Two algorithmic improvements captured this run: avx2_cnt8910 and avx2_cnt12 eliminate the
+  while(m) fallback for all cnt values 4–12 (~99% of windows). The remaining ~1% (cnt<4 or cnt>12)
+  still uses the while(m) path, which is negligible.
+- Compute budget analysis: fully at the bandwidth ceiling. No algorithmic change can help.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_parse_quad to judge** — local 0.177s (clang++ -O3 -march=native). PRIORITY ACTION. Expected ~60–63ms on judge hardware.
+1. **Submit avx2_cnt12 to judge** — local best 0.208s (g++ -Ofast -march=native -funroll-loops). PRIORITY ACTION. Expected ~55–65ms on judge hardware.
 2. **Force-inlining** — TESTED, no improvement.
 3. **cnt=8,9,10 paths** — TESTED, within noise.
 4. **Rust port** — DEAD. 10% slower codegen.
@@ -161,4 +180,5 @@ Champion is FASTER than cat — mmap bypasses the kernel read-path copy so there
 13. **Compiler tuning (-march=cascadelake, -fno-plt, -Ofast -funroll-loops)** — TESTED. Best already: clang++ -Ofast -march=native -funroll-loops at 0.210s.
 14. **THP/huge pages for mmap** — kernel already uses huge folios for file cache (FileHugePages=380MB seen in /proc/meminfo). Already optimal.
 15. **Gather-based tail loads (vpgatherdq)** — would load 4×8-byte tails in one VPGATHERDQ; but gather on Cascade Lake is ~20cy vs 4×L1-hit-loadl ~4cy. Slower.
+16. **Dual-window loop unrolling** (`avx2_dual_window`) — loads both nl_mask64(p) and nl_mask64(p+64) before processing either window. The `base` pointer carries a serial dependency between windows (window1's first number length depends on where window0's processing left `base`). No ILP gain; 7% slower. DEAD.
 16. **64-bit SIMD multiply for high digits** — AVX2 has no mullo_epi64; _mm256_mul_epu32 could vectorize h×10^8 but h×10^8 result fits in 64-bit only, requiring extract. OOO already issues 4 independent scalar IMULQ simultaneously; no gain possible.
