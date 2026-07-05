@@ -91,6 +91,8 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-04 | avx512_cnt47 (AVX-512 scan + cnt==4/7 fast paths) | best 0.247s, med 0.252s x86 | ✓ (+9 edge) | ✗ HOLD | cnt==4/7 paths correct but not triggered frequently enough; within noise of champion. |
 | 2026-07-04 | avx2_nohadd47 (AVX2 + single-shuffle nohadd + cnt==4/7) | best 0.222s, med 0.232s x86 | ✓ (+9 edge) | ✗ superseded | Pure-AVX2 (no frequency penalty), nohadd halves port-5 pressure, cnt==4/7 paths; superseded by parse_quad same run. |
 | 2026-07-04 | avx2_parse_quad (256-bit parse_quad + nohadd + len>=8 + cnt==4-7) | best 0.197s, med 0.197s x86 | ✓ (+9 edge) | ✓ CHAMPION | SIMD 4-at-a-time via 256-bit AVX2; cnt==6 now 2 SIMD batches vs 3; len>=8 enables 8-digit SIMD; 17% win over avx2_maddubs. Submit: clang++ -O3 -march=native (0.192s local best). |
+| 2026-07-05 | avx2_cnt8910 (add cnt==8,9,10 fast paths: 2×parse_quad+…) | best 0.218s, med 0.224s x86 | ✓ (+9 edge) | ✗ HOLD | Eliminates while(m) fallback for cnt=8,9,10 (~22% of iterations). Within noise of champion — confirms bandwidth-bound, not compute-bound. |
+| 2026-07-05 | rust_avx2 (Rust port of avx2_parse_quad, std::arch x86_64) | best 0.245s, med 0.249s x86 | ✓ | ✗ DEAD | Rust LLVM is 10% slower than clang++ for this SIMD workload. Same backend, different register/scheduling decisions on the hot cnt==6 path. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -121,23 +123,25 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
   where AVX-512 doesn't downscale frequency.
 - **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
 
-## Status: STOP-FLOOR (2026-07-04, updated)
-Champion (avx2_parse_quad) best=0.197–0.200s on local x86 vs bandwidth floor ~0.20s → ~1.0× floor.
-The x86 cloud floor is noisy (mmap+page-cache can beat `cat`); champion appears bandwidth-bound.
-Algorithmic improvements may be exhausted. **Submit the new champion to the judge.**
-- Best local: `clang++ -O3 -march=native` → 0.192s
-- Previous champion avx2_maddubs was ~0.237s local (3.4× rank-18 bar); avx2_parse_quad at ~0.197s
-  is ~2.9× the rank-18 bar. With judge bandwidth scaling, could land close to rank 18.
+## Status: STOP-FLOOR (2026-07-05, re-confirmed)
+Champion (avx2_parse_quad) best=0.210–0.221s on local x86 vs bandwidth floor 0.20–0.46s (noisy cloud).
+With clang++ champion is 0.210s; floor is variable (0.46s today, 0.22s on quiet runs) — champion
+at ~1.0× the real floor when cloud I/O is not congested.
+- Best local (clang++ -O3 -march=native): **0.210s**
+- cnt8910 variant added fast paths for cnt=8,9,10 (was `while(m)` fallback): best 0.218s, within
+  noise of champion → confirms we ARE bandwidth-bound, not compute-bound.
+- Rust port (rust_avx2): 0.245s — 10% SLOWER than C++ clang. Same LLVM backend, but different
+  codegen for SIMD hot path. C++ clang++ wins.
+- **Submit `avx2_parse_quad` (champion) to judge with `clang++ -O3 -march=native`.**
+  Expected judge time ~160-180ms (3× faster hardware); prior avx2_blockparse (0.357s local → 307ms judge).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_parse_quad to judge** — local 0.192s (clang). Expected to be significantly
-   faster than avx2_maddubs (307ms/rank119 old submission). 17% local improvement → judge
-   may show proportional gain.
-2. **128-byte window + 3×parse_quad** — double the scan window to process ~12 numbers in
-   3 parse_quad calls; halves outer loop iterations and the ctz-chain overhead (~24 cy for 6
-   ctz ops is now ~2× the effective compute bottleneck).
-3. **VPDPBUSD (AVX-512 VNNI)** — VNNI present on this CPU; could replace MADDUBSW+MADDWD.
-   BUT: digit weights need up to 10000000 > int8 (127) max; multi-stage DPBUSD needed.
-   Complex; only worth on judge without AVX-512 frequency penalty (Ice Lake Server).
-4. **Rust port of avx2_parse_quad** — Rust's codegen may schedule SIMD loads better.
-5. **All-cnt paths (cnt==8,9,10)** — covering rare cases that fall to while(m); marginal gain.
+1. **Submit avx2_parse_quad to judge** — local 0.210s (clang). PRIORITY ACTION.
+2. **cnt=8,9,10 paths** — TESTED, within noise on bandwidth-bound hardware. May help on
+   compute-bound judge slightly, but the gain is masked by bandwidth. Note: the variant is
+   correct and could be promoted if re-benchmarked on quieter hardware and shows real delta.
+3. **Rust port** — DEAD. rustc produces 10% slower code than clang++ for this SIMD workload.
+4. **AVX-512 VNNI (VPDPBUSD)** — CPU has avx512_vnni but uses AVX-512 EVEX prefix →
+   frequency penalty on Cascade Lake applies to VNNI too. Not viable.
+5. **128-byte window** — estimated ~0.4 cycles/number savings from halved loop overhead;
+   too small to measure over bandwidth noise.

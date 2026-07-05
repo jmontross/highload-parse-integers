@@ -85,6 +85,20 @@ for f in champion/main.cpp variants/*.cpp; do
   fi
   progs+=("$name"); bins+=("$bin"); state+=("BUILT")
 done
+# Rust variants (if rustc available)
+if command -v rustc >/dev/null 2>&1; then
+  RUST_FLAGS="-C opt-level=3 -C target-cpu=native"
+  for f in variants/*.rs; do
+    [ -e "$f" ] || continue
+    name="variants/$(basename "$f" .rs)"
+    bin="/tmp/pi_${name//\//_}"
+    if ! rustc $RUST_FLAGS "$f" -o "$bin" 2>/tmp/build.log; then
+      echo "  $name: COMPILE_FAIL"; sed 's/^/    /' /tmp/build.log
+      progs+=("$name"); bins+=("$bin"); state+=("COMPILE_FAIL"); continue
+    fi
+    progs+=("$name"); bins+=("$bin"); state+=("BUILT")
+  done
+fi
 
 # Correctness gate (one run each) BEFORE timing — never rank a WRONG program.
 for i in "${!progs[@]}"; do
