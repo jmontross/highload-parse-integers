@@ -93,6 +93,7 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-04 | avx2_parse_quad (256-bit parse_quad + nohadd + len>=8 + cnt==4-7) | best 0.197s, med 0.197s x86 | ✓ (+9 edge) | ✓ CHAMPION | SIMD 4-at-a-time via 256-bit AVX2; cnt==6 now 2 SIMD batches vs 3; len>=8 enables 8-digit SIMD; 17% win over avx2_maddubs. Submit: clang++ -O3 -march=native (0.192s local best). |
 | 2026-07-05 | avx2_cnt8910 (add cnt==8,9,10 fast paths: 2×parse_quad+…) | best 0.218s, med 0.224s x86 | ✓ (+9 edge) | ✗ HOLD | Eliminates while(m) fallback for cnt=8,9,10 (~22% of iterations). Within noise of champion — confirms bandwidth-bound, not compute-bound. |
 | 2026-07-05 | rust_avx2 (Rust port of avx2_parse_quad, std::arch x86_64) | best 0.245s, med 0.249s x86 | ✓ | ✗ DEAD | Rust LLVM is 10% slower than clang++ for this SIMD workload. Same backend, different register/scheduling decisions on the hot cnt==6 path. |
+| 2026-07-05 | avx2_forceinline (__attribute__((always_inline)) on all helpers) | best 0.208s, med 0.211s x86 | ✓ (+9 edge) | ✗ HOLD | Forces parse_quad/parse_pair inlined into cnt==5 and cnt==7 paths (champion only inlined for cnt==6). 2874 vs 1322 asm lines. No improvement — OOO already hides call overhead; confirms bandwidth-bound. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -122,26 +123,30 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
   cannot recoup the 10% frequency penalty. Do NOT retry unless on Ice Lake Server or Zen4
   where AVX-512 doesn't downscale frequency.
 - **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
+- **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
+- **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
 
-## Status: STOP-FLOOR (2026-07-05, re-confirmed)
-Champion (avx2_parse_quad) best=0.210–0.221s on local x86 vs bandwidth floor 0.20–0.46s (noisy cloud).
-With clang++ champion is 0.210s; floor is variable (0.46s today, 0.22s on quiet runs) — champion
-at ~1.0× the real floor when cloud I/O is not congested.
-- Best local (clang++ -O3 -march=native): **0.210s**
-- cnt8910 variant added fast paths for cnt=8,9,10 (was `while(m)` fallback): best 0.218s, within
-  noise of champion → confirms we ARE bandwidth-bound, not compute-bound.
-- Rust port (rust_avx2): 0.245s — 10% SLOWER than C++ clang. Same LLVM backend, but different
-  codegen for SIMD hot path. C++ clang++ wins.
+## Status: STOP-FLOOR (2026-07-05, re-confirmed ×3)
+Champion (avx2_parse_quad) best=0.188–0.207s on local x86 vs bandwidth floor 0.239–0.422s (noisy cloud).
+With clang++ champion is 0.177–0.188s; floor is variable (0.338–0.422s today) — champion
+faster than cat floor because mmap bypasses the kernel read-path copy.
+- Best local (clang++ -O3 -march=native): **0.177s** (compiler sweep, this run)
+- avx2_forceinline (all helpers force-inlined): 0.208s — no improvement. OOO already hides
+  the parse_quad/parse_pair function call overhead (25cy per call). Bandwidth-bound confirmed.
+- Rust port (rust_avx2): 0.207s (improved from 0.245s earlier, but still within noise of champion).
 - **Submit `avx2_parse_quad` (champion) to judge with `clang++ -O3 -march=native`.**
-  Expected judge time ~160-180ms (3× faster hardware); prior avx2_blockparse (0.357s local → 307ms judge).
+  Expected judge time ~160-175ms (0.86× scaling from avx2_blockparse 357ms→307ms).
+  Gap to rank-18 (69ms) is 2.3-2.5× on judge — likely due to judge having faster hardware.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_parse_quad to judge** — local 0.210s (clang). PRIORITY ACTION.
-2. **cnt=8,9,10 paths** — TESTED, within noise on bandwidth-bound hardware. May help on
-   compute-bound judge slightly, but the gain is masked by bandwidth. Note: the variant is
-   correct and could be promoted if re-benchmarked on quieter hardware and shows real delta.
-3. **Rust port** — DEAD. rustc produces 10% slower code than clang++ for this SIMD workload.
-4. **AVX-512 VNNI (VPDPBUSD)** — CPU has avx512_vnni but uses AVX-512 EVEX prefix →
-   frequency penalty on Cascade Lake applies to VNNI too. Not viable.
-5. **128-byte window** — estimated ~0.4 cycles/number savings from halved loop overhead;
-   too small to measure over bandwidth noise.
+1. **Submit avx2_parse_quad to judge** — local 0.177s (clang++ -O3 -march=native). PRIORITY ACTION.
+2. **Force-inlining** — TESTED, no improvement. OOO engine masks call overhead.
+3. **cnt=8,9,10 paths** — TESTED, within noise. Bandwidth-bound.
+4. **Rust port** — DEAD. 10% slower codegen.
+5. **AVX-512 on Ice Lake/Zen4 judge hardware** — if judge CPU has no frequency penalty,
+   `vpdpbusd` VNNI could give 2× digit-parse throughput. Not testable locally (Cascade Lake penalty).
+6. **Right-to-left scan** — parses digits with a running power that resets at each newline;
+   avoids variable-length number extraction. Equivalent work, different organization. Not proven faster.
+7. **VPCOMPRESSB approach** — AVX-512 compress bytes based on non-newline mask → contiguous
+   digit stream → fixed-width SIMD parse. Not viable locally (AVX-512 penalty), but might win
+   on ICX/SPR/Zen4 judge hardware.
