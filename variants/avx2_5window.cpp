@@ -1,13 +1,11 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_quad_window)
-// Process 4 consecutive 64-byte windows per outer-loop iteration.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_5window)
+// Process 5 consecutive 64-byte windows per outer-loop iteration.
 //
-// Extends avx2_triple_window: load 4 independent nl_mask64 values before
-// processing any of them, giving OOO more concurrent load ILP. Promoted
-// when it beat avx2_triple_window by 1.64% best AND lower median under
-// RUNS=5 interleaved timing. Edge suite 9/9 pass.
+// Extends avx2_quad_window: load 5 independent nl_mask64 values before
+// processing any of them. Tests whether OOO benefit continues beyond 4
+// windows. Expected: HOLD if OOO saturates at 4 masks.
 //
-// Submit with: clang++ -O3 -march=native
-// safe_end offset: 4×64 + 32 safety = 288 bytes before end.
+// safe_end offset: 5×64 + 32 safety = 352 bytes before end.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -294,21 +292,23 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 384) return scalar_tail(p, end, sum);
+    if (size < 480) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 288; // 4 windows (256) + safety (32)
+    const unsigned char* safe_end = end - 352; // 5 windows (320) + safety (32)
 
-    // Quad-window loop: load 4 masks before processing any window.
+    // 5-window loop: load 5 masks before processing any window.
     while (p < safe_end) {
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         uint64_t m2 = nl_mask64(p + 128);
         uint64_t m3 = nl_mask64(p + 192);
+        uint64_t m4 = nl_mask64(p + 256);
         sum += process_window(p,       base, m0);
         sum += process_window(p + 64,  base, m1);
         sum += process_window(p + 128, base, m2);
         sum += process_window(p + 192, base, m3);
-        p += 256;
+        sum += process_window(p + 256, base, m4);
+        p += 320;
     }
     // Single-window tail
     while (p + 96 < end) {

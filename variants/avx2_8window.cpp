@@ -1,13 +1,14 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_quad_window)
-// Process 4 consecutive 64-byte windows per outer-loop iteration.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8window)
+// Process 8 consecutive 64-byte windows per outer-loop iteration.
 //
-// Extends avx2_triple_window: load 4 independent nl_mask64 values before
-// processing any of them, giving OOO more concurrent load ILP. Promoted
-// when it beat avx2_triple_window by 1.64% best AND lower median under
-// RUNS=5 interleaved timing. Edge suite 9/9 pass.
+// Aggressive extension: load 8 independent nl_mask64 values before
+// processing any. Tests whether the OOO / memory-level parallelism
+// benefit continues far beyond 4 windows, or saturates quickly.
+// With 8 outstanding 64-byte reads (= 16 AVX2 loads) in flight,
+// DRAM/LLC can service them in parallel, potentially hiding more latency.
 //
-// Submit with: clang++ -O3 -march=native
-// safe_end offset: 4×64 + 32 safety = 288 bytes before end.
+// Expected: HOLD or marginal improvement if MLP saturates at 4-5 windows.
+// safe_end offset: 8×64 + 32 safety = 544 bytes before end.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -294,21 +295,30 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 384) return scalar_tail(p, end, sum);
+    if (size < 800) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 288; // 4 windows (256) + safety (32)
+    const unsigned char* safe_end = end - 544; // 8 windows (512) + safety (32)
 
-    // Quad-window loop: load 4 masks before processing any window.
+    // 8-window loop: load 8 masks before processing any window.
+    // Tests whether MLP (memory-level parallelism) continues growing.
     while (p < safe_end) {
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         uint64_t m2 = nl_mask64(p + 128);
         uint64_t m3 = nl_mask64(p + 192);
+        uint64_t m4 = nl_mask64(p + 256);
+        uint64_t m5 = nl_mask64(p + 320);
+        uint64_t m6 = nl_mask64(p + 384);
+        uint64_t m7 = nl_mask64(p + 448);
         sum += process_window(p,       base, m0);
         sum += process_window(p + 64,  base, m1);
         sum += process_window(p + 128, base, m2);
         sum += process_window(p + 192, base, m3);
-        p += 256;
+        sum += process_window(p + 256, base, m4);
+        sum += process_window(p + 320, base, m5);
+        sum += process_window(p + 384, base, m6);
+        sum += process_window(p + 448, base, m7);
+        p += 512;
     }
     // Single-window tail
     while (p + 96 < end) {
