@@ -1,26 +1,17 @@
-// HighLoad.fun — parse_integers  (VARIANT: avx2_dual_window)
-// Process 2 consecutive 64-byte windows per outer-loop iteration.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_triple_window)
+// Process 3 consecutive 64-byte windows per outer-loop iteration.
 //
-// MOTIVATION:
-//   The main loop does: nl_mask64(p) → dispatch(cnt) → p += 64.
-//   The nl_mask64 loads are sequential-stride-64, and the hardware prefetcher
-//   covers this pattern well. However, the dependency chain from:
-//     nl_mask64(p0) → parse_quad → base update → nl_mask64(p1)
-//   prevents the OOO engine from starting the p1 scan while the p0 parse runs.
+// Extends avx2_dual_window: load 3 independent nl_mask64 values before
+// processing any of them, giving OOO more ILP. The 3 loads are:
+//   m0 = nl_mask64(p)       -- no dependency
+//   m1 = nl_mask64(p + 64)  -- no dependency on m0
+//   m2 = nl_mask64(p + 128) -- no dependency on m0 or m1
+// All 3 loads can overlap in the OOO window before any dispatch begins.
+// Theoretical extra savings: ~4-6 more cycles/iteration vs dual-window,
+// from hiding m2's load latency behind m0+m1's processing.
 //
-//   By loading BOTH masks upfront within one loop iteration:
-//     m0 = nl_mask64(p0)  -- independent, can overlap
-//     m1 = nl_mask64(p1)  -- starts immediately, before m0's parse runs
-//   We give the OOO engine more instruction-level parallelism. The dispatch
-//   for m1 begins before m0's parse_quad dependency chain completes.
-//
-//   The key cost: base-pointer threading between the two windows. If a number
-//   spans the p0/p1 boundary (base at end of p0 window), window1's first
-//   number length depends on where m0's parse left base — so we must process
-//   m0 before setting up m1's first-number start. This limits the gain.
-//
-//   Still worth testing: the nl_mask64 loads themselves (2 loads × 64 bytes = 128B
-//   per window) have 4-6 cycle latency; overlapping them saves ~8 cycles per pair.
+// Cost: same base-pointer threading serial dependency as dual-window;
+// process_window(p0) must complete before process_window(p1) to update base.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -308,18 +299,20 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 256) return scalar_tail(p, end, sum);
+    if (size < 320) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 160; // 2 windows + safety margin
+    const unsigned char* safe_end = end - 224; // 3 windows (192) + safety (32)
 
-    // Dual-window loop: load both masks before processing either window.
-    // The two nl_mask64 loads are independent and can overlap in OOO.
+    // Triple-window loop: load 3 masks before processing any window.
+    // The 3 nl_mask64 loads are mutually independent and overlap in OOO.
     while (p < safe_end) {
         uint64_t m0 = nl_mask64(p);
-        uint64_t m1 = nl_mask64(p + 64); // independent: can be issued immediately
-        sum += process_window(p,      base, m0);
-        sum += process_window(p + 64, base, m1);
-        p += 128;
+        uint64_t m1 = nl_mask64(p + 64);
+        uint64_t m2 = nl_mask64(p + 128);
+        sum += process_window(p,       base, m0);
+        sum += process_window(p + 64,  base, m1);
+        sum += process_window(p + 128, base, m2);
+        p += 192;
     }
     // Tail: process remaining windows one at a time
     while (p + 96 < end) {
