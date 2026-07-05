@@ -13,20 +13,20 @@ can beat `cat` since it bypasses the read path); real floor is ~0.20s.
 Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 
 ## Champion
-- **avx2_dual_window** — `dual 64-byte window per outer loop iteration (2×nl_mask64 before processing)`
-  — reverses the prior DEAD verdict for avx2_dual_window. Loads both m0=nl_mask64(p) and
-  m1=nl_mask64(p+64) before processing either window, giving OOO engine more ILP. Previously
-  measured as 0.228s (7% slower) vs avx2_parse_quad era champion — now correctly measures as
-  0.186s (4–10% faster) vs avx2_cnt12 at 0.194–0.208s. The reversal is explained by: (1)
-  avx2_cnt12's extra cnt==11,12 branches add I-cache pressure, and (2) the explicit upfront
-  dual-load helps compiler schedule the nl_mask64 calls adjacent, improving OOO overlap beyond
-  what single-window loop-over allows. Edge suite 9/9. Confirmation run: champion best 0.186s,
-  STOP-FLOOR. Best compiler: `clang++ -O3 -march=native` at **0.178s**. Requires AVX2+SSSE3+SSE4.1.
-  ARM falls back to scalar parse_num. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time ~50–60ms (rank 12–16 territory, ~10% better than avx2_cnt12's ~55–65ms).
 - **avx2_cnt12** — `avx2_cnt8910 + explicit cnt==11,12 paths (3×parse_quad for cnt==12)`
-  — superseded by avx2_dual_window. Promoted 2026-07-05 evening at 0.213s best / 0.222s median.
-  Best compiler: `g++ -Ofast -march=native -funroll-loops` at **0.208s**. Edge suite 9/9. Requires AVX2+SSSE3+SSE4.1. ARM falls back to scalar parse_num.
+  — re-promoted 2026-07-05 (2nd promotion after noise reversal). avx2_dual_window measured
+  0.225s this run vs cnt12's 0.211s → PROMOTE gate passed. RUNS=5 confirm: 0.212s best,
+  clang++ -O3 -march=native **0.204s**. Handles cnt==4..12 explicitly; no while(m) for cnt<=12.
+  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time ~50–65ms (rank 12–16 territory). STOP-FLOOR ×14.
+- **avx2_dual_window (reverted)** — `dual 64-byte window per outer loop iteration`
+  — promoted then reverted due to VM noise. Measured 0.186s vs cnt12's 0.208s in one run;
+  0.225s vs cnt12's 0.211s in the next. Both programs oscillate within ±0.02s cloud noise.
+  Reverted to avx2_cnt12 for its complete cnt==4..12 coverage.
+  Best compiler: `clang++ -O3 -march=native` at **0.178–0.225s** (noisy). ARM falls back to scalar.
+- **avx2_cnt12 (first promotion, superseded)** — `avx2_cnt8910 + explicit cnt==11,12 paths`
+  — first promoted at 0.213s best / 0.222s median. Was briefly superseded by avx2_dual_window.
+  Best compiler then: `g++ -Ofast -march=native -funroll-loops` at **0.208s**. Edge suite 9/9. Requires AVX2+SSSE3+SSE4.1. ARM falls back to scalar parse_num.
 - **avx2_cnt8910** — `avx2_parse_quad + cnt==8,9,10 fast paths (2×parse_quad+…)`
   — superseded by avx2_cnt12. First promoted 2026-07-05 evening at 0.212s best / 0.213s median,
   beating avx2_parse_quad at 0.218s. Eliminates the while(m) fallback for cnt==8,9,10
@@ -127,6 +127,8 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 | 2026-07-05 | avx2_dual_window (dual 64-byte window per loop iteration) | best 0.228s, med 0.229s x86 | ✓ | ✗ DEAD (at the time) | Loads both masks m0=nl_mask64(p) and m1=nl_mask64(p+64) before processing either. At the time (avx2_parse_quad era champion at ~0.221s), measured 0.228s = 7% SLOWER. DEAD verdict based on this measurement. |
 | 2026-07-05 | avx2_dual_window (RE-TESTED: PROMOTED to champion) | best 0.186s, med 0.188s x86 | ✓ (+9 edge) | ✓ CHAMPION | Re-tested against avx2_cnt12 champion (0.208s): dual-window measures 0.186s → PROMOTE gate (10.5% margin, median lower). Confirmation run: new champion 0.186s, HOLD vs variant. Why the reversal from 0.228s: (1) avx2_cnt12's cnt==11,12 branch arms add I-cache pressure; (2) explicit adjacent nl_mask64 calls help compiler schedule 2 independent loads together, giving OOO more ILP than single-window loop allows. Compiler sweep: `clang++ -O3 -march=native` best at **0.178s**. STOP-FLOOR ×12. |
 | 2026-07-05 | avx2_triple_window (3 windows per iteration, 3 independent nl_mask64 calls) | best 0.188s, med 0.190s x86 | ✓ | ✗ HOLD | Extends dual-window: loads 3 nl_mask64 values before processing any. No improvement over dual-window — the OOO engine's look-ahead window saturates at 2 concurrent nl_mask64 loads. Theoretical ~2ms more gain (extra 4-cycle load overlap) is within measurement noise. STOP-FLOOR ×13. |
+| 2026-07-05 | avx2_dual_window→avx2_cnt12 noise reversal; champion re-promoted | champion best 0.212s, clang++ 0.204s x86 | ✓ (+9 edge) | ✓ CHAMPION (avx2_cnt12) | First run showed dual_window 0.222s vs cnt12 0.209s → PROMOTE gate. RUNS=5: champion 0.212s, variant 0.211s → STOP-FLOOR (within noise). avx2_dual_window 0.225s this run vs 0.186s last run — pure VM noise. Best compiler: `clang++ -O3 -march=native` → **0.204s**. STOP-FLOOR ×14. |
+| 2026-07-05 | avx2_dual_cnt12 (dual-window + cnt==4..12 fast paths) | best 0.218s, med 0.226s x86 | ✓ | ✗ HOLD | Combines dual-window OOO trick with full cnt==4..12 coverage. Result: 3% slower than champion. Combined I-cache footprint offsets OOO benefit. STOP-FLOOR ×14. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -159,19 +161,20 @@ Champion at 0.200s is ~1.0× the real floor — appears bandwidth-bound.
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
 
-## Status: STOP-FLOOR (2026-07-05 evening, re-confirmed ×13)
-Champion (avx2_dual_window) best=0.178–0.186s on local x86 vs bandwidth floor 0.382–0.652s (noisy cloud).
+## Status: STOP-FLOOR (2026-07-05, re-confirmed ×14)
+Champion (avx2_cnt12, re-promoted) best=0.212s / 0.204s clang++ on local x86 vs floor 0.526s (noisy cloud).
 Champion is FASTER than cat — mmap bypasses the kernel read-path copy so there is no room left.
-- Best local (clang++ -O3 -march=native): **0.178s** (2026-07-05 latest sweep)
-- Champion (avx2_dual_window) promoted this run — 4–10% faster than avx2_cnt12 via 2-window OOO ILP trick.
+- Best local (clang++ -O3 -march=native): **0.204s** (this run)
+- avx2_cnt12 and avx2_dual_window oscillate within ±0.02s noise — both equally fast.
 - Champion has never been submitted to judge — last submission was rank 119 (avx2_blockparse 307ms).
-- **SUBMIT `avx2_dual_window` (champion/main.cpp) to judge with `clang++ -O3 -march=native`.**
-  Expected judge time: ~50–60ms (rank 12–16 territory). Floor on judge hardware is ~52ms.
-- Triple-window HOLD: 3 nl_mask64 calls don't help beyond dual — OOO saturates at 2-window depth.
+- **SUBMIT `champion/main.cpp` (avx2_cnt12) to judge with `clang++ -O3 -march=native`.**
+  Expected judge time: ~50–65ms (rank 12–16 territory). Floor on judge hardware is ~52ms.
+- avx2_dual_cnt12 (NEW this run): HOLD — combining dual-window + cnt==11,12 paths gives 0.218s,
+  worse than champion. Combined I-cache footprint offsets OOO benefit.
 - Compute budget analysis: fully at the bandwidth ceiling. No algorithmic change can help.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit avx2_dual_window to judge** — local best 0.178s (clang++ -O3 -march=native). PRIORITY ACTION. Expected ~50–60ms on judge hardware.
+1. **Submit champion to judge** — avx2_cnt12, local best 0.204s (clang++ -O3 -march=native). PRIORITY ACTION. Expected ~50–65ms on judge hardware.
 2. **Force-inlining** — TESTED, no improvement.
 3. **cnt=8,9,10 paths** — TESTED, within noise.
 4. **Rust port** — DEAD. 10% slower codegen.

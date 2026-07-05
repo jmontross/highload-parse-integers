@@ -1,26 +1,14 @@
-// HighLoad.fun — parse_integers  (VARIANT: avx2_dual_window)
-// Process 2 consecutive 64-byte windows per outer-loop iteration.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_cnt12)
+// Extends avx2_cnt8910 with explicit fast paths for cnt==11 and cnt==12.
 //
 // MOTIVATION:
-//   The main loop does: nl_mask64(p) → dispatch(cnt) → p += 64.
-//   The nl_mask64 loads are sequential-stride-64, and the hardware prefetcher
-//   covers this pattern well. However, the dependency chain from:
-//     nl_mask64(p0) → parse_quad → base update → nl_mask64(p1)
-//   prevents the OOO engine from starting the p1 scan while the p0 parse runs.
-//
-//   By loading BOTH masks upfront within one loop iteration:
-//     m0 = nl_mask64(p0)  -- independent, can overlap
-//     m1 = nl_mask64(p1)  -- starts immediately, before m0's parse runs
-//   We give the OOO engine more instruction-level parallelism. The dispatch
-//   for m1 begins before m0's parse_quad dependency chain completes.
-//
-//   The key cost: base-pointer threading between the two windows. If a number
-//   spans the p0/p1 boundary (base at end of p0 window), window1's first
-//   number length depends on where m0's parse left base — so we must process
-//   m0 before setting up m1's first-number start. This limits the gain.
-//
-//   Still worth testing: the nl_mask64 loads themselves (2 loads × 64 bytes = 128B
-//   per window) have 4-6 cycle latency; overlapping them saves ~8 cycles per pair.
+//   avx2_cnt8910 handles cnt==8,9,10 with 2×parse_quad. The while(m) fallback
+//   still triggers for cnt==11,12 (short numbers: avg 5-6 digits per number).
+//   This is rare but eliminates the last serial extraction path:
+//     cnt=11 → 2×parse_quad + parse_pair + parse_num
+//     cnt=12 → 3×parse_quad
+//   With 64-byte windows and 6-byte average lines (5-digit numbers), cnt==11-12
+//   appears for the minority of 4-6 digit numbers in the dataset (~1-2% of windows).
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -156,145 +144,6 @@ static inline uint64_t parse_quad(
           +(ch*100000000ULL+c8)+(dh*100000000ULL+d8);
 }
 
-// Process one 64-byte window: updates base, returns partial sum
-static inline uint64_t process_window(
-    const unsigned char* __restrict__ p,
-    const unsigned char* __restrict__ & base,
-    uint64_t m)
-{
-    uint64_t sum = 0;
-    int cnt = __builtin_popcountll(m);
-
-    if (__builtin_expect(cnt == 6, 1)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4,n5;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm); mm&=mm-1;
-        n5=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
-                            *nl3=p+n3,*nl4=p+n4,*nl5=p+n5;
-        sum += parse_quad(base,    nl0-base,   nl0+1, nl1-nl0-1,
-                          nl1+1,   nl2-nl1-1,  nl2+1, nl3-nl2-1)
-             + parse_pair(nl3+1,   nl4-nl3-1,  nl4+1, nl5-nl4-1);
-        base = nl5+1;
-    } else if (__builtin_expect(cnt == 5, 1)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
-                            *nl3=p+n3,*nl4=p+n4;
-        sum += parse_quad(base,  nl0-base,   nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1,  nl2+1, nl3-nl2-1)
-             + parse_num(nl3+1,  nl4-nl3-1);
-        base = nl4+1;
-    } else if (__builtin_expect(cnt == 7, 0)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4,n5,n6;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm); mm&=mm-1;
-        n5=__builtin_ctzll(mm); mm&=mm-1;
-        n6=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
-                            *nl4=p+n4,*nl5=p+n5,*nl6=p+n6;
-        sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-             + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
-             + parse_num(nl5+1,  nl6-nl5-1);
-        base = nl6+1;
-    } else if (__builtin_expect(cnt == 4, 0)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3;
-        sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
-        base = nl3+1;
-    } else if (__builtin_expect(cnt == 8, 0)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4,n5,n6,n7;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm); mm&=mm-1;
-        n5=__builtin_ctzll(mm); mm&=mm-1;
-        n6=__builtin_ctzll(mm); mm&=mm-1;
-        n7=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
-                            *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7;
-        sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
-        base = nl7+1;
-    } else if (__builtin_expect(cnt == 9, 0)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm); mm&=mm-1;
-        n5=__builtin_ctzll(mm); mm&=mm-1;
-        n6=__builtin_ctzll(mm); mm&=mm-1;
-        n7=__builtin_ctzll(mm); mm&=mm-1;
-        n8=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
-                            *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,*nl8=p+n8;
-        sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
-             + parse_num(nl7+1,  nl8-nl7-1);
-        base = nl8+1;
-    } else if (__builtin_expect(cnt == 10, 0)) {
-        uint64_t mm = m;
-        unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9;
-        n0=__builtin_ctzll(mm); mm&=mm-1;
-        n1=__builtin_ctzll(mm); mm&=mm-1;
-        n2=__builtin_ctzll(mm); mm&=mm-1;
-        n3=__builtin_ctzll(mm); mm&=mm-1;
-        n4=__builtin_ctzll(mm); mm&=mm-1;
-        n5=__builtin_ctzll(mm); mm&=mm-1;
-        n6=__builtin_ctzll(mm); mm&=mm-1;
-        n7=__builtin_ctzll(mm); mm&=mm-1;
-        n8=__builtin_ctzll(mm); mm&=mm-1;
-        n9=__builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
-                            *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,
-                            *nl8=p+n8,*nl9=p+n9;
-        sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
-             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
-        base = nl9+1;
-    } else {
-        while (m) {
-            unsigned nlpos = __builtin_ctzll(m);
-            const unsigned char* nlp = p + nlpos;
-            size_t len = (size_t)(nlp - base);
-            if (len) sum += parse_num(base, len);
-            base = nlp + 1;
-            m &= m - 1;
-        }
-    }
-    return sum;
-}
-
 static inline uint64_t nl_mask64(const unsigned char* p) {
     __m256i v0 = _mm256_loadu_si256((const __m256i*)p);
     __m256i v1 = _mm256_loadu_si256((const __m256i*)(p + 32));
@@ -304,27 +153,206 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
+// Helper macro to extract N newline positions from mask mm into n0..n(N-1)
+#define EXTRACT2(mm, n0, n1) \
+    n0=__builtin_ctzll(mm); mm&=mm-1; \
+    n1=__builtin_ctzll(mm)
+#define EXTRACT4(mm, n0, n1, n2, n3) \
+    n0=__builtin_ctzll(mm); mm&=mm-1; \
+    n1=__builtin_ctzll(mm); mm&=mm-1; \
+    n2=__builtin_ctzll(mm); mm&=mm-1; \
+    n3=__builtin_ctzll(mm)
+
 static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 256) return scalar_tail(p, end, sum);
+    if (size < 128) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 160; // 2 windows + safety margin
+    const unsigned char* safe_end = end - 96;
 
-    // Dual-window loop: load both masks before processing either window.
-    // The two nl_mask64 loads are independent and can overlap in OOO.
     while (p < safe_end) {
-        uint64_t m0 = nl_mask64(p);
-        uint64_t m1 = nl_mask64(p + 64); // independent: can be issued immediately
-        sum += process_window(p,      base, m0);
-        sum += process_window(p + 64, base, m1);
-        p += 128;
-    }
-    // Tail: process remaining windows one at a time
-    while (p + 96 < end) {
         uint64_t m = nl_mask64(p);
-        sum += process_window(p, base, m);
+        int cnt = __builtin_popcountll(m);
+
+        if (__builtin_expect(cnt == 6, 1)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
+                                *nl3=p+n3,*nl4=p+n4,*nl5=p+n5;
+            sum += parse_quad(base,    nl0-base,   nl0+1, nl1-nl0-1,
+                              nl1+1,   nl2-nl1-1,  nl2+1, nl3-nl2-1)
+                 + parse_pair(nl3+1,   nl4-nl3-1,  nl4+1, nl5-nl4-1);
+            base = nl5+1;
+        } else if (__builtin_expect(cnt == 5, 1)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
+                                *nl3=p+n3,*nl4=p+n4;
+            sum += parse_quad(base,  nl0-base,   nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1,  nl2+1, nl3-nl2-1)
+                 + parse_num(nl3+1,  nl4-nl3-1);
+            base = nl4+1;
+        } else if (__builtin_expect(cnt == 7, 0)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6;
+            sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+                 + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
+                 + parse_num(nl5+1,  nl6-nl5-1);
+            base = nl6+1;
+        } else if (__builtin_expect(cnt == 4, 0)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3;
+            sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
+            base = nl3+1;
+        } else if (__builtin_expect(cnt == 8, 0)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6,n7;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm); mm&=mm-1;
+            n7=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7;
+            sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+                 + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                              nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
+            base = nl7+1;
+        } else if (__builtin_expect(cnt == 9, 0)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm); mm&=mm-1;
+            n7=__builtin_ctzll(mm); mm&=mm-1;
+            n8=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,*nl8=p+n8;
+            sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+                 + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                              nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
+                 + parse_num(nl7+1,  nl8-nl7-1);
+            base = nl8+1;
+        } else if (__builtin_expect(cnt == 10, 0)) {
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm); mm&=mm-1;
+            n7=__builtin_ctzll(mm); mm&=mm-1;
+            n8=__builtin_ctzll(mm); mm&=mm-1;
+            n9=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,
+                                *nl8=p+n8,*nl9=p+n9;
+            sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                              nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+                 + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                              nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
+                 + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
+            base = nl9+1;
+        } else if (__builtin_expect(cnt == 11, 0)) {
+            // 2×parse_quad + parse_pair + parse_num
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm); mm&=mm-1;
+            n7=__builtin_ctzll(mm); mm&=mm-1;
+            n8=__builtin_ctzll(mm); mm&=mm-1;
+            n9=__builtin_ctzll(mm); mm&=mm-1;
+            n10=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,
+                                *nl8=p+n8,*nl9=p+n9,*nl10=p+n10;
+            sum += parse_quad(base,   nl0-base,   nl0+1, nl1-nl0-1,
+                              nl1+1,  nl2-nl1-1,  nl2+1, nl3-nl2-1)
+                 + parse_quad(nl3+1,  nl4-nl3-1,  nl4+1, nl5-nl4-1,
+                              nl5+1,  nl6-nl5-1,  nl6+1, nl7-nl6-1)
+                 + parse_pair(nl7+1,  nl8-nl7-1,  nl8+1, nl9-nl8-1)
+                 + parse_num(nl9+1,   nl10-nl9-1);
+            base = nl10+1;
+        } else if (__builtin_expect(cnt == 12, 0)) {
+            // 3×parse_quad covers all 12 numbers
+            uint64_t mm = m;
+            unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11;
+            n0=__builtin_ctzll(mm); mm&=mm-1;
+            n1=__builtin_ctzll(mm); mm&=mm-1;
+            n2=__builtin_ctzll(mm); mm&=mm-1;
+            n3=__builtin_ctzll(mm); mm&=mm-1;
+            n4=__builtin_ctzll(mm); mm&=mm-1;
+            n5=__builtin_ctzll(mm); mm&=mm-1;
+            n6=__builtin_ctzll(mm); mm&=mm-1;
+            n7=__builtin_ctzll(mm); mm&=mm-1;
+            n8=__builtin_ctzll(mm); mm&=mm-1;
+            n9=__builtin_ctzll(mm); mm&=mm-1;
+            n10=__builtin_ctzll(mm); mm&=mm-1;
+            n11=__builtin_ctzll(mm);
+            const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
+                                *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,
+                                *nl8=p+n8,*nl9=p+n9,*nl10=p+n10,*nl11=p+n11;
+            sum += parse_quad(base,   nl0-base,   nl0+1, nl1-nl0-1,
+                              nl1+1,  nl2-nl1-1,  nl2+1, nl3-nl2-1)
+                 + parse_quad(nl3+1,  nl4-nl3-1,  nl4+1, nl5-nl4-1,
+                              nl5+1,  nl6-nl5-1,  nl6+1, nl7-nl6-1)
+                 + parse_quad(nl7+1,  nl8-nl7-1,  nl8+1, nl9-nl8-1,
+                              nl9+1,  nl10-nl9-1, nl10+1, nl11-nl10-1);
+            base = nl11+1;
+        } else {
+            while (m) {
+                unsigned nlpos = __builtin_ctzll(m);
+                const unsigned char* nlp = p + nlpos;
+                size_t len = (size_t)(nlp - base);
+                if (len) sum += parse_num(base, len);
+                base = nlp + 1;
+                m &= m - 1;
+            }
+        }
         p += 64;
     }
     return scalar_tail(base, end, sum);
