@@ -19,18 +19,23 @@ interleaved prefetch), 186 ms, score 21,124, **clang++18.1.3** `-O3 -march=nativ
 Your rank can only go *up*: highload.fun keeps your **best** submission, so a slower one
 never displaces it.
 
-**IMPORTANT — we are now MEMORY-BANDWIDTH bound, not compute bound.** The judge row reads
-`186M ns · 174M ns` — ~174ms is just streaming the 500MB input; the parse is a small slice
-on top. That's why the routine keeps hitting STOP-FLOOR and why a 30% parse speedup only
-moved 1 rank. **More SIMD parse cleverness (vpdpbusd etc.) is largely spent.** The rank-18
-bar (69ms) is ~2.7× below us — the top solutions win on the **I/O side**, so that's where
-the next real gains are:
-- **Huge pages** (`madvise(MADV_HUGEPAGE)` / `MAP_HUGETLB`) to cut TLB misses on the 500MB map.
-- **Overlap I/O with compute** — prefetch/stream so parsing hides memory latency (the champion
-  already prefetches; push it / try non-temporal or software-pipelined reads).
-- **Investigate what the ~69ms solutions actually do** (read strategy, not parse) — e.g. the
-  rank-71 C# entry hits 169ms; the leaders at 69ms are near the raw memory floor.
-- Compiler is settled: **clang++18.1.3** beats g++ ~15% here.
+**PLATEAU REACHED — we're at the judge's noise floor.** Two things are now *proven* by the
+routine's x86 experiments, so don't grind them:
+- **I/O is already optimal**: mmap+MAP_POPULATE beats read()/read_thp/io_uring ~3×; huge pages
+  give nothing. (My earlier "memory-bound, tune I/O" call was wrong — mmap already bypasses
+  the kernel read path and runs 3.5× faster than `cat`.)
+- **Parse SIMD is near-optimal**: 8-window + SSE maddubs/cnt3 is within a few % of the limit.
+
+**The judge has ~few-% run-to-run noise**, so a gate PROMOTE with a <10-15% local margin does
+NOT move your rank — proven 2026-07-06: a 2.1% local win (cnt3) scored *0.2% worse* on the
+judge (21,172 vs 21,124), so rank held at 76. **Only submit BREAKTHROUGH wins (≥15-20%).**
+The routine is now in **breakthrough-only mode** (won't churn marginal variants; will shout
+"BIG WIN READY TO SUBMIT" if it finds one). Compiler settled: **clang++18.1.3** (~15% over g++).
+
+The remaining gap to rank 18 (69ms vs 186ms, ~2.7×) sits near the **raw memory-bandwidth
+floor** — closing it needs a genuinely different approach (study what the sub-100ms leaders
+actually do), not more tuning. Realistically this is a strong stopping point; big further
+gains are unlikely without a real algorithmic breakthrough.
 
 ### The one open decision
 `variants/avx512_blockparse.cpp` (AVX-512, tiered AVX512BW→AVX2→scalar) is written and its
