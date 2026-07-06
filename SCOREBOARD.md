@@ -13,15 +13,19 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_cnt12 (re-promoted 2026-07-06, this run)** — `cnt==4..12 fast paths, single 64-byte window per iteration`
-  — re-promoted because today's VM state favors simpler/compact code. Initial baseline run (before new variants):
-  avx2_cnt12 0.2140s vs avx2_8window champion 0.2340s → PROMOTE gate (8.5% margin, both conditions).
-  Confirmation RUNS=5: new champion 0.2100s best / 0.2180s median, floor 0.5170s, STOP-FLOOR ×19.
-  Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.2060s local best**.
-  Note: avx2_8window champion still valid on low-noise hardware (0.1460s yesterday). VM oscillation
-  between cnt12 and 8window is real — the judge will determine the true winner.
-  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
-  Expected judge time: ~40–60ms.
+- **avx2_8w_pf (PROMOTED 2026-07-06, this run)** — `8-window + explicit L2 prefetch 2 iterations ahead (_MM_HINT_T1)`
+  — New variant created this run. First run: best=0.1610s, median=0.1660s vs avx2_8window champion 0.1710s/0.1750s
+  → PROMOTE gate (5.8% margin on best, median also lower). Edge suite 9/9.
+  Confirmation RUNS=5: champion (avx2_8w_pf) best=0.1610s, median=0.1640s; avx2_8w_pf variant 0.1600s (0.62% margin, HOLD).
+  Compiler sweep: **clang++ -O3 -march=native → 0.1470s local best** (new record).
+  Why prefetch helps: HW prefetcher tracks ~2 streams; 8-window exposes 8 sequential streams, leaving 6 un-prefetched.
+  `_mm_prefetch(T1)` hints 2 iterations (1024 bytes) ahead cover L3→L2 fill latency (~40ns=~120cy).
+  Floor: 0.4880s (noisy cloud); champion 0.1610s is 3.0× FASTER than cat — well at the I/O ceiling.
+  STOP-FLOOR ×20. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time: ~40–55ms.
+- **avx2_cnt12 (re-promoted 2026-07-06, previous run, now superseded)** — `cnt==4..12 fast paths, single 64-byte window per iteration`
+  — re-promoted because that run's VM state favored simpler/compact code. Best: 0.2100s (g++ -Ofast -march=native -funroll-loops → 0.2060s).
+  Superseded by avx2_8w_pf. Edge suite 9/9.
 - **avx2_8window (previous champion, not deleted)** — `8 × 64-byte windows per outer loop iteration (8 independent nl_mask64 loads)`
   — promoted 2026-07-06. RUNS=3: 0.1500s vs quad_window champion 0.1540s → PROMOTE gate (2.6%
   margin, both conditions). Confirmation RUNS=5: champion 0.1460s best / 0.1480s median, floor 0.477s,
@@ -164,11 +168,18 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_cnt12 (RE-PROMOTED: VM oscillation, compact code wins today) | best 0.2100s, med 0.2180s x86 | ✓ (+9 edge) | ✓ CHAMPION | Baseline: avx2_8window champion at 0.2340s, avx2_cnt12 0.2140s → PROMOTE gate (8.5% margin). RUNS=5 confirmation: champion 0.2100s, floor 0.5170s, STOP-FLOOR ×19. VM state today heavily favors compact single-window code over 8-window ROB-pressure. Compiler sweep: g++ -Ofast -march=native -funroll-loops best 0.2060s. Note: avx2_8window was 0.1460s yesterday — oscillation is VM noise, not real regression. |
 | 2026-07-06 | avx2_6window (6 windows per outer loop iteration) | best 0.2200s, med 0.2250s x86 | ✓ | ✗ HOLD | New variant. 6 × 64-byte windows = 384 bytes/iter. Between 5-window (0.2230s) and 8-window (0.2340s) in today's run. Confirms MLP gain from multi-window is minimal today (compact single-window cnt12 at 0.2100s wins). 4.8% slower than champion. STOP-FLOOR ×19. |
 | 2026-07-06 | avx2_cnt12_switch (switch dispatch instead of if-chain) | best 0.2320s, med 0.2390s x86 | ✓ | ✗ DEAD | New variant. Replaces cascaded if-chain with switch() so compiler can emit jump table. Result: 10.5% SLOWER (0.2320s vs 0.2100s). The if-chain with __builtin_expect hints gives better BTB prediction for the hot cnt==6 path. The switch's indirect branch (1 BTB entry for the jump table) is slower than the well-predicted direct branch chain. Dead end. |
+| 2026-07-06 | avx2_8window (RE-PROMOTED 2nd time in this run, avx2_8w_pf base) | best 0.1680s, med 0.1720s x86 | ✓ (+9 edge) | — (baseline for new champion) | Re-tested as part of confirming avx2_8w_pf. Measured 0.1680s vs avx2_cnt12 champion 0.2010s → PROMOTE gate triggered in first run of this session, then used as the new champion while avx2_8w_pf was being created. |
+| 2026-07-06 | avx2_7window (7 windows per outer loop iteration) | best 0.1710s, med 0.1750s x86 | ✓ | ✗ HOLD | New variant. 7 × 64-byte windows = 448 bytes/iter. Tied with champion (avx2_8window at 0.1710s best, 0.1750s median). Fills the 6–8 window gap; confirms both 7 and 8 windows are near-equivalent today. STOP-FLOOR ×20. |
+| 2026-07-06 | avx2_8w_pf (8-window + L2 prefetch 2 iterations ahead) | best 0.1610s, med 0.1660s x86 | ✓ (+9 edge) | ✓ CHAMPION | New variant. Adds 8 × `_mm_prefetch(T1)` hints at p+1024..p+1472 (2 iterations = 1024 bytes ahead) to avx2_8window. First run: 0.1610s vs avx2_8window champion 0.1710s → PROMOTE gate (5.8% margin, median 0.1660s < 0.1750s). Confirmation RUNS=5: champion best=0.1610s, median=0.1640s; variant 0.1600s (0.62%, HOLD). STOP-FLOOR ×20. Compiler sweep: **clang++ -O3 -march=native → 0.1470s** (new record). Why it helps: HW prefetcher covers ~2 streams; software prefetch covers remaining 6 of 8 streams, reducing effective L3→L2 latency. **SUBMIT with `clang++ -O3 -march=native`.** Expected judge time: ~40–55ms. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
 - `__builtin_prefetch` ahead of the scan (`swar_prefetch`) — prefetch evicts more
   than it saves; mmap MAP_POPULATE/MADV_SEQUENTIAL already streams optimally.
+  **EXCEPTION**: `_mm_prefetch(T1)` in the AVX2 8-window loop (avx2_8w_pf) IS helpful —
+  the multi-window approach exposes 8 independent streams while HW prefetcher covers only ~2;
+  explicit T1 prefetch 1024 bytes (2 iterations) ahead covers the remaining 6 streams and
+  gives 5.8% speedup (0.1710s → 0.1610s). Scalar code has no such multi-stream gap.
 - 2 numbers/iter with dual accumulators (`swar_unroll2`) — slower; the per-number
   boundary scans are serial (number 2 starts where number 1 ends) so there's no
   independent work to fill the OOO window, and the manual unroll defeated -O3.
@@ -201,34 +212,26 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×19)
-Champion (avx2_cnt12) best=0.2100s / 0.2060s g++ -Ofast on local x86 vs floor 0.5170s (noisy cloud).
-Champion is 2.46× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- Best local (g++ -Ofast -march=native -funroll-loops): **0.2060s** (today's best)
-- avx2_cnt12 is CHAMPION — compact single-window code with cnt==4..12 fast paths.
-- VM oscillation: avx2_8window best was 0.1460s yesterday, 0.2340s today. avx2_cnt12 is 0.2100s today.
-- Champion has never been submitted to judge — last submission rank 119 (avx2_blockparse 307ms).
-- **SUBMIT `champion/main.cpp` (avx2_cnt12) to judge with `g++ -Ofast -march=native -funroll-loops`.**
-  (Also worth trying `clang++ -O3 -march=native` on judge hardware — it was best yesterday.)
-  Expected judge time: ~40–60ms.
-- All compute and I/O angles exhausted. Window-count, cnt-coverage, parse-method, and compiler all explored.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×20)
+Champion (avx2_8w_pf) best=0.1610s / 0.1470s clang++ -O3 -march=native on local x86 vs floor 0.4880s (noisy cloud).
+Champion is 3.0× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
+- Best local (clang++ -O3 -march=native): **0.1470s** (new record, from compiler sweep)
+- avx2_8w_pf is CHAMPION — 8-window + L2 prefetch 2 iterations ahead for uncovered streams.
+- **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time: ~40–55ms.
+- All compute and I/O angles exhausted. Prefetch + multi-window is the winning formula.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_cnt12, local best 0.2060s (g++ -Ofast -march=native -funroll-loops). **PRIORITY ACTION.** Also try avx2_8window.cpp (yesterday's champion, 0.1310s clang++) — both are valid judge candidates and judge hardware may prefer either. Expected ~40–60ms.
-2. **Force-inlining** — TESTED, no improvement.
-3. **cnt=8,9,10,11,12 paths** — TESTED, within noise (avx2_cnt8910, avx2_cnt12).
-4. **Rust port** — DEAD. 10% slower codegen.
-5. **128-byte window** — TESTED, slower. Wider cnt distribution outweighs loop amortization.
-6. **512-bit parse_oct** — TESTED. Correct but 7% slower — extraction overhead offsets SIMD benefit.
-7. **Branch reduction (cnt6only)** — TESTED, 3% slower. cnt==5,7,4 paths are genuinely useful.
-8. **AVX-512 VNNI (VPDPBUSD)** — the 4-byte dot product can't represent weights >127 (e.g., 1000), so it doesn't replace MADDUBS+MADD in a single pass. Dead end.
-9. **VPCOMPRESSB approach** — AVX-512 compact digits → fixed-width parse. Not implemented; might help on SPR but parse_oct testing suggests 512-bit overhead is real. Not worth trying on Cascade Lake.
-10. **PDEP parallel extraction** — TESTED, no improvement. Confirms compute is hidden by DRAM latency.
-11. **Direct load addresses (p+n_i-8)** — TESTED, no improvement. Same reason as PDEP.
-12. **PGO (profile-guided optimization)** — TESTED (g++). No improvement. clang PGO unavailable.
-13. **Compiler tuning** — TESTED. Best: clang++ -Ofast -march=native -funroll-loops at 0.1740s.
-14. **THP/huge pages for mmap** — kernel already uses huge folios for file cache. Already optimal.
-15. **Gather-based tail loads (vpgatherdq)** — gather on Cascade Lake is ~20cy vs 4×L1-hit-loadl ~4cy. Slower.
-16. **CLZ-based base update** (`avx2_clzbase`) — TESTED, no improvement. OOO already handles the base dependency.
-17. **5-window / 8-window loop** — TESTED this run. 5-window HOLD (tied best), 8-window DEAD (slower). MLP saturates at 4 windows.
-18. **64-bit SIMD multiply for high digits** — AVX2 has no mullo_epi64; OOO already issues 4 independent scalar IMULQ simultaneously; no gain possible.
+1. **Submit champion to judge** — avx2_8w_pf, local best 0.1470s (clang++ -O3 -march=native). **PRIORITY ACTION.** Expected ~40–55ms.
+2. **Prefetch distance tuning** — Try 3 iterations ahead (1536 bytes) vs current 2 iterations (1024 bytes). L3 latency ~120cy; at ~300cy/iteration, 1 iteration may be enough, 2 is conservative. Diminishing returns expected.
+3. **avx2_8w_pf + _MM_HINT_T0** — Try prefetch into L1 (T0) instead of L2 (T1). Risk: evicts useful L1 data if too many prefetches issued. Worth one test.
+4. **Force-inlining** — TESTED, no improvement.
+5. **cnt=8,9,10,11,12 paths** — TESTED, within noise.
+6. **Rust port** — DEAD. 10% slower codegen.
+7. **128-byte window** — TESTED, slower.
+8. **512-bit parse_oct** — TESTED. Correct but 7% slower.
+9. **AVX-512 VNNI (VPDPBUSD)** — can't represent weights >127. Dead end.
+10. **PDEP parallel extraction** — TESTED, no improvement.
+11. **PGO** — TESTED (g++). No improvement.
+12. **7-window loop** — TESTED (avx2_7window), HOLD (tied with champion today).
+13. **64-bit SIMD multiply for high digits** — AVX2 has no mullo_epi64; OOO already issues 4 independent scalar IMULQ simultaneously; no gain possible.

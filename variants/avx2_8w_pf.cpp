@@ -1,4 +1,4 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf)
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8w_pf)
 // 8-window + explicit L2 prefetch for the NEXT 2 iterations' windows.
 //
 // Rationale: The HW prefetcher on Cascade Lake tracks ~2 sequential

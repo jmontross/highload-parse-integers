@@ -1,14 +1,9 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf)
-// 8-window + explicit L2 prefetch for the NEXT 2 iterations' windows.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_7window)
+// Process 7 consecutive 64-byte windows per outer-loop iteration.
 //
-// Rationale: The HW prefetcher on Cascade Lake tracks ~2 sequential
-// streams. For 8 independent 64-byte windows, 6 streams are not
-// hardware-prefetched. Adding `_mm_prefetch(T1)` hints 2 iterations
-// (1024 bytes) ahead may cover the L3→L2 fill latency (~40ns = ~120cy).
-//
-// Structure: identical to avx2_8window except each iteration also issues
-// 8 prefetch hints for p+1024 through p+1472 (2 iterations ahead).
-// Uses the same process_window as avx2_8window (cnt==4..10 fast paths).
+// Rationale: 6-window (0.1700s) and 8-window (0.1700s) tie today.
+// 7 windows is the midpoint — possibly better cache/ROB balance.
+// safe_end offset: 7×64 + 32 safety = 480 bytes before end.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -295,23 +290,11 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
     uint64_t sum = 0;
-    if (size < 800) return scalar_tail(p, end, sum);
+    if (size < 700) return scalar_tail(p, end, sum);
     const unsigned char* base = data;
-    const unsigned char* safe_end = end - 544; // 8 windows (512) + safety (32)
+    const unsigned char* safe_end = end - 480; // 7 windows (448) + safety (32)
 
     while (p < safe_end) {
-        // Prefetch 2 iterations ahead (1024 bytes) into L2 cache.
-        // Cascade Lake L3 latency ~40ns; at 3 GHz each iteration ~300cy
-        // → 1 iteration of lookahead is sufficient; 2 is a safety margin.
-        _mm_prefetch((const char*)(p + 1024),      _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 64), _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 128),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 192),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 256),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 320),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 384),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1024 + 448),_MM_HINT_T1);
-
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         uint64_t m2 = nl_mask64(p + 128);
@@ -319,7 +302,6 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         uint64_t m4 = nl_mask64(p + 256);
         uint64_t m5 = nl_mask64(p + 320);
         uint64_t m6 = nl_mask64(p + 384);
-        uint64_t m7 = nl_mask64(p + 448);
         sum += process_window(p,       base, m0);
         sum += process_window(p + 64,  base, m1);
         sum += process_window(p + 128, base, m2);
@@ -327,8 +309,7 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         sum += process_window(p + 256, base, m4);
         sum += process_window(p + 320, base, m5);
         sum += process_window(p + 384, base, m6);
-        sum += process_window(p + 448, base, m7);
-        p += 512;
+        p += 448;
     }
     // Single-window tail
     while (p + 96 < end) {
