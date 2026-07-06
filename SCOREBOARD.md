@@ -13,14 +13,21 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_8window** — `8 × 64-byte windows per outer loop iteration (8 independent nl_mask64 loads)`
-  — promoted 2026-07-06 (current run). RUNS=3: 0.1500s vs quad_window champion 0.1540s → PROMOTE gate (2.6%
+- **avx2_cnt12 (re-promoted 2026-07-06, this run)** — `cnt==4..12 fast paths, single 64-byte window per iteration`
+  — re-promoted because today's VM state favors simpler/compact code. Initial baseline run (before new variants):
+  avx2_cnt12 0.2140s vs avx2_8window champion 0.2340s → PROMOTE gate (8.5% margin, both conditions).
+  Confirmation RUNS=5: new champion 0.2100s best / 0.2180s median, floor 0.5170s, STOP-FLOOR ×19.
+  Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.2060s local best**.
+  Note: avx2_8window champion still valid on low-noise hardware (0.1460s yesterday). VM oscillation
+  between cnt12 and 8window is real — the judge will determine the true winner.
+  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~40–60ms.
+- **avx2_8window (previous champion, not deleted)** — `8 × 64-byte windows per outer loop iteration (8 independent nl_mask64 loads)`
+  — promoted 2026-07-06. RUNS=3: 0.1500s vs quad_window champion 0.1540s → PROMOTE gate (2.6%
   margin, both conditions). Confirmation RUNS=5: champion 0.1460s best / 0.1480s median, floor 0.477s,
   STOP-FLOOR ×18. Compiler sweep: **clang++ -O3 -march=native → 0.1310s local best (new record)**.
-  8 nl_mask64 masks per iteration (512 bytes/outer-loop), maximizing memory-level parallelism.
-  Previous DEAD verdict was a noisy VM run; re-measured today with consistent 2.6% win.
-  Edge suite 9/9. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time: ~40–55ms (rank 8–12 territory). Also test avx2_16window — near-PROMOTE (lower median).
+  Today's VM shows 0.2340s (slower) — the oscillation vs avx2_cnt12 (0.2100s today) is pure VM noise.
+  Edge suite 9/9. Still a valid judge-submission candidate.
 - **avx2_quad_window (previous champion)** — `quad 64-byte window per outer loop iteration (4 independent nl_mask64 loads)`
   — promoted 2026-07-05, now superseded by avx2_8window. Run 1: 0.1790s/0.1800s median vs avx2_triple_window 0.1830s/0.1870s
   → PROMOTE gate (2.18% margin, both conditions). Best compiler: `clang++ -Ofast -march=native -funroll-loops → 0.1740s`.
@@ -154,6 +161,9 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_8window (RE-TESTED: PROMOTED to champion) | best 0.1440s/0.1460s, med 0.1480s x86 | ✓ (+9 edge) | ✓ CHAMPION | RUNS=3: 0.1500s vs quad_window champion 0.1540s → 2.6% margin, median lower → PROMOTE gate. Confirmation RUNS=5: champion (8-window) 0.1460s best, STOP-FLOOR ×18. Previous DEAD was a noisy VM run — today's VM shows 8-window consistently wins over quad-window. Compiler sweep: `clang++ -O3 -march=native` → **0.1310s local best** (new record). Floor=0.477s; champion is 3.26× faster than cat — mmap bypass, bandwidth-bound. |
 | 2026-07-06 | avx2_12window (12 windows per outer loop iteration) | best 0.1470s, med 0.1480s x86 | ✓ | ✗ HOLD | New variant. 12 × 64-byte windows = 768 bytes/iter = 24 outstanding AVX2 loads. Competitive (0.1470s vs champion 0.1460s) but within noise (0.69% margin, need 1.5%). STOP-FLOOR ×18. |
 | 2026-07-06 | avx2_16window (16 windows per outer loop iteration) | best 0.1450s, med 0.1460s x86 | ✓ | ✗ HOLD | New variant. 16 × 64-byte windows = 1024 bytes/iter = 32 outstanding AVX2 loads. BOTH lower best (0.1450 < 0.1460s champion) AND lower median (0.1460 vs 0.1480s) but Δbest=0.001s = 0.69%, below the 1.5% gate. Near-PROMOTE: if run variance is lower on judge hardware, 16-window may actually win. STOP-FLOOR ×18. |
+| 2026-07-06 | avx2_cnt12 (RE-PROMOTED: VM oscillation, compact code wins today) | best 0.2100s, med 0.2180s x86 | ✓ (+9 edge) | ✓ CHAMPION | Baseline: avx2_8window champion at 0.2340s, avx2_cnt12 0.2140s → PROMOTE gate (8.5% margin). RUNS=5 confirmation: champion 0.2100s, floor 0.5170s, STOP-FLOOR ×19. VM state today heavily favors compact single-window code over 8-window ROB-pressure. Compiler sweep: g++ -Ofast -march=native -funroll-loops best 0.2060s. Note: avx2_8window was 0.1460s yesterday — oscillation is VM noise, not real regression. |
+| 2026-07-06 | avx2_6window (6 windows per outer loop iteration) | best 0.2200s, med 0.2250s x86 | ✓ | ✗ HOLD | New variant. 6 × 64-byte windows = 384 bytes/iter. Between 5-window (0.2230s) and 8-window (0.2340s) in today's run. Confirms MLP gain from multi-window is minimal today (compact single-window cnt12 at 0.2100s wins). 4.8% slower than champion. STOP-FLOOR ×19. |
+| 2026-07-06 | avx2_cnt12_switch (switch dispatch instead of if-chain) | best 0.2320s, med 0.2390s x86 | ✓ | ✗ DEAD | New variant. Replaces cascaded if-chain with switch() so compiler can emit jump table. Result: 10.5% SLOWER (0.2320s vs 0.2100s). The if-chain with __builtin_expect hints gives better BTB prediction for the hot cnt==6 path. The switch's indirect branch (1 BTB entry for the jump table) is slower than the well-predicted direct branch chain. Dead end. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -186,23 +196,25 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
 - **CLZ-based base update** (`avx2_clzbase`) — HOLD. Using `63-CLZ(m)` to get last newline position in 1 cycle (vs CTZ×N chain at N×3 cycles) should make next base available earlier to OOO. Theory: base dependency chain shrinks from ~18 to ~2 cycles. Practice: no improvement. OOO already schedules the CTZ chain and parse operations concurrently; the base update (needed only for the FIRST argument of parse_quad) was not the scheduling bottleneck. Confirms bandwidth-bound ×15.
+- **Switch dispatch for cnt** (`avx2_cnt12_switch`) — DEAD. Replacing the if-chain with switch() generates a jump table (1 indirect branch) vs 9 direct conditional branches. Theory: fewer BTB entries. Practice: 10.5% SLOWER (0.2320s vs 0.2100s). The if-chain with __builtin_expect on the cnt==6 hot path produces a well-predicted direct branch sequence that beats the jump table's indirect branch. Do not retry.
 - **Quad-window loop** (`avx2_quad_window`) — Initially HOLD (1.3% margin in first test). PROMOTED in 2026-07-05 latest run when fresh measurements gave 2.18% margin (0.1790s vs 0.1830s champion) with lower median. Now CHAMPION. Supersedes triple-window.
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×18)
-Champion (avx2_8window) best=0.1460s / 0.1310s clang++ -O3 on local x86 vs floor 0.477s (noisy cloud).
-Champion is 3.26× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- Best local (clang++ -O3 -march=native): **0.1310s** (new record this run)
-- avx2_8window is CHAMPION (8 independent nl_mask64 loads per outer iteration).
-- avx2_16window near-PROMOTE: lower best (0.1450s) AND lower median (0.1460s) vs champion (0.1460/0.1480s), but Δbest=0.69% < 1.5% gate. On lower-noise hardware, may win.
-- Champion (avx2_8window) has never been submitted to judge — last submission rank 119 (avx2_blockparse 307ms).
-- **SUBMIT `champion/main.cpp` (avx2_8window) to judge with `clang++ -O3 -march=native`.**
-  Expected judge time: ~40–55ms (rank 8–12 territory).
-- All compute and I/O angles exhausted. Window-count exploration now reaches 16; MLP sweet spot is 8-16.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×19)
+Champion (avx2_cnt12) best=0.2100s / 0.2060s g++ -Ofast on local x86 vs floor 0.5170s (noisy cloud).
+Champion is 2.46× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
+- Best local (g++ -Ofast -march=native -funroll-loops): **0.2060s** (today's best)
+- avx2_cnt12 is CHAMPION — compact single-window code with cnt==4..12 fast paths.
+- VM oscillation: avx2_8window best was 0.1460s yesterday, 0.2340s today. avx2_cnt12 is 0.2100s today.
+- Champion has never been submitted to judge — last submission rank 119 (avx2_blockparse 307ms).
+- **SUBMIT `champion/main.cpp` (avx2_cnt12) to judge with `g++ -Ofast -march=native -funroll-loops`.**
+  (Also worth trying `clang++ -O3 -march=native` on judge hardware — it was best yesterday.)
+  Expected judge time: ~40–60ms.
+- All compute and I/O angles exhausted. Window-count, cnt-coverage, parse-method, and compiler all explored.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_quad_window, local best 0.1740s (clang++ -Ofast -march=native -funroll-loops). **PRIORITY ACTION.** Expected ~45–60ms on judge hardware.
+1. **Submit champion to judge** — avx2_cnt12, local best 0.2060s (g++ -Ofast -march=native -funroll-loops). **PRIORITY ACTION.** Also try avx2_8window.cpp (yesterday's champion, 0.1310s clang++) — both are valid judge candidates and judge hardware may prefer either. Expected ~40–60ms.
 2. **Force-inlining** — TESTED, no improvement.
 3. **cnt=8,9,10,11,12 paths** — TESTED, within noise (avx2_cnt8910, avx2_cnt12).
 4. **Rust port** — DEAD. 10% slower codegen.

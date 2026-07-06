@@ -1,14 +1,17 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_cnt12)
-// Extends avx2_cnt8910 with explicit fast paths for cnt==11 and cnt==12.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_cnt12_switch)
+// Same algorithm as avx2_cnt12 but uses switch() for cnt dispatch.
 //
-// MOTIVATION:
-//   avx2_cnt8910 handles cnt==8,9,10 with 2×parse_quad. The while(m) fallback
-//   still triggers for cnt==11,12 (short numbers: avg 5-6 digits per number).
-//   This is rare but eliminates the last serial extraction path:
-//     cnt=11 → 2×parse_quad + parse_pair + parse_num
-//     cnt=12 → 3×parse_quad
-//   With 64-byte windows and 6-byte average lines (5-digit numbers), cnt==11-12
-//   appears for the minority of 4-6 digit numbers in the dataset (~1-2% of windows).
+// Motivation: the if-chain in avx2_cnt12 (cnt==6, 5, 7, 4, 8..12)
+// generates a cascade of conditional jumps. A switch() on an integer
+// in [4..12] should let the compiler emit a jump table (1 load + 1
+// indirect branch vs 9 conditional branches). On a variable-cnt
+// workload this may improve branch predictor utilization.
+//
+// The __builtin_expect hints on the if-chain tell the compiler which
+// branch is hot but don't affect the generated instruction count.
+// A switch with a jump table uses 1 indirect branch (predictable via BTB)
+// vs 9 direct conditional branches (9 BTB entries). At high throughput,
+// fewer BTB entries = fewer mispredictions.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -153,16 +156,6 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
-// Helper macro to extract N newline positions from mask mm into n0..n(N-1)
-#define EXTRACT2(mm, n0, n1) \
-    n0=__builtin_ctzll(mm); mm&=mm-1; \
-    n1=__builtin_ctzll(mm)
-#define EXTRACT4(mm, n0, n1, n2, n3) \
-    n0=__builtin_ctzll(mm); mm&=mm-1; \
-    n1=__builtin_ctzll(mm); mm&=mm-1; \
-    n2=__builtin_ctzll(mm); mm&=mm-1; \
-    n3=__builtin_ctzll(mm)
-
 static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
@@ -175,7 +168,10 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         uint64_t m = nl_mask64(p);
         int cnt = __builtin_popcountll(m);
 
-        if (__builtin_expect(cnt == 6, 1)) {
+        // switch on cnt generates a jump table (9 entries: 4..12),
+        // replacing 9 cascaded conditional branches with 1 indirect branch.
+        switch (cnt) {
+        case 6: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -190,7 +186,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                               nl1+1,   nl2-nl1-1,  nl2+1, nl3-nl2-1)
                  + parse_pair(nl3+1,   nl4-nl3-1,  nl4+1, nl5-nl4-1);
             base = nl5+1;
-        } else if (__builtin_expect(cnt == 5, 1)) {
+            break;
+        }
+        case 5: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -204,7 +202,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                               nl1+1, nl2-nl1-1,  nl2+1, nl3-nl2-1)
                  + parse_num(nl3+1,  nl4-nl3-1);
             base = nl4+1;
-        } else if (__builtin_expect(cnt == 7, 0)) {
+            break;
+        }
+        case 7: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -221,7 +221,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                  + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
                  + parse_num(nl5+1,  nl6-nl5-1);
             base = nl6+1;
-        } else if (__builtin_expect(cnt == 4, 0)) {
+            break;
+        }
+        case 4: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -232,7 +234,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             sum += parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
                               nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
             base = nl3+1;
-        } else if (__builtin_expect(cnt == 8, 0)) {
+            break;
+        }
+        case 8: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6,n7;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -250,7 +254,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                  + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
                               nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
             base = nl7+1;
-        } else if (__builtin_expect(cnt == 9, 0)) {
+            break;
+        }
+        case 9: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -270,7 +276,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                               nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
                  + parse_num(nl7+1,  nl8-nl7-1);
             base = nl8+1;
-        } else if (__builtin_expect(cnt == 10, 0)) {
+            break;
+        }
+        case 10: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -292,8 +300,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                               nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
                  + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
             base = nl9+1;
-        } else if (__builtin_expect(cnt == 11, 0)) {
-            // 2×parse_quad + parse_pair + parse_num
+            break;
+        }
+        case 11: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -317,8 +326,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                  + parse_pair(nl7+1,  nl8-nl7-1,  nl8+1, nl9-nl8-1)
                  + parse_num(nl9+1,   nl10-nl9-1);
             base = nl10+1;
-        } else if (__builtin_expect(cnt == 12, 0)) {
-            // 3×parse_quad covers all 12 numbers
+            break;
+        }
+        case 12: {
             uint64_t mm = m;
             unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11;
             n0=__builtin_ctzll(mm); mm&=mm-1;
@@ -343,7 +353,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                  + parse_quad(nl7+1,  nl8-nl7-1,  nl8+1, nl9-nl8-1,
                               nl9+1,  nl10-nl9-1, nl10+1, nl11-nl10-1);
             base = nl11+1;
-        } else {
+            break;
+        }
+        default: {
             while (m) {
                 unsigned nlpos = __builtin_ctzll(m);
                 const unsigned char* nlp = p + nlpos;
@@ -352,6 +364,8 @@ static uint64_t solve(const unsigned char* data, size_t size) {
                 base = nlp + 1;
                 m &= m - 1;
             }
+            break;
+        }
         }
         p += 64;
     }
