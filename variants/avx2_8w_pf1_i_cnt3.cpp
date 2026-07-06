@@ -1,11 +1,9 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_interleaved)
-// 8-window + T1@1536B prefetch + interleaved mask-compute/window-process.
-// Interleaves nl_mask64() and process_window() calls: compute mask[i+1] while
-// processing window[i]. AVX2 loads (ports 2/3) and integer parse (ports 0/1/5)
-// use disjoint EUs, so issuing them in parallel improves port utilization.
-// Re-promoted 2026-07-07: gate fired vs avx2_8w_pf3_i_cnt3 on two consecutive
-// RUNS=5 runs. Both variants within noise of each other; oscillation between
-// interleaved and i_cnt3 is documented. Clang++ sweep: 0.1360s (-Ofast -funroll).
+// avx2_8w_pf1_i_cnt3 — judge-optimized prefetch distance
+// Champion (avx2_8w_pf3_i_cnt3) with T1 prefetch at 512B = 1 iteration ahead.
+// Judge DRAM latency ~80ns bare-metal; at ~3 GHz, 80ns = 240cy. Each 512B iter
+// takes ~178ns at judge bandwidth (2.87 GB/s). Lookahead ratio = 80/178 ≈ 0.45.
+// Round up to 1 iteration → 512B. Locally 3 iterations (1536B) needed due to VM
+// DRAM latency ~1.5µs. This variant may be faster on judge bare-metal hardware.
 
 #include <cstdio>
 #include <cstdint>
@@ -255,6 +253,16 @@ static inline uint64_t process_window(
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
         base = nl9+1;
+    } else if (__builtin_expect(cnt == 3, 0)) {
+        uint64_t mm = m;
+        unsigned n0, n1, n2;
+        n0 = __builtin_ctzll(mm); mm &= mm - 1;
+        n1 = __builtin_ctzll(mm); mm &= mm - 1;
+        n2 = __builtin_ctzll(mm);
+        const unsigned char *nl0=p+n0, *nl1=p+n1, *nl2=p+n2;
+        sum = parse_pair(base, nl0-base, nl0+1, nl1-nl0-1)
+            + parse_num(nl1+1, nl2-nl1-1);
+        base = nl2+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -286,14 +294,14 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* safe_end = end - 544;
 
     while (p < safe_end) {
-        _mm_prefetch((const char*)(p + 1536),      _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 64), _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 128),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 192),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 256),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 320),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512),        _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 64),  _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 128), _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 192), _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 256), _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 320), _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 384), _MM_HINT_T1);
+        _mm_prefetch((const char*)(p + 512 + 448), _MM_HINT_T1);
 
         // Interleaved: compute mask i+2, process window i. The vector loads
         // (ports 2/3) and parse integer ops (ports 0/1/5) use disjoint EUs,

@@ -1,11 +1,9 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_interleaved)
-// 8-window + T1@1536B prefetch + interleaved mask-compute/window-process.
-// Interleaves nl_mask64() and process_window() calls: compute mask[i+1] while
-// processing window[i]. AVX2 loads (ports 2/3) and integer parse (ports 0/1/5)
-// use disjoint EUs, so issuing them in parallel improves port utilization.
-// Re-promoted 2026-07-07: gate fired vs avx2_8w_pf3_i_cnt3 on two consecutive
-// RUNS=5 runs. Both variants within noise of each other; oscillation between
-// interleaved and i_cnt3 is documented. Clang++ sweep: 0.1360s (-Ofast -funroll).
+// avx2_mmap_shared — champion with MAP_SHARED instead of MAP_PRIVATE
+// I/O hypothesis: MAP_SHARED avoids the CoW (copy-on-write) page tracking overhead
+// that MAP_PRIVATE incurs even for read-only access. The kernel maintains separate
+// PTEs for MAP_PRIVATE to support future write() calls; MAP_SHARED maps directly
+// to the page cache without this indirection. May allow file-backed huge page
+// promotion (MADV_HUGEPAGE + MADV_COLLAPSE) more readily on Linux 6.18.5.
 
 #include <cstdio>
 #include <cstdint>
@@ -255,6 +253,16 @@ static inline uint64_t process_window(
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
         base = nl9+1;
+    } else if (__builtin_expect(cnt == 3, 0)) {
+        uint64_t mm = m;
+        unsigned n0, n1, n2;
+        n0 = __builtin_ctzll(mm); mm &= mm - 1;
+        n1 = __builtin_ctzll(mm); mm &= mm - 1;
+        n2 = __builtin_ctzll(mm);
+        const unsigned char *nl0=p+n0, *nl1=p+n1, *nl2=p+n2;
+        sum = parse_pair(base, nl0-base, nl0+1, nl1-nl0-1)
+            + parse_num(nl1+1, nl2-nl1-1);
+        base = nl2+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -357,7 +365,7 @@ int main() {
     size_t size = (size_t)st.st_size;
     if (size > 0) {
         const unsigned char* data = (const unsigned char*)
-            mmap(nullptr, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
+            mmap(nullptr, size, PROT_READ, MAP_SHARED | MAP_POPULATE, 0, 0);
         if (data != MAP_FAILED) {
             madvise((void*)data, size, MADV_SEQUENTIAL);
             printf("%" PRIu64 "\n", solve(data, size));
