@@ -1,9 +1,10 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_i_cnt3)
-// avx2_8w_pf3_interleaved + explicit cnt==3 fast path.
-// P(cnt==3) ≈ 3.6% of 64-byte windows. Avoids 7 failed branches and replaces
-// 3 serial while(m) CTZ iterations with parse_pair + parse_num for cnt==3 windows.
-// Promoted 2026-07-06: PROMOTE gate ×2 consecutively: best=0.1420s vs
-// avx2_8w_pf3_interleaved 0.1450s → 2.1% margin, median 0.1460 vs 0.1490.
+// read_thp.cpp — Anonymous mmap + MADV_HUGEPAGE (THP) + pread()
+// I/O hypothesis (PRIORITY): read file into a Transparent Huge Page-backed buffer
+// to reduce TLB pressure during parse.
+// With file mmap: 500MB / 4KB = 128K page-table entries → many L2 STLB misses.
+// With anonymous mmap + MADV_HUGEPAGE: 500MB / 2MB = 250 TLB entries → fits in STLB.
+// Cost: extra memory bandwidth (file → THP buffer). Benefit: zero TLB misses in parse.
+// THP sysfs = [madvise] on this VM, so MADV_HUGEPAGE takes effect on anon mmaps.
 
 #include <cstdio>
 #include <cstdint>
@@ -18,6 +19,9 @@
 
 #ifndef MAP_POPULATE
 #define MAP_POPULATE 0
+#endif
+#ifndef MADV_HUGEPAGE
+#define MADV_HUGEPAGE 14
 #endif
 
 static inline uint32_t parse_8(uint64_t chunk) {
@@ -253,16 +257,6 @@ static inline uint64_t process_window(
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
         base = nl9+1;
-    } else if (__builtin_expect(cnt == 3, 0)) {
-        uint64_t mm = m;
-        unsigned n0, n1, n2;
-        n0 = __builtin_ctzll(mm); mm &= mm - 1;
-        n1 = __builtin_ctzll(mm); mm &= mm - 1;
-        n2 = __builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0, *nl1=p+n1, *nl2=p+n2;
-        sum = parse_pair(base, nl0-base, nl0+1, nl1-nl0-1)
-            + parse_num(nl1+1, nl2-nl1-1);
-        base = nl2+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -303,9 +297,6 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
 
-        // Interleaved: compute mask i+2, process window i. The vector loads
-        // (ports 2/3) and parse integer ops (ports 0/1/5) use disjoint EUs,
-        // so issuing them in parallel gives better EU utilization.
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         sum += process_window(p,       base, m0);
@@ -333,6 +324,7 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 }
 
 #else
+// Scalar fallback
 static inline unsigned nl_pos8(uint64_t w) {
     const uint64_t NLW = 0x0a0a0a0a0a0a0a0aULL;
     uint64_t x = w ^ NLW;
@@ -363,15 +355,48 @@ int main() {
     struct stat st;
     if (fstat(0, &st) != 0) return 1;
     size_t size = (size_t)st.st_size;
+
     if (size > 0) {
+        // Primary: anonymous mmap + MADV_HUGEPAGE (THP) + pread
+        // Round up to 2MB alignment for best THP coverage
+        const size_t HP = (size_t)1 << 21;  // 2MB
+        size_t size_hp = (size + HP - 1) & ~(HP - 1);
+
+        // Over-allocate by HP so we can align the start pointer to 2MB
+        void* raw = mmap(NULL, size_hp + HP, PROT_READ | PROT_WRITE,
+                         MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        if (raw != MAP_FAILED) {
+            // Align to 2MB boundary
+            unsigned char* buf = (unsigned char*)(
+                ((uintptr_t)raw + HP - 1) & ~(uintptr_t)(HP - 1));
+
+            // Request THP: kernel will try to use 2MB pages for this region.
+            // With THP=madvise (current sysfs setting) this is a firm request.
+            madvise(buf, size_hp, MADV_HUGEPAGE);
+            madvise(buf, size_hp, MADV_SEQUENTIAL);
+
+            // pread fills buffer (triggers THP page faults into 2MB pages)
+            ssize_t total = 0, r;
+            while ((size_t)total < size &&
+                   (r = pread(0, buf + total, size - (size_t)total, total)) > 0)
+                total += r;
+
+            printf("%" PRIu64 "\n", solve(buf, (size_t)total));
+            munmap(raw, size_hp + HP);
+            return 0;
+        }
+
+        // Fallback: standard file mmap
         const unsigned char* data = (const unsigned char*)
-            mmap(nullptr, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
+            mmap(NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
         if (data != MAP_FAILED) {
             madvise((void*)data, size, MADV_SEQUENTIAL);
             printf("%" PRIu64 "\n", solve(data, size));
             return 0;
         }
     }
+
+    // Last resort: read() loop (works for pipes, limited to 64MB)
     static unsigned char buf[1 << 26];
     size_t total = 0; ssize_t n;
     while (total < sizeof(buf) && (n = read(0, buf + total, sizeof(buf) - total)) > 0)

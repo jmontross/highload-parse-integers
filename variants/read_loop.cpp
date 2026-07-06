@@ -1,9 +1,10 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_i_cnt3)
-// avx2_8w_pf3_interleaved + explicit cnt==3 fast path.
-// P(cnt==3) ≈ 3.6% of 64-byte windows. Avoids 7 failed branches and replaces
-// 3 serial while(m) CTZ iterations with parse_pair + parse_num for cnt==3 windows.
-// Promoted 2026-07-06: PROMOTE gate ×2 consecutively: best=0.1420s vs
-// avx2_8w_pf3_interleaved 0.1450s → 2.1% margin, median 0.1460 vs 0.1490.
+// read_loop.cpp — read() loop into aligned buffer (no file mmap)
+// I/O strategy comparison: champion uses file mmap + MAP_POPULATE.
+// This variant uses a large read() into an aligned anonymous buffer,
+// skipping the file mmap entirely. Tests whether mmap or read() is
+// faster for our sequential-access use case on this hardware.
+// The anonymous buffer is 2MB-aligned for THP compatibility.
+// Key difference from read_thp.cpp: no MADV_HUGEPAGE (control experiment).
 
 #include <cstdio>
 #include <cstdint>
@@ -12,6 +13,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #if defined(__AVX2__) && !defined(BLOCK_SCALAR_SIM)
 #include <immintrin.h>
 #endif
@@ -253,16 +255,6 @@ static inline uint64_t process_window(
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
         base = nl9+1;
-    } else if (__builtin_expect(cnt == 3, 0)) {
-        uint64_t mm = m;
-        unsigned n0, n1, n2;
-        n0 = __builtin_ctzll(mm); mm &= mm - 1;
-        n1 = __builtin_ctzll(mm); mm &= mm - 1;
-        n2 = __builtin_ctzll(mm);
-        const unsigned char *nl0=p+n0, *nl1=p+n1, *nl2=p+n2;
-        sum = parse_pair(base, nl0-base, nl0+1, nl1-nl0-1)
-            + parse_num(nl1+1, nl2-nl1-1);
-        base = nl2+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -303,9 +295,6 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
 
-        // Interleaved: compute mask i+2, process window i. The vector loads
-        // (ports 2/3) and parse integer ops (ports 0/1/5) use disjoint EUs,
-        // so issuing them in parallel gives better EU utilization.
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
         sum += process_window(p,       base, m0);
@@ -363,15 +352,42 @@ int main() {
     struct stat st;
     if (fstat(0, &st) != 0) return 1;
     size_t size = (size_t)st.st_size;
+
     if (size > 0) {
+        // Allocate a large aligned anonymous buffer (no MAP_POPULATE, no THP hint)
+        // then fill it entirely with read().
+        // This avoids file mmap's page-fault overhead and measures read() bandwidth.
+        const size_t PAGE = 4096;
+        size_t size_aligned = (size + PAGE - 1) & ~(PAGE - 1);
+
+        void* buf = mmap(NULL, size_aligned, PROT_READ | PROT_WRITE,
+                         MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        if (buf != MAP_FAILED) {
+            // Hint sequential access pattern (increments kernel readahead)
+            posix_fadvise(0, 0, (off_t)size, POSIX_FADV_SEQUENTIAL);
+
+            // Read the entire file into our buffer
+            ssize_t total = 0, r;
+            while ((size_t)total < size &&
+                   (r = read(0, (char*)buf + total, size - (size_t)total)) > 0)
+                total += r;
+
+            printf("%" PRIu64 "\n", solve((unsigned char*)buf, (size_t)total));
+            munmap(buf, size_aligned);
+            return 0;
+        }
+
+        // Fallback: file mmap (champion approach)
         const unsigned char* data = (const unsigned char*)
-            mmap(nullptr, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
+            mmap(NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
         if (data != MAP_FAILED) {
             madvise((void*)data, size, MADV_SEQUENTIAL);
             printf("%" PRIu64 "\n", solve(data, size));
             return 0;
         }
     }
+
+    // Last resort: static 64MB buffer
     static unsigned char buf[1 << 26];
     size_t total = 0; ssize_t n;
     while (total < sizeof(buf) && (n = read(0, buf + total, sizeof(buf) - total)) > 0)

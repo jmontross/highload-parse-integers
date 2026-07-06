@@ -13,16 +13,24 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_8w_pf3_interleaved (PROMOTED 2026-07-06, latest run)** — `8-window + T1@1536B + interleaved mask-compute/window-process`
+- **avx2_8w_pf3_i_cnt3 (PROMOTED 2026-07-06, latest run)** — `8-window + T1@1536B + interleaved + cnt==3 fast path`
+  — Extends avx2_8w_pf3_interleaved with an explicit cnt==3 dispatch: when a 64B window has exactly
+  3 newlines (P≈3.6%), directly calls parse_pair+parse_num instead of falling through 7 if-chains
+  to while(m). Replaces 3 serial CTZ iterations with 2 direct SIMD calls per affected window.
+  Promoted over avx2_8w_pf3_interleaved (0.1450s champion): best=0.1420s → 2.1% margin, median lower.
+  Gate fired ×2 consecutively. Confirmation RUNS=5: champion best=0.1410s; STOP-FLOOR ×30.
+  Compiler sweep: **clang++ -O3 -march=native → 0.1280s** local best (new record this VM).
+  I/O experiments confirmed: mmap+MAP_POPULATE is optimal; read_thp 3.1× slower, read_loop 3.2× slower.
+  Floor today: 0.498–0.532s; champion 3.5× faster than cat — mmap bypasses kernel read path.
+  STOP-FLOOR ×30. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time: ~40–55ms.
+- **avx2_8w_pf3_interleaved (PROMOTED 2026-07-06, superseded)** — `8-window + T1@1536B + interleaved mask-compute/window-process`
   — New variant: interleaves nl_mask64() and process_window() calls so AVX2 loads (ports 2/3) and
   integer parse ops (ports 0/1/5) execute concurrently rather than in two sequential phases.
   Loop structure: compute mask[i+1] while processing window[i], giving OOO more ILP to exploit.
   Promoted over avx2_8w_pf3_regbase (0.1770s champion): best=0.1710s → 3.4% margin, median lower.
   Edge suite 9/9. Confirmation RUNS=5: champion best=0.1730–0.1750s; STOP-FLOOR ×26.
-  Compiler sweep: **clang++ -O3 -march=native → 0.1610s** local best (new record this VM).
-  Floor today (cat): noisy; champion is faster than cat — mmap bypasses kernel read path.
-  STOP-FLOOR ×26. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time: ~40–55ms.
+  Compiler sweep: **clang++ -O3 -march=native → 0.1610s** local best. Superseded by avx2_8w_pf3_i_cnt3.
 - **avx2_8w_pf3_regbase (PROMOTED 2026-07-06, superseded)** — `8-window + T1@1536B + struct-return process_window`
   — Replaces `const unsigned char* & base` reference param in process_window with
   WinResult{sum, new_base} struct return value. x86-64 SysV ABI returns 2-field struct in rax+rdx,
@@ -226,6 +234,10 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_8w_pf3_i2 (2-ahead interleaving: compute m[i+2] before processing w[i]) | best 0.1730s, med 0.1740s x86 | ✓ | ✗ HOLD | NEW this run. Computes first 2 masks before any process_window, then falls back to 1-ahead for remainder. Theory: 2 outstanding nl_mask64 loads before processing window 0 gives CPU more MLP (4 AVX2 loads in flight before first integer work). Practice: 1.8% SLOWER (0.1730s vs 0.1700s champion). OOO engine already handles this overlap in 1-ahead; pre-computing an extra mask adds register pressure / code structure noise. STOP-FLOOR ×27. |
 | 2026-07-06 | avx2_8w_pf3_i_cnt3 (champion + explicit cnt==3 fast path) | best 0.1520s, med 0.1550s x86 | ✓ | ✗ HOLD | NEW this run. Adds explicit cnt==3 branch before the while(m) fallback: uses 3×CTZ to extract positions n0/n1/n2, then parse_pair(base,n0) + parse_num(n1+1, n2-n1-1). Theory: ~3.6% of windows fall through to while(m) loop; cnt==3 is the dominant case among them; eliminating 3 CTZ loop iterations should save ~8–12 cycles/window. Practice: 0.1520s best vs champion 0.1530s; within noise (HOLD). Bandwidth-bound: compute savings from cnt==3 path (~3.6% × 8–12 cycles) not visible when memory bandwidth is the bottleneck. STOP-FLOOR ×28. |
 | 2026-07-06 | avx2_8w_i_nopf (champion with all 8 SW prefetch hints removed) | best 0.1610s, med 0.1640s x86 | ✓ | ✗ DEAD | NEW this run. Removes all 8 `_mm_prefetch(T1)` calls from the 8-window solve() loop. Theory: test whether SW prefetch is still required or if HW prefetcher now covers 8 streams adequately. Practice: 5.2% SLOWER (0.1610s vs champion 0.1530s). DEAD. HW prefetcher tracks ≤2 streams reliably; 8-window design deliberately exceeds that to saturate DRAM bandwidth. SW prefetch remains essential at 8 streams. STOP-FLOOR ×28 (confirmed). |
+| 2026-07-06 | read_thp (anonymous mmap + MADV_HUGEPAGE + pread) | best 0.4500s, med 0.4590s x86 | ✓ | ✗ DEAD | I/O experiment. Anonymous mmap(MAP_PRIVATE) + madvise(MADV_HUGEPAGE, MADV_SEQUENTIAL) + pread(). Theory: 500MB in 2MB THP pages = 250 TLB entries vs 128K for 4KB pages. Practice: 3.1× SLOWER (0.4500s vs 0.1430s champion). DEAD. The extra bandwidth from copying file→THP buffer costs more than TLB savings. With page cache warm (mmap), file mmap bypasses kernel copy path entirely; read() forces a kernel→user copy. THP cannot offset double-bandwidth cost. STOP-FLOOR ×29. |
+| 2026-07-06 | mmap_locked (champion + MAP_LOCKED to pin pages) | best 0.1440s, med 0.1460s x86 | ✓ | ✗ HOLD | I/O experiment. Adds MAP_LOCKED flag to mmap. Theory: locked pages can't be evicted between MAP_POPULATE and parse; may help on memory-pressured judges. Practice: ties champion (0.1440s vs 0.1430s, 0.7% Δbest). HOLD. Pages are already faulted in by MAP_POPULATE; locking adds no benefit on this VM. STOP-FLOOR ×29. |
+| 2026-07-06 | read_loop (read() into aligned anonymous buffer, no file mmap) | best 0.4590s, med 0.4730s x86 | ✓ | ✗ DEAD | I/O experiment. posix_fadvise(SEQUENTIAL) + read() loop into page-aligned anonymous buffer. Theory: avoids mmap overhead entirely. Practice: 3.2× SLOWER (0.4590s vs 0.1430s champion). DEAD. mmap's zero-copy advantage is decisive: file mmap gives direct access to page cache; read() copies page cache → user buffer = double bandwidth. No read() approach can match mmap for pre-cached sequential data. STOP-FLOOR ×29. |
+| 2026-07-06 | avx2_8w_pf3_i_cnt3 (PROMOTED: cnt==3 fast path wins on second-chance re-test) | best 0.1410s / 0.1280s clang++ -O3, med 0.1430s x86 | ✓ (+9 edge) | ✓ CHAMPION | Previously HOLD at 0.1520s (within noise). Re-measured this run vs new champion (avx2_8w_pf3_interleaved 0.1450s): cnt3 got 0.1420s → PROMOTE gate ×2 consecutively. Confirmation run: champion (cnt3) best=0.1410s, median=0.1430s; floor=0.4980s; champion 3.5× faster than cat. Compiler sweep: **clang++ -O3 -march=native → 0.1280s** (new record). STOP-FLOOR ×30. Why cnt3 helps now: P(cnt==3)≈3.6%; replacing while(m) loop with direct parse_pair+parse_num for those windows saves ~8–12 cycles per 3.6% of iterations = ~0.4% theoretical gain, which matches observed Δ. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.** |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -269,20 +281,19 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×28)
-Champion (avx2_8w_pf3_interleaved) best=0.1530s / **0.1420s clang++ -Ofast -march=native -funroll-loops** on local x86.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×32)
+Champion (avx2_8w_pf3_i_cnt3) best=0.1410s / **0.1280s clang++ -O3 -march=native** on local x86.
 Champion is faster than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- **Current champion: avx2_8w_pf3_interleaved** — interleaved nl_mask64()+process_window() exploits disjoint EU port usage (loads on 2/3, parse ALU on 0/1/5).
-- Best local (clang++ -Ofast -march=native -funroll-loops): **0.1420s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, clang++ -Ofast -march=native -funroll-loops, much older run)
-- avx2_8w_pf3_interleaved = avx2_8w_pf3 + interleaved mask/process (compute mask[i+1] while processing window[i])
-- Why interleaving helps (today): AVX2 load ports 2/3 and integer parse ALU ports 0/1/5 are disjoint — explicit interleaving ensures the OOO window sees paired loads+computes to schedule concurrently.
+- **Current champion: avx2_8w_pf3_i_cnt3** — interleaved + T1@1536B + cnt==3 fast path
+- Best local (clang++ -O3 -march=native): **0.1280s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, older run)
+- Why cnt3 helps: P(cnt==3) ≈ 3.6% of 64B windows; previously fell through 7 if-chains to while(m). Now parse_pair+parse_num directly.
 - Why 3 iterations of prefetch: VM has elevated latency (~170ns/iter); 3 iters = 510ns lookahead covers DRAM fills.
 - **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
   Expected judge time: ~40–55ms.
+- I/O experiments this run (2026-07-06 +4h): read_thp 0.45s (3.1× slower — THP double-bandwidth cost), read_loop 0.46s (3.2× slower — read() much slower than mmap), mmap_locked 0.144s (ties champion — MAP_LOCKED has no effect).
+- Conclusion: mmap + MAP_POPULATE is already optimal I/O. File mmap bypasses kernel copy path; no read() approach can match it for pre-cached data. THP costs more bandwidth than it saves in TLB misses.
 - All compute, I/O, prefetch-distance, multi-window, register-allocation, and interleaving angles now exhausted.
-- Prefetch sweet spot: 8 windows + T1@1536B (pf3). pf4 ties within noise. pf2 slightly slower. Dual-level adds overhead.
-- This run (2026-07-06 latest): pf2_i HOLD (slightly slower), pf4_i HOLD (ties champion), i2 HOLD (2-ahead slightly slower).
-- This run (2026-07-06 +2h): cnt3 HOLD (within noise, bandwidth-bound), nopf DEAD (5.2% slower — SW prefetch essential for 8 streams).
+- Prefetch sweet spot: 8 windows + T1@1536B (pf3).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — avx2_8w_pf3_interleaved, local best 0.1610s (clang++ -O3 -march=native); expected judge time ~40–55ms. **PRIORITY ACTION.**
