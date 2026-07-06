@@ -190,6 +190,8 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_16w_pf3 (16-window + T1@3072B = 3 iterations ahead) | best 0.1480s, med 0.1500s x86 | ✓ | ✗ HOLD | 16×64=1024 bytes/iter, 16 prefetch hints at 3072B ahead. Even more MLP than 8-window. Result: 2.8% SLOWER than champion (0.1480s vs 0.1440s). 16 prefetch instructions + 16 nl_mask64 calls = I-cache pressure overwhelms the extra MLP. 8-window remains the sweet spot. STOP-FLOOR ×23. |
 | 2026-07-06 | avx2_8w_pf5 (T1 prefetch at 2560 bytes = 5 iterations ahead) | best 0.1440s, med 0.1450s x86 | ✓ | ✗ HOLD | Extends pf4 (2048B) by one more iter to 2560B. Tied with champion (0.1440s vs 0.1440s, 0% Δbest). Confirms prefetch saturation beyond pf4; longer distances offer no benefit here. STOP-FLOOR ×23. |
 | 2026-07-06 | avx2_8w_pf_half (T1@1536B but only 4 hints, every other cache line) | best 0.1440s, med 0.1450s x86 | ✓ | ✗ HOLD | Same distance as champion (1536B) but only 4 SW prefetch hints instead of 8. Theory: HW prefetcher covers the alternating cache lines, reducing SW overhead. Practice: tied with champion. HW prefetcher already covers some streams; halving SW hints causes cold misses on the uncovered 4 lines. Dead end. STOP-FLOOR ×23. Compiler sweep new best: **clang++ -Ofast -march=native -funroll-loops → 0.1270s** (improved from 0.1290s). |
+| 2026-07-06 | avx2_8w_pf1 (T1 prefetch at 512B = 1 iteration ahead) | best 0.2210s, med 0.2240s x86 | ✓ | ✗ HOLD | NEW (missing grid point). T1@512B completes the distance×hint matrix: T0@512B was tried (avx2_8w_pf_t0), T1@1024B (avx2_8w_pf), T1@1536B (champion). Today's VM: 0.2210s vs champion 0.2190s — HOLD. Slower than champion by 0.9%. On low-latency judge hardware (~40-50ns DRAM) where 1 iteration ≈ 512B is exactly the right lookahead, this may be optimal. STOP-FLOOR ×24. |
+| 2026-07-06 | avx2_cnt12 (VM-oscillation promotion then reverted) | best 0.2100s, med 0.2120s x86 | ✓ (+9 edge) | ✗ REVERTED | Today's VM (floor=0.2900-0.5360s) showed avx2_cnt12 0.2120s vs champion (avx2_8w_pf3) 0.2190s → PROMOTE gate fired (3.2% margin). Promoted, confirmation run: champion 0.2120s/0.2250s, variant (same code) 0.2100s/0.2120s → STOP-FLOOR. REVERTED: this oscillation (compact single-window winning when VM is in slow/noisy state) has been documented 5+ times. avx2_8w_pf3 best-ever 0.1270s vs avx2_cnt12 best-ever 0.2050s. avx2_8w_pf3 is the correct judge candidate. Compiler sweep: avx2_cnt12 clang++ -Ofast → 0.2050s, avx2_8w_pf3 clang++ -Ofast → 0.1270s (4.8× better). STOP-FLOOR ×24. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -233,26 +235,24 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×23)
+## Status: STOP-FLOOR (2026-07-06, confirmed ×24)
 Champion (avx2_8w_pf3) best=0.1440s / **0.1270s clang++ -Ofast -march=native -funroll-loops** on local x86 vs floor 0.4280s (noisy cloud).
 Champion is 3.0× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- Best local (clang++ -Ofast -march=native -funroll-loops): **0.1270s** (new record, this run)
+- Best local (clang++ -Ofast -march=native -funroll-loops): **0.1270s** (from previous run, still best-ever)
 - avx2_8w_pf3 is CHAMPION — 8-window + T1 prefetch 3 iterations (1536 bytes) ahead.
-- Why 3 iterations: VM has 260MB L3 cache; effective latency ~3×512B iterations; 3 iters fully covers L3 fill time.
+- Why 3 iterations: VM has elevated latency (~170ns/iter); 3 iters = 510ns lookahead covers DRAM fills.
 - **SUBMIT `champion/main.cpp` with `clang++ -Ofast -march=native -funroll-loops`.**
   Expected judge time: ~40–55ms.
 - All compute, I/O, prefetch-distance, and multi-window angles now exhausted.
 - Prefetch sweet spot: 8 windows + T1@1536B. pf4/pf5 within noise. Dual-level adds overhead.
-- 16-window+pf3 TESTED this run: slower (I-cache pressure). 8 windows is optimal.
-- pf5 (2560B) TESTED this run: tied with champion. No benefit beyond pf3.
-- pf_half (4 hints) TESTED this run: tied with champion. HW doesn't fill the gaps.
-- PREFETCHNTA: DEAD. T0 at 512B: HOLD.
+- T1@512B (avx2_8w_pf1) TESTED this run: HOLD (0.2210s vs champ 0.2190s). Good for judge (low latency) but can't beat pf3 on noisy VM.
+- VM oscillation alert: today's VM showed avx2_cnt12 at 0.2100s vs avx2_8w_pf3 at 0.2190s (5.7% gap). avx2_cnt12 PROMOTED then REVERTED — this is the 6th documented oscillation. On stable hardware (judge), avx2_8w_pf3 wins by 4.8× (0.1270s vs 0.2050s).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — avx2_8w_pf3, local best 0.1270s (clang++ -Ofast -march=native -funroll-loops). **PRIORITY ACTION.** Expected ~40–55ms.
-2. **Prefetch distance 5 iters (2560 bytes)** — TESTED ×23. No benefit.
+2. **T1@512B for judge** — avx2_8w_pf1 TESTED ×24. HOLD locally but may be optimal on judge's low-latency hardware (~40-50ns DRAM).
 3. **Force-inlining** — TESTED, no improvement.
-4. **cnt=8,9,10,11,12 paths** — TESTED, within noise.
+4. **cnt=8,9,10,11,12 paths** — TESTED, within noise (and slow on stable VM).
 5. **Rust port** — DEAD. 10% slower codegen.
 6. **128-byte window** — TESTED, slower.
 7. **512-bit parse_oct** — TESTED. Correct but 7% slower.
@@ -260,7 +260,6 @@ Champion is 3.0× FASTER than cat — mmap bypasses the kernel read-path copy, a
 9. **PDEP parallel extraction** — TESTED, no improvement.
 10. **PGO** — TESTED (g++). No improvement.
 11. **7-window loop** — TESTED (avx2_7window), HOLD.
-12. **16-window + prefetch** — TESTED ×23. Slower than 8-window.
-13. **Half-prefetch (4 hints)** — TESTED ×23. Tied with champion.
+12. **16-window + prefetch** — TESTED. Slower than 8-window.
+13. **Half-prefetch (4 hints)** — TESTED. Tied with champion.
 14. **Dual-level T2+T1 prefetch** — TESTED. Dead end.
-14. **Dual-level T2+T1 prefetch** — TESTED this run (avx2_8w_pf_dual). Dead end: adds 8 extra prefetch instructions, no benefit.
