@@ -11,16 +11,26 @@ and **[SCOREBOARD.md](SCOREBOARD.md)** for standings.
 
 ## 📌 PICK UP HERE (paused 2026-07-03)
 
-**Current best on the judge: rank 77 / 900** — `avx2_maddubs` (SSE PMADDUBSW pair-parse),
-199 ms, score 22,889, `g++10.5.0 -O3 -march=native` (submitted 2026-07-04). Progression:
-#460 (749ms) → #167 (392ms, v5 scalar) → #119 (307ms, AVX2 block) → **#77 (199ms, maddubs)**.
+**Current best on the judge: rank 76 / 900** — `avx2_8w_pf3_interleaved` (8-window AVX2 +
+interleaved prefetch), 186 ms, score 21,124, **clang++18.1.3** `-O3 -march=native`
+(submitted 2026-07-06). Progression:
+#460 (749ms) → #167 (392ms, v5 scalar) → #119 (307ms, AVX2 block) → #77 (199ms, maddubs) →
+**#76 (186ms, 8-window+clang)**.
 Your rank can only go *up*: highload.fun keeps your **best** submission, so a slower one
 never displaces it.
 
-**Next levers to climb past #77** (the cloud routine is hunting these; re-run `run.sh` on
-x86 to measure before submitting): AVX-512 **VNNI `vpdpbusd`** digit×weight reduction (the
-top-tier technique), wider multi-number-per-vector parsing, and a **compiler swap** — many
-neighbors at this tier use clang++18/20 rather than g++10.5.
+**IMPORTANT — we are now MEMORY-BANDWIDTH bound, not compute bound.** The judge row reads
+`186M ns · 174M ns` — ~174ms is just streaming the 500MB input; the parse is a small slice
+on top. That's why the routine keeps hitting STOP-FLOOR and why a 30% parse speedup only
+moved 1 rank. **More SIMD parse cleverness (vpdpbusd etc.) is largely spent.** The rank-18
+bar (69ms) is ~2.7× below us — the top solutions win on the **I/O side**, so that's where
+the next real gains are:
+- **Huge pages** (`madvise(MADV_HUGEPAGE)` / `MAP_HUGETLB`) to cut TLB misses on the 500MB map.
+- **Overlap I/O with compute** — prefetch/stream so parsing hides memory latency (the champion
+  already prefetches; push it / try non-temporal or software-pipelined reads).
+- **Investigate what the ~69ms solutions actually do** (read strategy, not parse) — e.g. the
+  rank-71 C# entry hits 169ms; the leaders at 69ms are near the raw memory floor.
+- Compiler is settled: **clang++18.1.3** beats g++ ~15% here.
 
 ### The one open decision
 `variants/avx512_blockparse.cpp` (AVX-512, tiered AVX512BW→AVX2→scalar) is written and its
