@@ -1,10 +1,27 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_interleaved)
-// 8-window + T1@1536B prefetch with INTERLEAVED mask compute + window processing.
-// Alternates computing mask[i+1] with processing window[i], giving the CPU more
-// scheduling freedom: vector loads (port 2/3) and parse_quad ALU ops (ports 0/1/5)
-// use disjoint execution units, so interleaving avoids stalls in either port group.
-// Promoted 2026-07-06: beats avx2_8w_pf3_regbase (0.1770s) with best=0.1710s,
-// median=0.1730s vs champ 0.1790s — 3.4% margin, both conditions met. Edge 9/9.
+// avx2_8w_pf3_clzbase.cpp
+// 8-window + T1@1536B prefetch + CLZ-based base precomputation.
+//
+// KEY INNOVATION vs current champion (avx2_8w_pf3_regbase):
+//   The regbase variant returns WinResult{sum,base} so each window call
+//   depends on the PREVIOUS call's returned base register (12-cycle CTZ
+//   chain inside process_window_r).  That creates an 8-step serial chain:
+//     r0 → r1 → r2 → ... → r7  (8 × 12 cycle = 96 cycles serialised)
+//
+//   Here: after computing all 8 masks we immediately compute all 8 bases
+//   with a SINGLE CLZ each (1 cycle each, total 8 cycles for the chain
+//   because CLZ(m_i) depends only on m_i which is already in a register).
+//   Result: all 8 process_window_s calls are INDEPENDENT.  The OOO engine
+//   can dispatch them simultaneously (limited only by ROB/port pressure),
+//   not serialised through the CTZ chain.
+//
+//   Expected speedup: 7 × ~11 cycles saved / (1.04M outer iters) ≈ 12ms
+//   on a 3 GHz CPU — large enough to exceed the 1.5 % PROMOTE gate.
+//
+//   Note: CLZ precomputation was tried before as avx2_clzbase (single-window
+//   loop) and gave no gain — there the OOO covered the intra-window latency
+//   with the next iteration's mask load.  The 8-window case is different:
+//   the 8 inter-window dependencies CANNOT be covered by any look-ahead;
+//   they must execute serially unless we break the chain with CLZ.
 
 #include <cstdio>
 #include <cstdint>
@@ -67,6 +84,7 @@ static inline uint64_t parse_pair(
 {
     if (__builtin_expect(len_a < 8 || len_b < 8, 0))
         return parse_num(p_a, len_a) + parse_num(p_b, len_b);
+
     __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
     __m128i cb = _mm_loadl_epi64((__m128i const*)(p_b + len_b - 8));
     __m128i chunks = _mm_unpacklo_epi64(ca, cb);
@@ -81,11 +99,16 @@ static inline uint64_t parse_pair(
     __m128i l4  = _mm_add_epi32(l3, l3s);
     uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(l4);
     uint32_t b8 = (uint32_t)_mm_extract_epi32(l4, 2);
-    uint64_t a0=(uint64_t)(unsigned char)p_a[0]-'0', b0=(uint64_t)(unsigned char)p_b[0]-'0';
-    uint64_t a_is9=(len_a==9), a_is10=(len_a==10), b_is9=(len_b==9), b_is10=(len_b==10);
-    uint64_t a1=(uint64_t)(unsigned char)p_a[1]-'0', b1=(uint64_t)(unsigned char)p_b[1]-'0';
-    uint64_t ah=a0*a_is9+(a0*10+a1)*a_is10, bh=b0*b_is9+(b0*10+b1)*b_is10;
-    return (ah*100000000ULL+a8)+(bh*100000000ULL+b8);
+
+    uint64_t a0 = (uint64_t)(unsigned char)p_a[0] - '0';
+    uint64_t b0 = (uint64_t)(unsigned char)p_b[0] - '0';
+    uint64_t a_is9=(len_a==9), a_is10=(len_a==10);
+    uint64_t b_is9=(len_b==9), b_is10=(len_b==10);
+    uint64_t a1 = (uint64_t)(unsigned char)p_a[1] - '0';
+    uint64_t b1 = (uint64_t)(unsigned char)p_b[1] - '0';
+    uint64_t a_high = a0*a_is9 + (a0*10+a1)*a_is10;
+    uint64_t b_high = b0*b_is9 + (b0*10+b1)*b_is10;
+    return (a_high * 100000000ULL + a8) + (b_high * 100000000ULL + b8);
 }
 
 static inline uint64_t parse_quad(
@@ -96,6 +119,7 @@ static inline uint64_t parse_quad(
 {
     if (__builtin_expect(len_a < 8 || len_b < 8 || len_c < 8 || len_d < 8, 0))
         return parse_pair(p_a,len_a,p_b,len_b) + parse_pair(p_c,len_c,p_d,len_d);
+
     __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
     __m128i cb = _mm_loadl_epi64((__m128i const*)(p_b + len_b - 8));
     __m128i lo128 = _mm_unpacklo_epi64(ca, cb);
@@ -104,6 +128,7 @@ static inline uint64_t parse_quad(
     __m128i hi128 = _mm_unpacklo_epi64(cc, cd);
     __m256i chunks = _mm256_set_m128i(hi128, lo128);
     chunks = _mm256_sub_epi8(chunks, _mm256_set1_epi8('0'));
+
     const __m256i W1 = _mm256_broadcastsi128_si256(
         _mm_set_epi8(1,10,1,10,1,10,1,10, 1,10,1,10,1,10,1,10));
     __m256i l1 = _mm256_maddubs_epi16(chunks, W1);
@@ -116,8 +141,11 @@ static inline uint64_t parse_quad(
     __m256i l4  = _mm256_add_epi32(l3, l3s);
     __m128i lo4 = _mm256_castsi256_si128(l4);
     __m128i hi4 = _mm256_extracti128_si256(l4, 1);
-    uint32_t a8=(uint32_t)_mm_cvtsi128_si32(lo4), b8=(uint32_t)_mm_extract_epi32(lo4,2);
-    uint32_t c8=(uint32_t)_mm_cvtsi128_si32(hi4), d8=(uint32_t)_mm_extract_epi32(hi4,2);
+    uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(lo4);
+    uint32_t b8 = (uint32_t)_mm_extract_epi32(lo4, 2);
+    uint32_t c8 = (uint32_t)_mm_cvtsi128_si32(hi4);
+    uint32_t d8 = (uint32_t)_mm_extract_epi32(hi4, 2);
+
     uint64_t a0=(uint64_t)(unsigned char)p_a[0]-'0', b0=(uint64_t)(unsigned char)p_b[0]-'0';
     uint64_t c0=(uint64_t)(unsigned char)p_c[0]-'0', d0=(uint64_t)(unsigned char)p_d[0]-'0';
     uint64_t a_is9=(len_a==9), a_is10=(len_a==10), b_is9=(len_b==9), b_is10=(len_b==10);
@@ -130,13 +158,15 @@ static inline uint64_t parse_quad(
           +(ch*100000000ULL+c8)+(dh*100000000ULL+d8);
 }
 
-static inline uint64_t process_window(
+// Returns only sum (base is precomputed externally using CLZ).
+static inline uint64_t process_window_s(
     const unsigned char* __restrict__ p,
-    const unsigned char* __restrict__ & base,
+    const unsigned char* __restrict__ base,
     uint64_t m)
 {
     uint64_t sum = 0;
     int cnt = __builtin_popcountll(m);
+
     if (__builtin_expect(cnt == 6, 1)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5;
@@ -148,10 +178,9 @@ static inline uint64_t process_window(
         n5=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                             *nl3=p+n3,*nl4=p+n4,*nl5=p+n5;
-        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-            + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1);
-        base = nl5+1;
+        sum = parse_quad(base,    nl0-base,   nl0+1, nl1-nl0-1,
+                         nl1+1,   nl2-nl1-1,  nl2+1, nl3-nl2-1)
+            + parse_pair(nl3+1,   nl4-nl3-1,  nl4+1, nl5-nl4-1);
     } else if (__builtin_expect(cnt == 5, 1)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4;
@@ -162,10 +191,9 @@ static inline uint64_t process_window(
         n4=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                             *nl3=p+n3,*nl4=p+n4;
-        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+        sum = parse_quad(base,  nl0-base,   nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1,  nl2+1, nl3-nl2-1)
             + parse_num(nl3+1,  nl4-nl3-1);
-        base = nl4+1;
     } else if (__builtin_expect(cnt == 7, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6;
@@ -182,7 +210,6 @@ static inline uint64_t process_window(
                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
             + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
             + parse_num(nl5+1,  nl6-nl5-1);
-        base = nl6+1;
     } else if (__builtin_expect(cnt == 4, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3;
@@ -193,7 +220,6 @@ static inline uint64_t process_window(
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3;
         sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
-        base = nl3+1;
     } else if (__builtin_expect(cnt == 8, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7;
@@ -211,7 +237,6 @@ static inline uint64_t process_window(
                          nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
-        base = nl7+1;
     } else if (__builtin_expect(cnt == 9, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8;
@@ -231,7 +256,6 @@ static inline uint64_t process_window(
             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_num(nl7+1,  nl8-nl7-1);
-        base = nl8+1;
     } else if (__builtin_expect(cnt == 10, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9;
@@ -253,7 +277,6 @@ static inline uint64_t process_window(
             + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
-        base = nl9+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -276,6 +299,18 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
+// CLZ-based base precomputation helper.
+// Returns pointer to byte after the LAST newline in window [p, p+64).
+// Mask m must be non-zero (guaranteed in main loop: numbers <= 10 digits,
+// window is 64 bytes, so at least 6 newlines per window).
+static inline const unsigned char* clz_base(
+    const unsigned char* p, uint64_t m, const unsigned char* fallback)
+{
+    if (__builtin_expect(m != 0, 1))
+        return p + (63 - __builtin_clzll(m)) + 1;
+    return fallback;
+}
+
 static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* p   = data;
     const unsigned char* end = data + size;
@@ -285,6 +320,7 @@ static uint64_t solve(const unsigned char* data, size_t size) {
     const unsigned char* safe_end = end - 544;
 
     while (p < safe_end) {
+        // T1 prefetch 3 iterations (1536 bytes) ahead — covers 8 streams
         _mm_prefetch((const char*)(p + 1536),      _MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 64), _MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 128),_MM_HINT_T1);
@@ -294,30 +330,47 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
 
-        // Interleaved: compute mask i+2, process window i. The vector loads
-        // (ports 2/3) and parse integer ops (ports 0/1/5) use disjoint EUs,
-        // so issuing them in parallel gives better EU utilization.
+        // Compute 8 masks (independent — can issue in parallel)
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
-        sum += process_window(p,       base, m0);
         uint64_t m2 = nl_mask64(p + 128);
-        sum += process_window(p + 64,  base, m1);
         uint64_t m3 = nl_mask64(p + 192);
-        sum += process_window(p + 128, base, m2);
         uint64_t m4 = nl_mask64(p + 256);
-        sum += process_window(p + 192, base, m3);
         uint64_t m5 = nl_mask64(p + 320);
-        sum += process_window(p + 256, base, m4);
         uint64_t m6 = nl_mask64(p + 384);
-        sum += process_window(p + 320, base, m5);
         uint64_t m7 = nl_mask64(p + 448);
-        sum += process_window(p + 384, base, m6);
-        sum += process_window(p + 448, base, m7);
+
+        // Precompute all 8 bases with CLZ — only 1 cycle each after mask is ready.
+        // This breaks the serial r0.base→r1→r1.base→r2→...→r7 chain (96 cycles)
+        // down to 8 independent CLZ operations (~8 cycles total for the chain).
+        const unsigned char* b0 = base;
+        const unsigned char* b1 = clz_base(p,       m0, b0);
+        const unsigned char* b2 = clz_base(p + 64,  m1, b1);
+        const unsigned char* b3 = clz_base(p + 128, m2, b2);
+        const unsigned char* b4 = clz_base(p + 192, m3, b3);
+        const unsigned char* b5 = clz_base(p + 256, m4, b4);
+        const unsigned char* b6 = clz_base(p + 320, m5, b5);
+        const unsigned char* b7 = clz_base(p + 384, m6, b6);
+        base = clz_base(p + 448, m7, b7);
+
+        // All 8 calls now independent — OOO can schedule them in parallel.
+        uint64_t s0 = process_window_s(p,       b0, m0);
+        uint64_t s1 = process_window_s(p + 64,  b1, m1);
+        uint64_t s2 = process_window_s(p + 128, b2, m2);
+        uint64_t s3 = process_window_s(p + 192, b3, m3);
+        uint64_t s4 = process_window_s(p + 256, b4, m4);
+        uint64_t s5 = process_window_s(p + 320, b5, m5);
+        uint64_t s6 = process_window_s(p + 384, b6, m6);
+        uint64_t s7 = process_window_s(p + 448, b7, m7);
+        // Tree-reduce to cut serial add chain from 7 to 3 cycles
+        sum += (s0 + s1) + (s2 + s3) + (s4 + s5) + (s6 + s7);
         p += 512;
     }
     while (p + 96 < end) {
         uint64_t m = nl_mask64(p);
-        sum += process_window(p, base, m);
+        const unsigned char* nb = clz_base(p, m, base);
+        sum += process_window_s(p, base, m);
+        base = nb;
         p += 64;
     }
     return scalar_tail(base, end, sum);

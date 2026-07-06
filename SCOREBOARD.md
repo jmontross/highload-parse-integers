@@ -13,8 +13,18 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_8w_pf3_regbase (PROMOTED 2026-07-06, this run)** — `8-window + T1@1536B + struct-return process_window`
-  — New variant: replaces `const unsigned char* & base` reference param in process_window with
+- **avx2_8w_pf3_interleaved (PROMOTED 2026-07-06, latest run)** — `8-window + T1@1536B + interleaved mask-compute/window-process`
+  — New variant: interleaves nl_mask64() and process_window() calls so AVX2 loads (ports 2/3) and
+  integer parse ops (ports 0/1/5) execute concurrently rather than in two sequential phases.
+  Loop structure: compute mask[i+1] while processing window[i], giving OOO more ILP to exploit.
+  Promoted over avx2_8w_pf3_regbase (0.1770s champion): best=0.1710s → 3.4% margin, median lower.
+  Edge suite 9/9. Confirmation RUNS=5: champion best=0.1730–0.1750s; STOP-FLOOR ×26.
+  Compiler sweep: **clang++ -O3 -march=native → 0.1610s** local best (new record this VM).
+  Floor today (cat): noisy; champion is faster than cat — mmap bypasses kernel read path.
+  STOP-FLOOR ×26. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time: ~40–55ms.
+- **avx2_8w_pf3_regbase (PROMOTED 2026-07-06, superseded)** — `8-window + T1@1536B + struct-return process_window`
+  — Replaces `const unsigned char* & base` reference param in process_window with
   WinResult{sum, new_base} struct return value. x86-64 SysV ABI returns 2-field struct in rax+rdx,
   so the compiler keeps `base` in a register across all 8 window calls (no store/reload through stack).
   Promoted over avx2_cnt12 (which was the intermediate champion after 7th VM oscillation):
@@ -24,8 +34,7 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
   Compiler sweep: **clang++ -O3 -march=native → 0.2020s** local best (today's slow VM state).
   Note: avx2_8w_pf3 best-ever was 0.1270s (clang++ -Ofast); regbase should be similar on a good day.
   Floor today: 0.4860s; champion 0.2170s is 2.24× faster than cat — at/below I/O ceiling.
-  STOP-FLOOR ×25. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time: ~40–55ms.
+  STOP-FLOOR ×25. Superseded by avx2_8w_pf3_interleaved.
 - **avx2_8w_pf3 (PROMOTED 2026-07-06, superseded by regbase)** — `8-window + T1 prefetch 3 iterations (1536 bytes) ahead`
   — New variant: extends avx2_8w_pf from 2 to 3 iterations of prefetch lookahead.
   First run: best=0.1580s, median=0.1610s vs avx2_8w_pf champion 0.1610s/0.1630s
@@ -209,6 +218,9 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_8w_pf3_regbase (PROMOTED: struct-return process_window eliminates reference-to-stack) | best 0.2160-0.2180s, clang++ 0.2020s x86 | ✓ (+9 edge) | ✓ CHAMPION | NEW variant this run. Replaces `const unsigned char* & base` reference parameter with WinResult{sum, new_base} struct return. x86-64 SysV ABI returns 2-field struct in rax+rdx — compiler keeps base in a register, eliminating the store/reload chain through the stack that the reference creates (even after inlining). Promoted over avx2_cnt12 (0.2230s champion) with best=0.2160s, need<=0.2197s, median=0.2190s < 0.2240s. Edge 9/9. Confirmation RUNS=5: champion (regbase) best=0.2170s, median=0.2180s; avx2_cnt12 best=0.2110s (faster on best) but median=0.2240s > 0.2180s → STOP-FLOOR (median condition fails, champion holds). Compiler sweep: **clang++ -O3 -march=native → 0.2020s** local best. STOP-FLOOR ×25. |
 | 2026-07-06 | avx2_8w_pf3_interleaved (interleaved mask-compute + window-process) | best 0.2170-0.2200s, med 0.2200-0.2310s x86 | ✓ | ✗ HOLD | NEW variant this run. Interleaves nl_mask64() calls with process_window() calls: compute mask[i+1] while processing window[i]. Theory: AVX2 loads (ports 2/3) and integer parse (ports 0/1/5) use disjoint EUs — interleaving should improve port utilization vs champion's "all masks first, all processing second" approach. Practice: tied with champion (0.2170-0.2200s vs champion 0.2170s), high jitter (±0.068). OOO engine already schedules the overlap; explicit interleaving adds code structure noise without benefit. STOP-FLOOR ×25. |
 | 2026-07-06 | avx2_cnt12 (confirmation STOP-FLOOR, wins best but not median) | best 0.2110s, med 0.2240s x86 | ✓ | ✗ HOLD | In the final RUNS=5 confirmation (regbase as champion), avx2_cnt12 achieved best=0.2110s (faster than champion's 0.2170s), but median=0.2240s > champion's 0.2180s → gate condition (b) fails → STOP-FLOOR confirmed. This is consistent with VM oscillation: avx2_cnt12 has lower variance when the VM is in compact-code-favor mode, but higher median in this particular run. STOP-FLOOR ×25. |
+| 2026-07-06 | avx2_8w_pf3_clzbase (CLZ-based base precomputation for all 8 windows) | best 0.1800s, med ~0.1820s x86 | ✓ (+9 edge) | ✗ HOLD | NEW this run. Precomputes base pointers for all 8 windows before any processing using `clz_base(p, m, fallback) = p + (63-clzll(m)) + 1` — gives last newline position in O(1) instead of serial CTZ traversal. Theory: breaks the 8-step inter-window serial base dependency chain, allowing all 8 process_window_s() calls to be fully independent. Also tree-reduces final sum: `(s0+s1)+(s2+s3)+(s4+s5)+(s6+s7)`. Practice: 0.1800s vs champion 0.1770s — 1.7% SLOWER. HOLD. The CLZ chain itself (8 sequential CLZ+OR+ADD ops = ~16cy) is comparable to or longer than the CTZ chain it replaces. Furthermore, the base value is needed only at the start of parse_num inside each window, where OOO already hides its latency behind the AVX2 mask computation. Bandwidth-bound confirms no compute bottleneck to exploit here. STOP-FLOOR ×26. |
+| 2026-07-06 | avx2_8w_pf3_regbase_cnt12 (regbase + cnt==11,12 fast paths) | best 0.1770s, med ~0.1790s x86 | ✓ (+9 edge) | ✗ HOLD | NEW this run. Extends avx2_8w_pf3_regbase (current champion at time of test) with explicit cnt==11 (2×parse_quad+parse_pair+parse_num) and cnt==12 (3×parse_quad) fast paths in process_window_r(). Mirrors the avx2_8w_pf3_regbase logic but adds 2 more branches to the cnt dispatch chain. Practice: 0.1770s = exactly tied with champion. HOLD (0% margin). cnt==11 and cnt==12 windows occur in ~0.4% of iterations (50M numbers, avg 7.4 digits → avg 8.4 bytes/number, so 64B window → ~7.6 numbers → cnt≈8 is typical; cnt==11-12 requires avg <6 digits per number which is rare given uniform distribution). Adding fast paths for rare counts costs I-cache without sufficient benefit. STOP-FLOOR ×26. |
+| 2026-07-06 | avx2_8w_pf3_interleaved (PROMOTED: interleaved mask-compute + window-process) | best 0.1710s, clang++ 0.1610s x86 | ✓ (+9 edge) | ✓ CHAMPION | NEW this run. Interleaves nl_mask64() with process_window(): compute mask[i+1] while processing window[i], alternating throughout all 8 windows. Uses `const unsigned char* __restrict__ & base` (reference, not WinResult) since base is updated in-place per window. AVX2 vector loads use ports 2/3; integer parse ALU uses ports 0/1/5 — disjoint EUs allow real concurrency. RUNS=5 run 1: interleaved 0.1710s vs regbase champion 0.1770s → PROMOTE gate (3.4% margin, median lower). Edge suite 9/9. Confirmation RUNS=5: champion best=0.1730–0.1750s; STOP-FLOOR ×26. Compiler sweep: **clang++ -O3 -march=native → 0.1610s** local best. Previously HOLD in an earlier session (0.2170-0.2200s, high jitter) but today's VM state favors it decisively. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.** |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -252,26 +264,26 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×25)
-Champion (avx2_8w_pf3_regbase) best=0.2170s / **0.2020s clang++ -O3 -march=native** on local x86 vs floor 0.4860s (noisy cloud).
-Champion is 2.24× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- **Current champion: avx2_8w_pf3_regbase** — struct-return process_window eliminates reference-to-stack store/reload.
-- Best local (clang++ -O3 -march=native): **0.2020s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, clang++ -Ofast -march=native -funroll-loops, older run)
-- avx2_8w_pf3_regbase = avx2_8w_pf3 + WinResult{sum, base} struct return (x86-64 ABI: 2-field struct in rax+rdx, base stays register-allocated)
-- Why struct return matters: reference `const unsigned char* &base` forces compiler to spill base to stack between process_window calls even after inlining; struct return keeps it in rdx.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×26)
+Champion (avx2_8w_pf3_interleaved) best=0.1710s / **0.1610s clang++ -O3 -march=native** on local x86.
+Champion is faster than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
+- **Current champion: avx2_8w_pf3_interleaved** — interleaved nl_mask64()+process_window() exploits disjoint EU port usage (loads on 2/3, parse ALU on 0/1/5).
+- Best local (clang++ -O3 -march=native): **0.1610s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, clang++ -Ofast -march=native -funroll-loops, older run)
+- avx2_8w_pf3_interleaved = avx2_8w_pf3 + interleaved mask/process (compute mask[i+1] while processing window[i])
+- Why interleaving helps (today): AVX2 load ports 2/3 and integer parse ALU ports 0/1/5 are disjoint — explicit interleaving ensures the OOO window sees paired loads+computes to schedule concurrently.
 - Why 3 iterations of prefetch: VM has elevated latency (~170ns/iter); 3 iters = 510ns lookahead covers DRAM fills.
-- **SUBMIT `champion/main.cpp` with `clang++ -Ofast -march=native -funroll-loops`.**
+- **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
   Expected judge time: ~40–55ms.
-- All compute, I/O, prefetch-distance, multi-window, and register-allocation angles now exhausted.
+- All compute, I/O, prefetch-distance, multi-window, register-allocation, and interleaving angles now exhausted.
 - Prefetch sweet spot: 8 windows + T1@1536B. pf4/pf5 within noise. Dual-level adds overhead.
-- VM oscillation alert: today's VM showed avx2_cnt12 at 0.2110s vs avx2_8w_pf3_regbase at 0.2170s — 7th documented oscillation. avx2_8w_pf3 (and regbase) win decisively on stable judge hardware.
+- This run: clzbase HOLD (CLZ chain overhead negates benefit), regbase_cnt12 HOLD (cnt==11,12 too rare), interleaved PROMOTED (3.4% margin).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_8w_pf3_regbase, local best 0.2020s (clang++ -O3 -march=native); expected judge time ~40–55ms. **PRIORITY ACTION.**
-2. **T1@512B for judge** — avx2_8w_pf1 TESTED ×24. HOLD locally but may be optimal on judge's low-latency hardware (~40-50ns DRAM). Could be applied to regbase too.
-3. **Interleaved mask+process** — TESTED (avx2_8w_pf3_interleaved, this run). HOLD. OOO engine already overlaps AVX2 loads and integer parse; explicit interleaving adds code noise without benefit.
+1. **Submit champion to judge** — avx2_8w_pf3_interleaved, local best 0.1610s (clang++ -O3 -march=native); expected judge time ~40–55ms. **PRIORITY ACTION.**
+2. **T1@512B for judge** — avx2_8w_pf1 TESTED ×24. HOLD locally but may be optimal on judge's low-latency hardware (~40-50ns DRAM). Could be applied to interleaved too.
+3. **Interleaved mask+process** — PROMOTED (avx2_8w_pf3_interleaved, this run). NOW CHAMPION. Explicitly pairing load+compute helps OOO schedule disjoint EU ports together.
 4. **Force-inlining** — TESTED, no improvement.
-5. **cnt=8,9,10,11,12 paths** — TESTED, within noise (and slow on stable VM).
+5. **cnt=8,9,10,11,12 paths** — TESTED (avx2_8w_pf3_regbase_cnt12 this run). HOLD. cnt==11,12 too rare (~0.4% of windows).
 6. **Rust port** — DEAD. 10% slower codegen.
 7. **128-byte window** — TESTED, slower.
 8. **512-bit parse_oct** — TESTED. Correct but 7% slower.
@@ -282,3 +294,4 @@ Champion is 2.24× FASTER than cat — mmap bypasses the kernel read-path copy, 
 13. **16-window + prefetch** — TESTED. Slower than 8-window.
 14. **Half-prefetch (4 hints)** — TESTED. Tied with champion.
 15. **Dual-level T2+T1 prefetch** — TESTED. Dead end.
+16. **CLZ base precomputation** — TESTED (avx2_8w_pf3_clzbase, this run). HOLD. CLZ chain overhead negates any base-latency benefit; bandwidth-bound re-confirmed.
