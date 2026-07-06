@@ -1,10 +1,11 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_regbase)
-// 8-window + T1@1536B prefetch, with struct-return process_window.
-// Replaces the reference parameter for 'base' with WinResult{sum,base} return
-// so the compiler keeps 'base' in a register across all 8 calls (x86-64 SysV
-// ABI returns 2-field struct in rax+rdx, eliminating store/reload chain).
-// Promoted 2026-07-06: beats avx2_cnt12 (0.2220s) with best=0.2160-0.2180s
-// and lower median; edge 9/9. Confirmed in 2nd PROMOTE verdict.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8w_pf3_interleaved)
+// Like avx2_8w_pf3 (8-window + T1@1536B) but interleaves mask computation with
+// window processing to explicitly expose ILP: compute mask[i+1] while processing
+// window[i]. The champion computes ALL 8 masks then processes ALL 8 windows;
+// this variant alternates, giving the CPU more scheduling freedom in the overlap
+// between vector loads (port 2/3) and integer/ALU ops (parse_quad on ports 0/1/5).
+// Hypothesis: HOLD — OOO engine already schedules them overlapping; explicit
+// interleaving might confuse the compiler's register allocation.
 
 #include <cstdio>
 #include <cstdint>
@@ -67,7 +68,6 @@ static inline uint64_t parse_pair(
 {
     if (__builtin_expect(len_a < 8 || len_b < 8, 0))
         return parse_num(p_a, len_a) + parse_num(p_b, len_b);
-
     __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
     __m128i cb = _mm_loadl_epi64((__m128i const*)(p_b + len_b - 8));
     __m128i chunks = _mm_unpacklo_epi64(ca, cb);
@@ -82,16 +82,11 @@ static inline uint64_t parse_pair(
     __m128i l4  = _mm_add_epi32(l3, l3s);
     uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(l4);
     uint32_t b8 = (uint32_t)_mm_extract_epi32(l4, 2);
-
-    uint64_t a0 = (uint64_t)(unsigned char)p_a[0] - '0';
-    uint64_t b0 = (uint64_t)(unsigned char)p_b[0] - '0';
-    uint64_t a_is9=(len_a==9), a_is10=(len_a==10);
-    uint64_t b_is9=(len_b==9), b_is10=(len_b==10);
-    uint64_t a1 = (uint64_t)(unsigned char)p_a[1] - '0';
-    uint64_t b1 = (uint64_t)(unsigned char)p_b[1] - '0';
-    uint64_t a_high = a0*a_is9 + (a0*10+a1)*a_is10;
-    uint64_t b_high = b0*b_is9 + (b0*10+b1)*b_is10;
-    return (a_high * 100000000ULL + a8) + (b_high * 100000000ULL + b8);
+    uint64_t a0=(uint64_t)(unsigned char)p_a[0]-'0', b0=(uint64_t)(unsigned char)p_b[0]-'0';
+    uint64_t a_is9=(len_a==9), a_is10=(len_a==10), b_is9=(len_b==9), b_is10=(len_b==10);
+    uint64_t a1=(uint64_t)(unsigned char)p_a[1]-'0', b1=(uint64_t)(unsigned char)p_b[1]-'0';
+    uint64_t ah=a0*a_is9+(a0*10+a1)*a_is10, bh=b0*b_is9+(b0*10+b1)*b_is10;
+    return (ah*100000000ULL+a8)+(bh*100000000ULL+b8);
 }
 
 static inline uint64_t parse_quad(
@@ -102,7 +97,6 @@ static inline uint64_t parse_quad(
 {
     if (__builtin_expect(len_a < 8 || len_b < 8 || len_c < 8 || len_d < 8, 0))
         return parse_pair(p_a,len_a,p_b,len_b) + parse_pair(p_c,len_c,p_d,len_d);
-
     __m128i ca = _mm_loadl_epi64((__m128i const*)(p_a + len_a - 8));
     __m128i cb = _mm_loadl_epi64((__m128i const*)(p_b + len_b - 8));
     __m128i lo128 = _mm_unpacklo_epi64(ca, cb);
@@ -111,7 +105,6 @@ static inline uint64_t parse_quad(
     __m128i hi128 = _mm_unpacklo_epi64(cc, cd);
     __m256i chunks = _mm256_set_m128i(hi128, lo128);
     chunks = _mm256_sub_epi8(chunks, _mm256_set1_epi8('0'));
-
     const __m256i W1 = _mm256_broadcastsi128_si256(
         _mm_set_epi8(1,10,1,10,1,10,1,10, 1,10,1,10,1,10,1,10));
     __m256i l1 = _mm256_maddubs_epi16(chunks, W1);
@@ -124,11 +117,8 @@ static inline uint64_t parse_quad(
     __m256i l4  = _mm256_add_epi32(l3, l3s);
     __m128i lo4 = _mm256_castsi256_si128(l4);
     __m128i hi4 = _mm256_extracti128_si256(l4, 1);
-    uint32_t a8 = (uint32_t)_mm_cvtsi128_si32(lo4);
-    uint32_t b8 = (uint32_t)_mm_extract_epi32(lo4, 2);
-    uint32_t c8 = (uint32_t)_mm_cvtsi128_si32(hi4);
-    uint32_t d8 = (uint32_t)_mm_extract_epi32(hi4, 2);
-
+    uint32_t a8=(uint32_t)_mm_cvtsi128_si32(lo4), b8=(uint32_t)_mm_extract_epi32(lo4,2);
+    uint32_t c8=(uint32_t)_mm_cvtsi128_si32(hi4), d8=(uint32_t)_mm_extract_epi32(hi4,2);
     uint64_t a0=(uint64_t)(unsigned char)p_a[0]-'0', b0=(uint64_t)(unsigned char)p_b[0]-'0';
     uint64_t c0=(uint64_t)(unsigned char)p_c[0]-'0', d0=(uint64_t)(unsigned char)p_d[0]-'0';
     uint64_t a_is9=(len_a==9), a_is10=(len_a==10), b_is9=(len_b==9), b_is10=(len_b==10);
@@ -141,22 +131,13 @@ static inline uint64_t parse_quad(
           +(ch*100000000ULL+c8)+(dh*100000000ULL+d8);
 }
 
-// Struct-return version: process_window returns {sum, new_base} so the compiler
-// can keep 'base' in a register (x86-64 ABI: 2-field struct returned in rax:rdx).
-struct WinResult {
-    uint64_t sum;
-    const unsigned char* base;
-};
-
-static inline WinResult process_window_r(
+static inline uint64_t process_window(
     const unsigned char* __restrict__ p,
-    const unsigned char* __restrict__ base,
+    const unsigned char* __restrict__ & base,
     uint64_t m)
 {
-    WinResult r; r.sum = 0;
-
+    uint64_t sum = 0;
     int cnt = __builtin_popcountll(m);
-
     if (__builtin_expect(cnt == 6, 1)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5;
@@ -168,10 +149,10 @@ static inline WinResult process_window_r(
         n5=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                             *nl3=p+n3,*nl4=p+n4,*nl5=p+n5;
-        r.sum = parse_quad(base,    nl0-base,   nl0+1, nl1-nl0-1,
-                           nl1+1,   nl2-nl1-1,  nl2+1, nl3-nl2-1)
-              + parse_pair(nl3+1,   nl4-nl3-1,  nl4+1, nl5-nl4-1);
-        r.base = nl5+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1);
+        base = nl5+1;
     } else if (__builtin_expect(cnt == 5, 1)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4;
@@ -182,10 +163,10 @@ static inline WinResult process_window_r(
         n4=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,
                             *nl3=p+n3,*nl4=p+n4;
-        r.sum = parse_quad(base,  nl0-base,   nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1,  nl2+1, nl3-nl2-1)
-              + parse_num(nl3+1,  nl4-nl3-1);
-        r.base = nl4+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_num(nl3+1,  nl4-nl3-1);
+        base = nl4+1;
     } else if (__builtin_expect(cnt == 7, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6;
@@ -198,11 +179,11 @@ static inline WinResult process_window_r(
         n6=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
                             *nl4=p+n4,*nl5=p+n5,*nl6=p+n6;
-        r.sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-              + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
-              + parse_num(nl5+1,  nl6-nl5-1);
-        r.base = nl6+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_pair(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1)
+            + parse_num(nl5+1,  nl6-nl5-1);
+        base = nl6+1;
     } else if (__builtin_expect(cnt == 4, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3;
@@ -211,9 +192,9 @@ static inline WinResult process_window_r(
         n2=__builtin_ctzll(mm); mm&=mm-1;
         n3=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3;
-        r.sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
-        r.base = nl3+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1);
+        base = nl3+1;
     } else if (__builtin_expect(cnt == 8, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7;
@@ -227,11 +208,11 @@ static inline WinResult process_window_r(
         n7=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
                             *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7;
-        r.sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-              + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                           nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
-        r.base = nl7+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                         nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1);
+        base = nl7+1;
     } else if (__builtin_expect(cnt == 9, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8;
@@ -246,12 +227,12 @@ static inline WinResult process_window_r(
         n8=__builtin_ctzll(mm);
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
                             *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,*nl8=p+n8;
-        r.sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-              + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                           nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
-              + parse_num(nl7+1,  nl8-nl7-1);
-        r.base = nl8+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                         nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
+            + parse_num(nl7+1,  nl8-nl7-1);
+        base = nl8+1;
     } else if (__builtin_expect(cnt == 10, 0)) {
         uint64_t mm = m;
         unsigned n0,n1,n2,n3,n4,n5,n6,n7,n8,n9;
@@ -268,24 +249,23 @@ static inline WinResult process_window_r(
         const unsigned char *nl0=p+n0,*nl1=p+n1,*nl2=p+n2,*nl3=p+n3,
                             *nl4=p+n4,*nl5=p+n5,*nl6=p+n6,*nl7=p+n7,
                             *nl8=p+n8,*nl9=p+n9;
-        r.sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
-                           nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
-              + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
-                           nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
-              + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
-        r.base = nl9+1;
+        sum = parse_quad(base,  nl0-base,  nl0+1, nl1-nl0-1,
+                         nl1+1, nl2-nl1-1, nl2+1, nl3-nl2-1)
+            + parse_quad(nl3+1, nl4-nl3-1, nl4+1, nl5-nl4-1,
+                         nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
+            + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
+        base = nl9+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
             const unsigned char* nlp = p + nlpos;
             size_t len = (size_t)(nlp - base);
-            if (len) r.sum += parse_num(base, len);
+            if (len) sum += parse_num(base, len);
             base = nlp + 1;
             m &= m - 1;
         }
-        r.base = base;
     }
-    return r;
+    return sum;
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -315,30 +295,30 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
         _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
 
+        // Interleaved: compute mask i+2, process window i. The vector loads
+        // (ports 2/3) and parse integer ops (ports 0/1/5) use disjoint EUs,
+        // so issuing them in parallel gives better EU utilization.
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);
+        sum += process_window(p,       base, m0);
         uint64_t m2 = nl_mask64(p + 128);
+        sum += process_window(p + 64,  base, m1);
         uint64_t m3 = nl_mask64(p + 192);
+        sum += process_window(p + 128, base, m2);
         uint64_t m4 = nl_mask64(p + 256);
+        sum += process_window(p + 192, base, m3);
         uint64_t m5 = nl_mask64(p + 320);
+        sum += process_window(p + 256, base, m4);
         uint64_t m6 = nl_mask64(p + 384);
+        sum += process_window(p + 320, base, m5);
         uint64_t m7 = nl_mask64(p + 448);
-
-        // Struct-return: compiler forwards base in registers (no store/reload).
-        WinResult r0 = process_window_r(p,       base, m0); sum += r0.sum;
-        WinResult r1 = process_window_r(p + 64,  r0.base, m1); sum += r1.sum;
-        WinResult r2 = process_window_r(p + 128, r1.base, m2); sum += r2.sum;
-        WinResult r3 = process_window_r(p + 192, r2.base, m3); sum += r3.sum;
-        WinResult r4 = process_window_r(p + 256, r3.base, m4); sum += r4.sum;
-        WinResult r5 = process_window_r(p + 320, r4.base, m5); sum += r5.sum;
-        WinResult r6 = process_window_r(p + 384, r5.base, m6); sum += r6.sum;
-        WinResult r7 = process_window_r(p + 448, r6.base, m7); sum += r7.sum;
-        base = r7.base;
+        sum += process_window(p + 384, base, m6);
+        sum += process_window(p + 448, base, m7);
         p += 512;
     }
     while (p + 96 < end) {
         uint64_t m = nl_mask64(p);
-        WinResult r = process_window_r(p, base, m); sum += r.sum; base = r.base;
+        sum += process_window(p, base, m);
         p += 64;
     }
     return scalar_tail(base, end, sum);

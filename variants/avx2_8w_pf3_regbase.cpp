@@ -1,10 +1,12 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_regbase)
-// 8-window + T1@1536B prefetch, with struct-return process_window.
-// Replaces the reference parameter for 'base' with WinResult{sum,base} return
-// so the compiler keeps 'base' in a register across all 8 calls (x86-64 SysV
-// ABI returns 2-field struct in rax+rdx, eliminating store/reload chain).
-// Promoted 2026-07-06: beats avx2_cnt12 (0.2220s) with best=0.2160-0.2180s
-// and lower median; edge 9/9. Confirmed in 2nd PROMOTE verdict.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8w_pf3_regbase)
+// Same as avx2_8w_pf3 (8-window + T1@1536B) but process_window uses a struct
+// return value instead of a reference parameter for 'base'. This lets the
+// compiler keep 'base' in a register across calls rather than forcing a
+// store/reload via the reference-to-stack mechanism.
+// Hypothesis: the 8-call chain of store[base], reload[base] for process_window
+// might add latency. With struct return the compiler can forward base purely via
+// registers (rax:rdx on x86-64 ABI). Expected: HOLD (compiler likely already
+// does this with -O3 through inline + reference aliasing analysis).
 
 #include <cstdio>
 #include <cstdint>
