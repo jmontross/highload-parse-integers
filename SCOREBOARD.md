@@ -13,7 +13,18 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
 
 ## Champion
-- **avx2_8w_pf (PROMOTED 2026-07-06, this run)** — `8-window + explicit L2 prefetch 2 iterations ahead (_MM_HINT_T1)`
+- **avx2_8w_pf3 (PROMOTED 2026-07-06, this run)** — `8-window + T1 prefetch 3 iterations (1536 bytes) ahead`
+  — New variant: extends avx2_8w_pf from 2 to 3 iterations of prefetch lookahead.
+  First run: best=0.1580s, median=0.1610s vs avx2_8w_pf champion 0.1610s/0.1630s
+  → PROMOTE gate (1.9% margin on best, median lower). Edge suite 9/9.
+  Confirmation RUNS=5: champion (avx2_8w_pf3) best=0.1570s, median=0.1590s; variant 0.1590s (HOLD).
+  Compiler sweep: **clang++ -O3 -march=native → 0.1440s local best** (new record).
+  Why 3 iters beats 2: VM-side NUMA/memory latency is higher than ~40ns bare metal estimate.
+  At 0.157s/iter and ~168ns/iteration, L3 fill latency ≈ 2.5–3 iters → 3-iter lookahead fully covers it.
+  Floor: 0.4950s (noisy cloud); champion 0.1570s is 3.2× FASTER than cat — at the I/O ceiling.
+  STOP-FLOOR ×21. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
+  Expected judge time: ~40–55ms.
+- **avx2_8w_pf (PROMOTED 2026-07-06, superseded)** — `8-window + explicit L2 prefetch 2 iterations ahead (_MM_HINT_T1)`
   — New variant created this run. First run: best=0.1610s, median=0.1660s vs avx2_8window champion 0.1710s/0.1750s
   → PROMOTE gate (5.8% margin on best, median also lower). Edge suite 9/9.
   Confirmation RUNS=5: champion (avx2_8w_pf) best=0.1610s, median=0.1640s; avx2_8w_pf variant 0.1600s (0.62% margin, HOLD).
@@ -21,8 +32,7 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
   Why prefetch helps: HW prefetcher tracks ~2 streams; 8-window exposes 8 sequential streams, leaving 6 un-prefetched.
   `_mm_prefetch(T1)` hints 2 iterations (1024 bytes) ahead cover L3→L2 fill latency (~40ns=~120cy).
   Floor: 0.4880s (noisy cloud); champion 0.1610s is 3.0× FASTER than cat — well at the I/O ceiling.
-  STOP-FLOOR ×20. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time: ~40–55ms.
+  STOP-FLOOR ×20. Superseded by avx2_8w_pf3.
 - **avx2_cnt12 (re-promoted 2026-07-06, previous run, now superseded)** — `cnt==4..12 fast paths, single 64-byte window per iteration`
   — re-promoted because that run's VM state favored simpler/compact code. Best: 0.2100s (g++ -Ofast -march=native -funroll-loops → 0.2060s).
   Superseded by avx2_8w_pf. Edge suite 9/9.
@@ -170,16 +180,21 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_cnt12_switch (switch dispatch instead of if-chain) | best 0.2320s, med 0.2390s x86 | ✓ | ✗ DEAD | New variant. Replaces cascaded if-chain with switch() so compiler can emit jump table. Result: 10.5% SLOWER (0.2320s vs 0.2100s). The if-chain with __builtin_expect hints gives better BTB prediction for the hot cnt==6 path. The switch's indirect branch (1 BTB entry for the jump table) is slower than the well-predicted direct branch chain. Dead end. |
 | 2026-07-06 | avx2_8window (RE-PROMOTED 2nd time in this run, avx2_8w_pf base) | best 0.1680s, med 0.1720s x86 | ✓ (+9 edge) | — (baseline for new champion) | Re-tested as part of confirming avx2_8w_pf. Measured 0.1680s vs avx2_cnt12 champion 0.2010s → PROMOTE gate triggered in first run of this session, then used as the new champion while avx2_8w_pf was being created. |
 | 2026-07-06 | avx2_7window (7 windows per outer loop iteration) | best 0.1710s, med 0.1750s x86 | ✓ | ✗ HOLD | New variant. 7 × 64-byte windows = 448 bytes/iter. Tied with champion (avx2_8window at 0.1710s best, 0.1750s median). Fills the 6–8 window gap; confirms both 7 and 8 windows are near-equivalent today. STOP-FLOOR ×20. |
-| 2026-07-06 | avx2_8w_pf (8-window + L2 prefetch 2 iterations ahead) | best 0.1610s, med 0.1660s x86 | ✓ (+9 edge) | ✓ CHAMPION | New variant. Adds 8 × `_mm_prefetch(T1)` hints at p+1024..p+1472 (2 iterations = 1024 bytes ahead) to avx2_8window. First run: 0.1610s vs avx2_8window champion 0.1710s → PROMOTE gate (5.8% margin, median 0.1660s < 0.1750s). Confirmation RUNS=5: champion best=0.1610s, median=0.1640s; variant 0.1600s (0.62%, HOLD). STOP-FLOOR ×20. Compiler sweep: **clang++ -O3 -march=native → 0.1470s** (new record). Why it helps: HW prefetcher covers ~2 streams; software prefetch covers remaining 6 of 8 streams, reducing effective L3→L2 latency. **SUBMIT with `clang++ -O3 -march=native`.** Expected judge time: ~40–55ms. |
+| 2026-07-06 | avx2_8w_pf (8-window + L2 prefetch 2 iterations ahead) | best 0.1610s, med 0.1660s x86 | ✓ (+9 edge) | ✓ PROMOTED (superseded) | New variant. Adds 8 × `_mm_prefetch(T1)` hints at p+1024..p+1472 (2 iterations = 1024 bytes ahead) to avx2_8window. First run: 0.1610s vs avx2_8window champion 0.1710s → PROMOTE gate (5.8% margin, median 0.1660s < 0.1750s). Confirmation RUNS=5: champion best=0.1610s, median=0.1640s; variant 0.1600s (0.62%, HOLD). STOP-FLOOR ×20. Compiler sweep: **clang++ -O3 -march=native → 0.1470s** (new record). Why it helps: HW prefetcher covers ~2 streams; software prefetch covers remaining 6 of 8 streams, reducing effective L3→L2 latency. Superseded by avx2_8w_pf3. |
+| 2026-07-06 | avx2_8w_nta (PREFETCHNTA at 512 bytes, 1 iteration ahead) | best 0.2160s, med 0.2190s x86 | ✓ | ✗ DEAD | PREFETCHNTA bypasses L2/L3 and loads into L1 only. Theory: single-pass 500MB stream should use NTA to avoid cache pollution. Practice: 34% SLOWER (0.2160s vs 0.1610s champion). VM has 260MB L3 cache — the file (500MB) partially fits in L3, and L3 is actively helping. Bypassing L3 with NTA forces direct DRAM reads for the non-cached half, which is much slower. NTA is the wrong hint when data partially fits in L3. Dead end. |
+| 2026-07-06 | avx2_8w_pf_t0 (T0 prefetch into L1 at 512 bytes ahead) | best 0.1670s, med 0.1680s x86 | ✓ | ✗ HOLD | Uses _MM_HINT_T0 to prefetch into L1 (vs T1 into L2) at 512 bytes (1 iteration) ahead. Result: 3.7% SLOWER (0.1670s vs 0.1610s champion). T0 at 512 bytes is too close — not enough time for L3→L1 fill at elevated VM latency. Also T0 causes more L1 evictions than T1. STOP-FLOOR ×21. |
+| 2026-07-06 | avx2_8w_pf3 (T1 prefetch at 1536 bytes = 3 iterations ahead) | best 0.1570s, med 0.1590s x86 | ✓ (+9 edge) | ✓ CHAMPION | Extends avx2_8w_pf to 3 iterations of prefetch lookahead. First run RUNS=5: 0.1580s vs avx2_8w_pf champion 0.1610s → PROMOTE gate (1.9% margin, median lower). Confirmation RUNS=5: champion 0.1570s/0.1590s; STOP-FLOOR ×21. Compiler sweep: **clang++ -O3 -march=native → 0.1440s** (new record). Why 3 iters beats 2: VM NUMA/memory latency is higher (~3 iters latency) than ~40ns bare-metal estimate. **SUBMIT with `clang++ -O3 -march=native`.** Expected judge time: ~40–55ms. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
 - `__builtin_prefetch` ahead of the scan (`swar_prefetch`) — prefetch evicts more
   than it saves; mmap MAP_POPULATE/MADV_SEQUENTIAL already streams optimally.
-  **EXCEPTION**: `_mm_prefetch(T1)` in the AVX2 8-window loop (avx2_8w_pf) IS helpful —
+  **EXCEPTION**: `_mm_prefetch(T1)` in the AVX2 8-window loop IS helpful —
   the multi-window approach exposes 8 independent streams while HW prefetcher covers only ~2;
-  explicit T1 prefetch 1024 bytes (2 iterations) ahead covers the remaining 6 streams and
-  gives 5.8% speedup (0.1710s → 0.1610s). Scalar code has no such multi-stream gap.
+  T1 prefetch covers the remaining 6 streams. avx2_8w_pf (2 iters = 1024B) → 0.1610s,
+  avx2_8w_pf3 (3 iters = 1536B) → 0.1570s; VM latency ≈ 3 iterations of lookahead.
+  PREFETCHNTA was tried (avx2_8w_nta) and is DEAD: 34% slower because 260MB L3 cache
+  actively helps (file=500MB, ~half fits in L3); bypassing L3 forces DRAM reads. Scalar code has no such multi-stream gap.
 - 2 numbers/iter with dual accumulators (`swar_unroll2`) — slower; the per-number
   boundary scans are serial (number 2 starts where number 1 ends) so there's no
   independent work to fill the OOO window, and the manual unroll defeated -O3.
@@ -212,19 +227,22 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×20)
-Champion (avx2_8w_pf) best=0.1610s / 0.1470s clang++ -O3 -march=native on local x86 vs floor 0.4880s (noisy cloud).
-Champion is 3.0× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
-- Best local (clang++ -O3 -march=native): **0.1470s** (new record, from compiler sweep)
-- avx2_8w_pf is CHAMPION — 8-window + L2 prefetch 2 iterations ahead for uncovered streams.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×21)
+Champion (avx2_8w_pf3) best=0.1570s / 0.1440s clang++ -O3 -march=native on local x86 vs floor 0.4950s (noisy cloud).
+Champion is 3.2× FASTER than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
+- Best local (clang++ -O3 -march=native): **0.1440s** (new record, from compiler sweep)
+- avx2_8w_pf3 is CHAMPION — 8-window + T1 prefetch 3 iterations (1536 bytes) ahead.
+- Why 3 iterations: VM has 260MB L3 cache; effective latency ~3×512B iterations; 3 iters fully covers L3 fill time.
 - **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
   Expected judge time: ~40–55ms.
-- All compute and I/O angles exhausted. Prefetch + multi-window is the winning formula.
+- All compute and I/O angles exhausted. Prefetch distance + multi-window is the winning formula.
+- PREFETCHNTA: DEAD (L3 bypass hurts because 260MB L3 is actively caching part of the file).
+- T0 at 512 bytes: HOLD (too close, not enough time for L3→L1 fill).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_8w_pf, local best 0.1470s (clang++ -O3 -march=native). **PRIORITY ACTION.** Expected ~40–55ms.
-2. **Prefetch distance tuning** — Try 3 iterations ahead (1536 bytes) vs current 2 iterations (1024 bytes). L3 latency ~120cy; at ~300cy/iteration, 1 iteration may be enough, 2 is conservative. Diminishing returns expected.
-3. **avx2_8w_pf + _MM_HINT_T0** — Try prefetch into L1 (T0) instead of L2 (T1). Risk: evicts useful L1 data if too many prefetches issued. Worth one test.
+1. **Submit champion to judge** — avx2_8w_pf3, local best 0.1440s (clang++ -O3 -march=native). **PRIORITY ACTION.** Expected ~40–55ms.
+2. **Prefetch distance 4 iters (2048 bytes)** — Try 4 iterations ahead vs current 3 (1536 bytes). May help if VM memory latency is even higher. Diminishing returns expected.
+3. **avx2_8w_pf3 + _MM_HINT_T0** — Already tested T0 at 512 bytes (HOLD). Try T0 at 1536 bytes as dual-level prefetch. Low probability.
 4. **Force-inlining** — TESTED, no improvement.
 5. **cnt=8,9,10,11,12 paths** — TESTED, within noise.
 6. **Rust port** — DEAD. 10% slower codegen.

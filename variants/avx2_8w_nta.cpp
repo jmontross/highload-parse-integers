@@ -1,8 +1,8 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3)
-// 8-window + T1 prefetch at 3 iterations (1536 bytes) ahead.
-// Rationale: In a VM with potential NUMA effects or elevated memory latency,
-// the effective L3 fill latency may be much higher than ~40ns bare metal.
-// Prefetching 3× iterations ahead gives more overlap time to hide latency.
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8w_nta)
+// 8-window + PREFETCHNTA (non-temporal) at 1 iteration (512 bytes) ahead.
+// Rationale: file=500MB >> L3 cache. For a single-pass streaming workload
+// where data will never be reused, NTA bypasses L2/L3 and loads into L1
+// only, reducing cache-fill pressure and potentially improving throughput.
 
 #include <cstdio>
 #include <cstdint>
@@ -296,16 +296,16 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
     while (p < safe_end) {
         // Prefetch 2 iterations ahead (1024 bytes) into L2 cache.
-        // T1 (L2) at 3 iterations (1536 bytes) ahead.
-        // In VM environments with elevated effective latency, longer distance helps.
-        _mm_prefetch((const char*)(p + 1536),      _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 64), _MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 128),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 192),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 256),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 320),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 384),_MM_HINT_T1);
-        _mm_prefetch((const char*)(p + 1536 + 448),_MM_HINT_T1);
+        // PREFETCHNTA: non-temporal, loads into L1 only (no L2/L3 fill).
+        // Distance: 512 bytes = 1 iteration ahead. Good for pure streaming.
+        _mm_prefetch((const char*)(p + 512),      _MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 64), _MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 128),_MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 192),_MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 256),_MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 320),_MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 384),_MM_HINT_NTA);
+        _mm_prefetch((const char*)(p + 512 + 448),_MM_HINT_NTA);
 
         uint64_t m0 = nl_mask64(p);
         uint64_t m1 = nl_mask64(p + 64);

@@ -1,4 +1,4 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3)
+// HighLoad.fun — parse_integers  (VARIANT: avx2_8w_pf3)
 // 8-window + T1 prefetch at 3 iterations (1536 bytes) ahead.
 // Rationale: In a VM with potential NUMA effects or elevated memory latency,
 // the effective L3 fill latency may be much higher than ~40ns bare metal.
