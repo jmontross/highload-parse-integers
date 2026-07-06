@@ -224,6 +224,8 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-06 | avx2_8w_pf2_i (interleaved + T1@1024B = 2 iters ahead) | best 0.1720s, med 0.1750s x86 | ✓ | ✗ HOLD | NEW this run. Reduces prefetch lookahead from 3 iters (1536B) to 2 iters (1024B). Theory: judge bare-metal has ~80ns DRAM latency vs VM's ~400ns; at 3 GHz, 80ns=240cy, each 512B iter≈150cy → need ~1.6 iters → round to 2. Practice: 0.1% SLOWER on local VM (0.1720s vs 0.1700s champion). HOLD. Local VM needs 3 iters; may be better on judge. STOP-FLOOR ×27. |
 | 2026-07-06 | avx2_8w_pf4_i (interleaved + T1@2048B = 4 iters ahead) | best 0.1700s, med 0.1720s x86 | ✓ | ✗ HOLD | NEW this run. Extends champion's 3-iter lookahead to 4 iters (2048B). Ties champion exactly: best=0.1700s=champion, median=0.1720s=champion → Δbest=0%. HOLD (need ≥1.5%). Same latency/bandwidth ratio as pf3 on this VM. Confirms prefetch sweet spot is in the 3–4 iter range. Clang++ sweep: 0.1610s (same as champion). STOP-FLOOR ×27. |
 | 2026-07-06 | avx2_8w_pf3_i2 (2-ahead interleaving: compute m[i+2] before processing w[i]) | best 0.1730s, med 0.1740s x86 | ✓ | ✗ HOLD | NEW this run. Computes first 2 masks before any process_window, then falls back to 1-ahead for remainder. Theory: 2 outstanding nl_mask64 loads before processing window 0 gives CPU more MLP (4 AVX2 loads in flight before first integer work). Practice: 1.8% SLOWER (0.1730s vs 0.1700s champion). OOO engine already handles this overlap in 1-ahead; pre-computing an extra mask adds register pressure / code structure noise. STOP-FLOOR ×27. |
+| 2026-07-06 | avx2_8w_pf3_i_cnt3 (champion + explicit cnt==3 fast path) | best 0.1520s, med 0.1550s x86 | ✓ | ✗ HOLD | NEW this run. Adds explicit cnt==3 branch before the while(m) fallback: uses 3×CTZ to extract positions n0/n1/n2, then parse_pair(base,n0) + parse_num(n1+1, n2-n1-1). Theory: ~3.6% of windows fall through to while(m) loop; cnt==3 is the dominant case among them; eliminating 3 CTZ loop iterations should save ~8–12 cycles/window. Practice: 0.1520s best vs champion 0.1530s; within noise (HOLD). Bandwidth-bound: compute savings from cnt==3 path (~3.6% × 8–12 cycles) not visible when memory bandwidth is the bottleneck. STOP-FLOOR ×28. |
+| 2026-07-06 | avx2_8w_i_nopf (champion with all 8 SW prefetch hints removed) | best 0.1610s, med 0.1640s x86 | ✓ | ✗ DEAD | NEW this run. Removes all 8 `_mm_prefetch(T1)` calls from the 8-window solve() loop. Theory: test whether SW prefetch is still required or if HW prefetcher now covers 8 streams adequately. Practice: 5.2% SLOWER (0.1610s vs champion 0.1530s). DEAD. HW prefetcher tracks ≤2 streams reliably; 8-window design deliberately exceeds that to saturate DRAM bandwidth. SW prefetch remains essential at 8 streams. STOP-FLOOR ×28 (confirmed). |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -267,11 +269,11 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-06, confirmed ×27)
-Champion (avx2_8w_pf3_interleaved) best=0.1700s / **0.1610s clang++ -O3 -march=native** on local x86.
+## Status: STOP-FLOOR (2026-07-06, confirmed ×28)
+Champion (avx2_8w_pf3_interleaved) best=0.1530s / **0.1420s clang++ -Ofast -march=native -funroll-loops** on local x86.
 Champion is faster than cat — mmap bypasses the kernel read-path copy, at/below the effective I/O ceiling.
 - **Current champion: avx2_8w_pf3_interleaved** — interleaved nl_mask64()+process_window() exploits disjoint EU port usage (loads on 2/3, parse ALU on 0/1/5).
-- Best local (clang++ -O3 -march=native): **0.1610s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, clang++ -Ofast -march=native -funroll-loops, older run)
+- Best local (clang++ -Ofast -march=native -funroll-loops): **0.1420s** (this run); best-ever any compiler: **0.1270s** (avx2_8w_pf3, clang++ -Ofast -march=native -funroll-loops, much older run)
 - avx2_8w_pf3_interleaved = avx2_8w_pf3 + interleaved mask/process (compute mask[i+1] while processing window[i])
 - Why interleaving helps (today): AVX2 load ports 2/3 and integer parse ALU ports 0/1/5 are disjoint — explicit interleaving ensures the OOO window sees paired loads+computes to schedule concurrently.
 - Why 3 iterations of prefetch: VM has elevated latency (~170ns/iter); 3 iters = 510ns lookahead covers DRAM fills.
@@ -280,6 +282,7 @@ Champion is faster than cat — mmap bypasses the kernel read-path copy, at/belo
 - All compute, I/O, prefetch-distance, multi-window, register-allocation, and interleaving angles now exhausted.
 - Prefetch sweet spot: 8 windows + T1@1536B (pf3). pf4 ties within noise. pf2 slightly slower. Dual-level adds overhead.
 - This run (2026-07-06 latest): pf2_i HOLD (slightly slower), pf4_i HOLD (ties champion), i2 HOLD (2-ahead slightly slower).
+- This run (2026-07-06 +2h): cnt3 HOLD (within noise, bandwidth-bound), nopf DEAD (5.2% slower — SW prefetch essential for 8 streams).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — avx2_8w_pf3_interleaved, local best 0.1610s (clang++ -O3 -march=native); expected judge time ~40–55ms. **PRIORITY ACTION.**
