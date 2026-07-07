@@ -1,9 +1,15 @@
-// dp2_8s_itercount.cpp — dp2_8stream with fixed-iteration widen instead of num_count.
-// Current champion tracks c0..c7 (8 cnt return values) and sums them to num_count per
-// iteration (~9 integer ops + comparison). This variant widens every 100 loop iterations
-// instead, removing those 9 ops from the hot path.
-// Safety: 100 iters × 4 acc_u16_add × max 144 per call = 57,600 < 65535 ✓
-// Also removes ret_cnt parameter from process_window_dp → popcll result not returned.
+// dp2_8s_2w.cpp — dp2_8stream with 2 windows per stream per iteration.
+// Each of 8 streams advances 128B per main loop iteration (vs 64B in dp2_8stream).
+// All 16 nl_mask64 loads (8 streams × 2 windows) are issued before any processing,
+// giving the OOO engine 16 outstanding DRAM requests from 8 different DRAM regions.
+// Current champion issues 8 outstanding loads; doubling may saturate more line-fill
+// buffers (LFB cap ~12-16 on Sapphire Rapids).
+//
+// Key: the 2nd window of each stream (p+64) is independent of the 1st window's
+// base-pointer update — we know the address without processing window 0a first.
+// So all 16 loads can be in flight simultaneously.
+// Window 0b's process_window_dp needs updated b0 from window 0a — but while we
+// wait for b0 (~20cy), we can overlap with processing streams 1a, 2a, ... 7a.
 
 #include <cstdio>
 #include <cstdint>
@@ -95,7 +101,6 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
-// No ret_cnt — caller doesn't track number count.
 static __attribute__((always_inline)) __m128i process_window_dp(
     const unsigned char* __restrict__ p,
     const unsigned char* __restrict__& base,
@@ -279,65 +284,105 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *p6=adj_start[6], *b6=adj_start[6];
         const unsigned char *p7=adj_start[7], *b7=adj_start[7];
 
-        const unsigned char *s0=(adj_end[0]>adj_start[0]+96)?adj_end[0]-96:adj_start[0];
-        const unsigned char *s1=(adj_end[1]>adj_start[1]+96)?adj_end[1]-96:adj_start[1];
-        const unsigned char *s2=(adj_end[2]>adj_start[2]+96)?adj_end[2]-96:adj_start[2];
-        const unsigned char *s3=(adj_end[3]>adj_start[3]+96)?adj_end[3]-96:adj_start[3];
-        const unsigned char *s4=(adj_end[4]>adj_start[4]+96)?adj_end[4]-96:adj_start[4];
-        const unsigned char *s5=(adj_end[5]>adj_start[5]+96)?adj_end[5]-96:adj_start[5];
-        const unsigned char *s6=(adj_end[6]>adj_start[6]+96)?adj_end[6]-96:adj_start[6];
-        const unsigned char *s7=(adj_end[7]>adj_start[7]+96)?adj_end[7]-96:adj_start[7];
+        // Safe-end: leave 160 bytes margin for 2-window tail (2×64+32)
+        const unsigned char *s0=(adj_end[0]>adj_start[0]+160)?adj_end[0]-160:adj_start[0];
+        const unsigned char *s1=(adj_end[1]>adj_start[1]+160)?adj_end[1]-160:adj_start[1];
+        const unsigned char *s2=(adj_end[2]>adj_start[2]+160)?adj_end[2]-160:adj_start[2];
+        const unsigned char *s3=(adj_end[3]>adj_start[3]+160)?adj_end[3]-160:adj_start[3];
+        const unsigned char *s4=(adj_end[4]>adj_start[4]+160)?adj_end[4]-160:adj_start[4];
+        const unsigned char *s5=(adj_end[5]>adj_start[5]+160)?adj_end[5]-160:adj_start[5];
+        const unsigned char *s6=(adj_end[6]>adj_start[6]+160)?adj_end[6]-160:adj_start[6];
+        const unsigned char *s7=(adj_end[7]>adj_start[7]+160)?adj_end[7]-160:adj_start[7];
 
         __m256i acc_u16 = _mm256_setzero_si256();
         int iter_count = 0;
 
+        // Main loop: 8 streams × 2 windows = 16 outstanding DRAM requests per iteration.
+        // Prefetch 2 iterations (256B) × 8 streams ahead (at 1536B = 12 iterations ahead).
+        // All 16 mask loads are issued before any processing call.
         while (__builtin_expect(p0 < s0 & p1 < s1 & p2 < s2 & p3 < s3 &
                                 p4 < s4 & p5 < s5 & p6 < s6 & p7 < s7, 1)) {
+            // Prefetch 2 windows ahead per stream at 1536B lookahead
             _mm_prefetch((const char*)(p0 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p1 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p2 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p3 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p4 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p5 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p6 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 1600), _MM_HINT_T1);
             _mm_prefetch((const char*)(p7 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 1600), _MM_HINT_T1);
 
-            uint64_t m0 = nl_mask64(p0);
-            uint64_t m1 = nl_mask64(p1);
-            uint64_t m2 = nl_mask64(p2);
-            uint64_t m3 = nl_mask64(p3);
-            uint64_t m4 = nl_mask64(p4);
-            uint64_t m5 = nl_mask64(p5);
-            uint64_t m6 = nl_mask64(p6);
-            uint64_t m7 = nl_mask64(p7);
+            // Issue all 16 mask loads BEFORE processing — 16 independent DRAM requests.
+            // The 'b' windows (p+64) are independent of 'a' processing:
+            // their address is p+64 which is known before any base update.
+            uint64_t m0a = nl_mask64(p0);
+            uint64_t m0b = nl_mask64(p0 + 64);
+            uint64_t m1a = nl_mask64(p1);
+            uint64_t m1b = nl_mask64(p1 + 64);
+            uint64_t m2a = nl_mask64(p2);
+            uint64_t m2b = nl_mask64(p2 + 64);
+            uint64_t m3a = nl_mask64(p3);
+            uint64_t m3b = nl_mask64(p3 + 64);
+            uint64_t m4a = nl_mask64(p4);
+            uint64_t m4b = nl_mask64(p4 + 64);
+            uint64_t m5a = nl_mask64(p5);
+            uint64_t m5b = nl_mask64(p5 + 64);
+            uint64_t m6a = nl_mask64(p6);
+            uint64_t m6b = nl_mask64(p6 + 64);
+            uint64_t m7a = nl_mask64(p7);
+            uint64_t m7b = nl_mask64(p7 + 64);
 
-            __m128i r0 = process_window_dp(p0, b0, m0); p0 += 64;
-            __m128i r1 = process_window_dp(p1, b1, m1); p1 += 64;
-            __m128i r2 = process_window_dp(p2, b2, m2); p2 += 64;
-            __m128i r3 = process_window_dp(p3, b3, m3); p3 += 64;
-            __m128i r4 = process_window_dp(p4, b4, m4); p4 += 64;
-            __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64;
-            __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64;
-            __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64;
+            // Process: 'a' window first (updates b), then 'b' window (uses updated b)
+            __m128i r0a = process_window_dp(p0,    b0, m0a);
+            __m128i r0b = process_window_dp(p0+64, b0, m0b); p0 += 128;
+            __m128i r1a = process_window_dp(p1,    b1, m1a);
+            __m128i r1b = process_window_dp(p1+64, b1, m1b); p1 += 128;
+            __m128i r2a = process_window_dp(p2,    b2, m2a);
+            __m128i r2b = process_window_dp(p2+64, b2, m2b); p2 += 128;
+            __m128i r3a = process_window_dp(p3,    b3, m3a);
+            __m128i r3b = process_window_dp(p3+64, b3, m3b); p3 += 128;
+            __m128i r4a = process_window_dp(p4,    b4, m4a);
+            __m128i r4b = process_window_dp(p4+64, b4, m4b); p4 += 128;
+            __m128i r5a = process_window_dp(p5,    b5, m5a);
+            __m128i r5b = process_window_dp(p5+64, b5, m5b); p5 += 128;
+            __m128i r6a = process_window_dp(p6,    b6, m6a);
+            __m128i r6b = process_window_dp(p6+64, b6, m6b); p6 += 128;
+            __m128i r7a = process_window_dp(p7,    b7, m7a);
+            __m128i r7b = process_window_dp(p7+64, b7, m7b); p7 += 128;
 
-            acc_u16_add(acc_u16, _mm_add_epi8(r0, r1));
-            acc_u16_add(acc_u16, _mm_add_epi8(r2, r3));
-            acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));
-            acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));
+            // Accumulate: pair 4 windows in u8 (max 4×72=288 > 255, overflow!), so pair 2.
+            // 2 windows per pair: max 2×72=144 ≤ 255 (safe).
+            acc_u16_add(acc_u16, _mm_add_epi8(r0a, r0b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r1a, r1b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r2a, r2b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r3a, r3b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r4a, r4b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r5a, r5b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r6a, r6b));
+            acc_u16_add(acc_u16, _mm_add_epi8(r7a, r7b));
 
-            // Fixed-interval widening: every 100 iterations instead of num_count.
-            // Saves 8 integer adds (c0..c7 accumulation) per iteration.
-            if (__builtin_expect(++iter_count >= 100, 0)) {
+            // Widen every 50 iterations (8 acc_u16_add per iter; 50×8=400 calls ×max_u8=144 < 65535).
+            // Safety: 50 × 8 × 144 = 57,600 < 65,535 ✓
+            if (__builtin_expect(++iter_count >= 50, 0)) {
                 widen_u16(acc_u16, wide_acc);
                 iter_count = 0;
             }
         }
 
+        // Per-stream tail cleanup (single-window)
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
             acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
             (pi) += 64; \
-            if (__builtin_expect(++iter_count >= 100, 0)) { \
+            if (__builtin_expect(++iter_count >= 50, 0)) { \
                 widen_u16(acc_u16, wide_acc); iter_count = 0; } \
         } \
         widen_u16(acc_u16, wide_acc); \
