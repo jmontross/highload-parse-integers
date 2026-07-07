@@ -1,11 +1,10 @@
-// HighLoad.fun — parse_integers  (CHAMPION: avx2_8w_pf3_interleaved)
-// 8-window + T1@1536B prefetch + interleaved mask-compute/window-process.
-// Interleaves nl_mask64() and process_window() calls: compute mask[i+1] while
-// processing window[i]. AVX2 loads (ports 2/3) and integer parse (ports 0/1/5)
-// use disjoint EUs, so issuing them in parallel improves port utilization.
-// Re-promoted 2026-07-07: gate fired vs avx2_8w_pf3_i_cnt3 on two consecutive
-// RUNS=5 runs. Both variants within noise of each other; oscillation between
-// interleaved and i_cnt3 is documented. Clang++ sweep: 0.1360s (-Ofast -funroll).
+// avx2_hugepage_collapse — champion + MADV_HUGEPAGE + MADV_COLLAPSE for TLB reduction
+// I/O hypothesis: 500MB / 4KB = 128K TLB entries → L2 STLB thrash (1024-4096 entry STLB).
+// MADV_COLLAPSE (Linux 6.1+, value=25) synchronously promotes pages to 2MB huge pages.
+// With 2MB pages: 500MB / 2MB = 250 TLB entries → fits in STLB, zero TLB misses.
+// TLB miss cost estimate: 1M misses × 70cy / 3GHz ≈ 23ms on judge hardware.
+// Kernel 6.18.5 supports file-backed huge pages via MADV_HUGEPAGE + MADV_COLLAPSE
+// on MAP_PRIVATE read-only file mmaps.
 
 #include <cstdio>
 #include <cstdint>
@@ -20,6 +19,12 @@
 
 #ifndef MAP_POPULATE
 #define MAP_POPULATE 0
+#endif
+#ifndef MADV_HUGEPAGE
+#define MADV_HUGEPAGE 14
+#endif
+#ifndef MADV_COLLAPSE
+#define MADV_COLLAPSE 25
 #endif
 
 static inline uint32_t parse_8(uint64_t chunk) {
@@ -255,6 +260,16 @@ static inline uint64_t process_window(
                          nl5+1, nl6-nl5-1, nl6+1, nl7-nl6-1)
             + parse_pair(nl7+1, nl8-nl7-1, nl8+1, nl9-nl8-1);
         base = nl9+1;
+    } else if (__builtin_expect(cnt == 3, 0)) {
+        uint64_t mm = m;
+        unsigned n0, n1, n2;
+        n0 = __builtin_ctzll(mm); mm &= mm - 1;
+        n1 = __builtin_ctzll(mm); mm &= mm - 1;
+        n2 = __builtin_ctzll(mm);
+        const unsigned char *nl0=p+n0, *nl1=p+n1, *nl2=p+n2;
+        sum = parse_pair(base, nl0-base, nl0+1, nl1-nl0-1)
+            + parse_num(nl1+1, nl2-nl1-1);
+        base = nl2+1;
     } else {
         while (m) {
             unsigned nlpos = __builtin_ctzll(m);
@@ -359,6 +374,8 @@ int main() {
         const unsigned char* data = (const unsigned char*)
             mmap(nullptr, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, 0, 0);
         if (data != MAP_FAILED) {
+            madvise((void*)data, size, MADV_HUGEPAGE);
+            madvise((void*)data, size, MADV_COLLAPSE);
             madvise((void*)data, size, MADV_SEQUENTIAL);
             printf("%" PRIu64 "\n", solve(data, size));
             return 0;
