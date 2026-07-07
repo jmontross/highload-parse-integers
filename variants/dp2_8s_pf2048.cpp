@@ -1,4 +1,5 @@
-// dp2_8stream.cpp — Change A (pshufb digit-place) + Change B (8 spatially-separated streams).
+// dp2_8s_pf2048.cpp — dp2_8stream with T1 prefetch at 2048B (32 iters×64B) instead of 1536B (24).
+// In 8-stream mode, each stream advances 64B/iter. 2048B = 32 iterations of lookahead.
 // Splits file into 8 equal blocks (~65MB each); processes 1 window per block per iteration.
 // All 8 nl_mask64 loads issued before processing → 8 truly independent DRAM requests from
 // 8 different regions of RAM (~65MB apart). Critical improvement over sequential champion:
@@ -307,14 +308,14 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         while (__builtin_expect(p0 < s0 & p1 < s1 & p2 < s2 & p3 < s3 &
                                 p4 < s4 & p5 < s5 & p6 < s6 & p7 < s7, 1)) {
             // SW prefetch: 1536B ahead per stream (3 iterations of 512B)
-            _mm_prefetch((const char*)(p0 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p1 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p2 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p3 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p4 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p5 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p6 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p7 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 2048), _MM_HINT_T1);
 
             // Issue all 8 mask loads BEFORE processing — 8 independent DRAM requests.
             uint64_t m0 = nl_mask64(p0);

@@ -1,10 +1,9 @@
-// dp2_8stream.cpp — Change A (pshufb digit-place) + Change B (8 spatially-separated streams).
-// Splits file into 8 equal blocks (~65MB each); processes 1 window per block per iteration.
-// All 8 nl_mask64 loads issued before processing → 8 truly independent DRAM requests from
-// 8 different regions of RAM (~65MB apart). Critical improvement over sequential champion:
-// the serial base-pointer chain (8 windows × ~20cy/window = 160cy) is broken into
-// 8 INDEPENDENT 20cy chains → OOO engine can overlap them, targeting ~20cy compute per iter.
-// Combines avx2_hugepage_collapse's huge-page TLB optimization with dp2's pshufb parsing.
+// dp2_acc2.cpp — stuchlik_dp2 with u8 pair accumulation before widening to u16.
+// Key change: instead of widening each window's u8 result to u16 separately (8 VPMOVZXBW
+// per main loop iteration), accumulate pairs of windows in u8 first (max 2×72=144≤255 ✓),
+// then widen once per pair (4 VPMOVZXBW per iteration). Saves 4 VPMOVZXBW + 4 VPADDW ops
+// per 512-byte main loop iteration = ~7% reduction in port-5 pressure.
+// Reduces acc_u16_add calls from 8 to 4 per main loop iteration.
 
 #include <cstdio>
 #include <cstdint>
@@ -29,24 +28,33 @@
 
 #if defined(__AVX2__) && !defined(BLOCK_SCALAR_SIM)
 
+// ctrl[L]: 16-byte pshufb ctrl: place 0 gets byte[L-1], place 1 gets byte[L-2], ...
+// place L-1 gets byte[0]. Places >= L get 0x80 → pshufb zeroes those output lanes.
+// We use -1 (= 0xFF, high bit set) for "zero this output lane".
 static const __m128i place_ctrl[11] = {
-    _mm_setzero_si128(),
-    _mm_setr_epi8(0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(8,7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1),
-    _mm_setr_epi8(9,8,7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1),
+    _mm_setzero_si128(),  // len=0 unused
+    _mm_setr_epi8(0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),  // len=1
+    _mm_setr_epi8(1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),   // len=2
+    _mm_setr_epi8(2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),    // len=3
+    _mm_setr_epi8(3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),     // len=4
+    _mm_setr_epi8(4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),      // len=5
+    _mm_setr_epi8(5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1),       // len=6
+    _mm_setr_epi8(6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1),        // len=7
+    _mm_setr_epi8(7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1,-1),         // len=8
+    _mm_setr_epi8(8,7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1,-1),          // len=9
+    _mm_setr_epi8(9,8,7,6,5,4,3,2,1,0,-1,-1,-1,-1,-1,-1),           // len=10
 };
 
+// Produce a pshufb-scattered u8 contribution for one number.
+// Loads 16 bytes from p (garbage past len is masked by 0xFF in ctrl).
 #define PSHUF(p, len) \
     _mm_shuffle_epi8( \
         _mm_sub_epi8(_mm_loadu_si128((const __m128i*)(p)), _mm_set1_epi8('0')), \
         place_ctrl[(len)])
+
+// Tree-reduce N contributions → single u8 result (all intermediates fit in u8:
+// max path is 6 contributions × 9 = 54 ≤ 255).
+// Caller zero-extends the result to u16 and adds to acc_u16.
 
 static inline __m128i tree6(
     __m128i s0, __m128i s1, __m128i s2,
@@ -56,7 +64,7 @@ static inline __m128i tree6(
     __m128i t23   = _mm_add_epi8(s2, s3);
     __m128i t45   = _mm_add_epi8(s4, s5);
     __m128i t0123 = _mm_add_epi8(t01, t23);
-    return _mm_add_epi8(t0123, t45);
+    return _mm_add_epi8(t0123, t45);  // max 54 per lane ✓ (fits u8)
 }
 
 static inline __m128i tree5(
@@ -65,20 +73,24 @@ static inline __m128i tree5(
     __m128i t01   = _mm_add_epi8(s0, s1);
     __m128i t23   = _mm_add_epi8(s2, s3);
     __m128i t0123 = _mm_add_epi8(t01, t23);
-    return _mm_add_epi8(t0123, s4);
+    return _mm_add_epi8(t0123, s4);  // max 45 per lane ✓
 }
 
 static inline __m128i tree4(
     __m128i s0, __m128i s1, __m128i s2, __m128i s3)
 {
-    return _mm_add_epi8(_mm_add_epi8(s0, s1), _mm_add_epi8(s2, s3));
+    return _mm_add_epi8(_mm_add_epi8(s0, s1), _mm_add_epi8(s2, s3));  // max 36 ✓
 }
 
+// Add a window's u8 contribution to the u16 accumulator via zero-extension.
+// _mm256_cvtepu8_epi16 (VPMOVZXBW): zero-extends 16 u8 lanes → 16 u16 lanes.
+// acc_u16 is a 256-bit register with 16 u16 lanes; we use lanes 0..9 for places.
 static __attribute__((always_inline)) void
 acc_u16_add(__m256i& acc_u16, __m128i contrib_u8) {
     acc_u16 = _mm256_add_epi16(acc_u16, _mm256_cvtepu8_epi16(contrib_u8));
 }
 
+// Widen acc_u16 (places 0..9 in u16 lanes 0..9) into wide_acc[10] (u64).
 static __attribute__((noinline)) void
 widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
     alignas(32) uint16_t lanes[16];
@@ -96,7 +108,8 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
-// Returns u8 window contribution; updates base; sets ret_cnt.
+// Process one 64-byte window; returns u8 contribution (to be zero-extended by caller).
+// Also returns number of numbers via ret_cnt for widen scheduling.
 static __attribute__((always_inline)) __m128i process_window_dp(
     const unsigned char* __restrict__ p,
     const unsigned char* __restrict__& base,
@@ -163,6 +176,7 @@ static __attribute__((always_inline)) __m128i process_window_dp(
             PSHUF(nl2+1, (unsigned)(nl3-nl2-1)),
             PSHUF(nl3+1, (unsigned)(nl4-nl3-1)),
             PSHUF(nl4+1, (unsigned)(nl5-nl4-1)));
+        // t6 max 54, s6 max 9, sum max 63 ≤ 255 ✓
         __m128i r = _mm_add_epi8(t6, PSHUF(nl5+1, (unsigned)(nl6-nl5-1)));
         base = nl6+1;
         return r;
@@ -191,7 +205,7 @@ static __attribute__((always_inline)) __m128i process_window_dp(
         __m128i s0=PSHUF(base,  (unsigned)(nl0-base));
         __m128i s1=PSHUF(nl0+1, (unsigned)(nl1-nl0-1));
         __m128i s2=PSHUF(nl1+1, (unsigned)(nl2-nl1-1));
-        __m128i r = _mm_add_epi8(_mm_add_epi8(s0, s1), s2);
+        __m128i r = _mm_add_epi8(_mm_add_epi8(s0, s1), s2);  // max 27 ✓
         base = nl2+1;
         return r;
     } else if (__builtin_expect(cnt == 8, 0)) {
@@ -217,10 +231,12 @@ static __attribute__((always_inline)) __m128i process_window_dp(
         __m128i t2 = _mm_add_epi8(
             PSHUF(nl5+1, (unsigned)(nl6-nl5-1)),
             PSHUF(nl6+1, (unsigned)(nl7-nl6-1)));
+        // t6 ≤ 54, t2 ≤ 18, sum ≤ 72 ✓
         __m128i r = _mm_add_epi8(t6, t2);
         base = nl7+1;
         return r;
     } else {
+        // Generic: while loop with scalar pshufb per number
         __m128i r = _mm_setzero_si128();
         ret_cnt = 0;
         while (m) {
@@ -228,6 +244,8 @@ static __attribute__((always_inline)) __m128i process_window_dp(
             const unsigned char* nlp = p + nlpos;
             unsigned len = (unsigned)(nlp - base);
             if (__builtin_expect(len > 0 && len <= 10, 1)) {
+                // Linear add: each number adds ≤9 per lane; with ≤12 numbers in
+                // while loop (edge case), max 12×9=108 ≤ 255 ✓ for intermediate.
                 r = _mm_add_epi8(r, PSHUF(base, len));
                 ret_cnt++;
             }
@@ -238,6 +256,7 @@ static __attribute__((always_inline)) __m128i process_window_dp(
     }
 }
 
+// Scalar back-to-front tail for correctness on unaligned bytes.
 static void scalar_tail(const unsigned char* from, const unsigned char* end,
                         uint64_t* wide_acc)
 {
@@ -257,122 +276,80 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
     uint64_t wide_acc[10] = {};
 
-    if (size < 8 * 800) {
+    if (size < 800) {
         scalar_tail(data, data + size, wide_acc);
         goto reconstruct;
     }
 
     {
-        // Split into 8 equal blocks at newline boundaries.
-        const unsigned char* end = data + size;
-        const unsigned char* adj_start[8];
-        const unsigned char* adj_end[8];
-
-        adj_start[0] = data;
-        for (int i = 1; i < 8; i++) {
-            const unsigned char* q = data + (size_t)i * (size / 8);
-            while (q < end && *q != '\n') ++q;
-            adj_start[i] = (q < end) ? q + 1 : end;
-        }
-        for (int i = 0; i < 7; i++) adj_end[i] = adj_start[i + 1];
-        adj_end[7] = end;
-
-        // Per-stream pointers: p=current window, b=base (start of current number)
-        const unsigned char *p0=adj_start[0], *b0=adj_start[0];
-        const unsigned char *p1=adj_start[1], *b1=adj_start[1];
-        const unsigned char *p2=adj_start[2], *b2=adj_start[2];
-        const unsigned char *p3=adj_start[3], *b3=adj_start[3];
-        const unsigned char *p4=adj_start[4], *b4=adj_start[4];
-        const unsigned char *p5=adj_start[5], *b5=adj_start[5];
-        const unsigned char *p6=adj_start[6], *b6=adj_start[6];
-        const unsigned char *p7=adj_start[7], *b7=adj_start[7];
-
-        // Safe-end: leave 96 bytes margin for tail in each stream
-        const unsigned char *s0=(adj_end[0]>adj_start[0]+96)?adj_end[0]-96:adj_start[0];
-        const unsigned char *s1=(adj_end[1]>adj_start[1]+96)?adj_end[1]-96:adj_start[1];
-        const unsigned char *s2=(adj_end[2]>adj_start[2]+96)?adj_end[2]-96:adj_start[2];
-        const unsigned char *s3=(adj_end[3]>adj_start[3]+96)?adj_end[3]-96:adj_start[3];
-        const unsigned char *s4=(adj_end[4]>adj_start[4]+96)?adj_end[4]-96:adj_start[4];
-        const unsigned char *s5=(adj_end[5]>adj_start[5]+96)?adj_end[5]-96:adj_start[5];
-        const unsigned char *s6=(adj_end[6]>adj_start[6]+96)?adj_end[6]-96:adj_start[6];
-        const unsigned char *s7=(adj_end[7]>adj_start[7]+96)?adj_end[7]-96:adj_start[7];
-
         __m256i acc_u16 = _mm256_setzero_si256();
         int num_count = 0;
 
-        // Main loop: 8 independent DRAM streams ~65MB apart.
-        // Issue all 8 nl_mask64 loads FIRST, then process all 8 windows.
-        // The 8 process_window_dp calls are independent (each uses its own b[i]).
-        // OOO engine can execute all 8 in parallel, hiding the base-update latency.
-        while (__builtin_expect(p0 < s0 & p1 < s1 & p2 < s2 & p3 < s3 &
-                                p4 < s4 & p5 < s5 & p6 < s6 & p7 < s7, 1)) {
-            // SW prefetch: 1536B ahead per stream (3 iterations of 512B)
-            _mm_prefetch((const char*)(p0 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p1 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p2 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p3 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p4 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p5 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p6 + 1536), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p7 + 1536), _MM_HINT_T1);
+        const unsigned char* p    = data;
+        const unsigned char* end  = data + size;
+        const unsigned char* base = data;
+        const unsigned char* safe_end = end - 544;
 
-            // Issue all 8 mask loads BEFORE processing — 8 independent DRAM requests.
-            uint64_t m0 = nl_mask64(p0);
-            uint64_t m1 = nl_mask64(p1);
-            uint64_t m2 = nl_mask64(p2);
-            uint64_t m3 = nl_mask64(p3);
-            uint64_t m4 = nl_mask64(p4);
-            uint64_t m5 = nl_mask64(p5);
-            uint64_t m6 = nl_mask64(p6);
-            uint64_t m7 = nl_mask64(p7);
+        while (p < safe_end) {
+            _mm_prefetch((const char*)(p + 1536),       _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 64),  _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 128), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 192), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 256), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 320), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 384), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p + 1536 + 448), _MM_HINT_T1);
 
-            // Process all 8 windows — each is independent (own base pointer).
+            // Interleaved: mask load for window i+1 overlaps processing of window i.
+            // Pair-add in u8 before widening: 2 windows × max72=144 ≤ 255 ✓.
+            // Each pair replaces 2×(VPMOVZXBW+VPADDW) with 1×VPADDB+1×(VPMOVZXBW+VPADDW).
             int c0,c1,c2,c3,c4,c5,c6,c7;
-            __m128i r0 = process_window_dp(p0, b0, m0, c0); p0 += 64;
-            __m128i r1 = process_window_dp(p1, b1, m1, c1); p1 += 64;
-            __m128i r2 = process_window_dp(p2, b2, m2, c2); p2 += 64;
-            __m128i r3 = process_window_dp(p3, b3, m3, c3); p3 += 64;
-            __m128i r4 = process_window_dp(p4, b4, m4, c4); p4 += 64;
-            __m128i r5 = process_window_dp(p5, b5, m5, c5); p5 += 64;
-            __m128i r6 = process_window_dp(p6, b6, m6, c6); p6 += 64;
-            __m128i r7 = process_window_dp(p7, b7, m7, c7); p7 += 64;
+            uint64_t m0 = nl_mask64(p);
+            uint64_t m1 = nl_mask64(p + 64);
+            __m128i r0 = process_window_dp(p,       base, m0, c0);
+            uint64_t m2 = nl_mask64(p + 128);
+            __m128i r1 = process_window_dp(p + 64,  base, m1, c1);
+            uint64_t m3 = nl_mask64(p + 192);
+            acc_u16_add(acc_u16, _mm_add_epi8(r0, r1));  // pair 01
 
-            // Accumulate to u16 (pair adjacent windows in u8 first: max 2×72=144≤255)
-            acc_u16_add(acc_u16, _mm_add_epi8(r0, r1));
-            acc_u16_add(acc_u16, _mm_add_epi8(r2, r3));
-            acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));
-            acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));
+            __m128i r2 = process_window_dp(p + 128, base, m2, c2);
+            uint64_t m4 = nl_mask64(p + 256);
+            __m128i r3 = process_window_dp(p + 192, base, m3, c3);
+            uint64_t m5 = nl_mask64(p + 320);
+            acc_u16_add(acc_u16, _mm_add_epi8(r2, r3));  // pair 23
+
+            __m128i r4 = process_window_dp(p + 256, base, m4, c4);
+            uint64_t m6 = nl_mask64(p + 384);
+            __m128i r5 = process_window_dp(p + 320, base, m5, c5);
+            uint64_t m7 = nl_mask64(p + 448);
+            acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));  // pair 45
+
+            __m128i r6 = process_window_dp(p + 384, base, m6, c6);
+            __m128i r7 = process_window_dp(p + 448, base, m7, c7);
+            acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));  // pair 67
+            p += 512;
 
             num_count += c0+c1+c2+c3+c4+c5+c6+c7;
+            // u16 max = 65535; 7000 numbers × 9 per lane = 63000 < 65535 ✓
             if (__builtin_expect(num_count >= 7000, 0)) {
                 widen_u16(acc_u16, wide_acc);
                 num_count = 0;
             }
         }
 
-        // Per-stream tail cleanup (single-window)
-#define STREAM_TAIL(pi, bi, ei) \
-        while ((pi) + 96 < (ei)) { \
-            int _c; \
-            acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi), _c)); \
-            (pi) += 64; \
-            num_count += _c; \
-            if (__builtin_expect(num_count >= 7000, 0)) { \
-                widen_u16(acc_u16, wide_acc); num_count = 0; } \
-        } \
-        widen_u16(acc_u16, wide_acc); \
-        num_count = 0; \
-        scalar_tail((bi), (ei), wide_acc);
+        // Single-window tail
+        while (p + 96 < end) {
+            uint64_t m = nl_mask64(p);
+            int c;
+            acc_u16_add(acc_u16, process_window_dp(p, base, m, c));
+            p += 64;
+        }
 
-        STREAM_TAIL(p0, b0, adj_end[0])
-        STREAM_TAIL(p1, b1, adj_end[1])
-        STREAM_TAIL(p2, b2, adj_end[2])
-        STREAM_TAIL(p3, b3, adj_end[3])
-        STREAM_TAIL(p4, b4, adj_end[4])
-        STREAM_TAIL(p5, b5, adj_end[5])
-        STREAM_TAIL(p6, b6, adj_end[6])
-        STREAM_TAIL(p7, b7, adj_end[7])
-#undef STREAM_TAIL
+        // Flush acc_u16
+        widen_u16(acc_u16, wide_acc);
+
+        // Scalar tail for remaining bytes (last <96 bytes)
+        scalar_tail(base, end, wide_acc);
     }
 
 reconstruct:
@@ -388,7 +365,7 @@ reconstruct:
 }
 
 #else
-// Scalar fallback (ARM / non-AVX2)
+// Scalar fallback (ARM / non-AVX2) — back-to-front carry, no multiply
 static uint64_t solve(const unsigned char* data, size_t size) {
     uint64_t ps[10] = {};
     if (size == 0) return 0;

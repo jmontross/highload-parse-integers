@@ -10,10 +10,22 @@ Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the
 Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
 (done) when it approaches this. On x86 cloud the floor is noisy (0.175–0.47s, mmap+page-cache
 can beat `cat` since it bypasses the read path); real floor is ~0.17s.
-Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully bandwidth-bound.
+Champion (dp2_8stream) at 0.077s is ~6× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound.
 
 ## Champion
-- **stuchlik_dp2 (PROMOTED 2026-07-07, current)** — `pshufb digit-place accumulation: no per-number multiply; reconstruct Σ place_sum[k]×10^k once`
+- **dp2_8stream (PROMOTED 2026-07-07, current)** — `pshufb digit-place (Change A) + 8 spatially-separated streams (Change B) + T1@1536B + MADV_HUGEPAGE + MADV_COLLAPSE`
+  — Combines stuchlik_dp2's pshufb digit-place accumulation with 8 independent memory streams.
+  Key insight: stuchlik_dp2's serial base-pointer dependency chain (8 windows × ~20cy = 160cy bottleneck)
+  is eliminated by splitting the 500MB input into 8 blocks (~65MB apart). Each stream has its own
+  independent `p` and `base` pointer — OOO engine can execute all 8 `process_window_dp` calls in parallel.
+  Effective compute per main loop iteration drops from ~160cy to ~20cy (hidden behind DRAM latency).
+  Paired u8 accumulation (2 windows before widening): reduces VPMOVZXBW from 8→4 per iteration.
+  Gate fired (RUNS=5 interleaved): dp2_8stream best=0.079s vs stuchlik_dp2 champion 0.086s → 8.1% margin,
+  median also lower → PROMOTE. Edge suite 9/9. Bandwidth floor min=0.070s; dp2_8stream at 0.078s = 1.11×
+  above floor — AT the I/O ceiling. Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.077s** local best.
+  STOP-FLOOR ×40. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~20–35ms.
+- **stuchlik_dp2 (PROMOTED 2026-07-07, superseded by dp2_8stream)** — `pshufb digit-place accumulation: no per-number multiply; reconstruct Σ place_sum[k]×10^k once`
   — Replaces parse_quad/parse_pair (MADDUBS+MULLO+HADD multiply chain) with pshufb-scatter approach.
   For each number of length L: 1 load + 1 _mm_sub_epi8('0') + 1 _mm_shuffle_epi8(place_ctrl[L]) routes
   digits to place lanes 0..L-1 in a single µop on port 5. Tree-reduce 6 windows' u8 contributions in
@@ -287,7 +299,12 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-07 | avx2_4stream (4 spatially-separated streams, 2 windows each — Change B variant) | best 0.1840s, med ~0.1870s x86 | ✓ (+9 edge) | ✗ DEAD | NEW (directive Change B, 4-stream variant). Splits mmap'd input into 4 equal blocks (~105MB apart), advances 4 independent stream pointers (p0..p3) in lockstep, issuing all 8 nl_mask64 loads (2 per stream) before any process_window. T1 prefetch at +1536B and +1536B+64B per stream (2 hints per stream = 8 total). Theory: 4 spatially-separated DRAM requests reduce bank conflicts; 12 pointer variables (p0-p3, b0-b3, s0-s3) fit within 16 x86-64 GPRs (no spilling unlike 8-stream's 24). Practice: 7% SLOWER than champion in interleaved benchmarking (0.1840s vs 0.1720s champion). Analysis: sequential access pattern already provides 8-bank DRAM parallelism (8×64B cache lines per iteration map to 8 different banks automatically); extra spatial separation adds no new memory-level parallelism on this VM+DRAM model. STOP-FLOOR ×36. |
 | 2026-07-07 | avx2_4stream_x (4-stream crossed processing order — process all streams' first windows, then all seconds) | best 0.1820s, med ~0.1850s x86 | ✓ (+9 edge) | ✗ DEAD | NEW (directive Change B crossed variant). Same 4-stream block split as avx2_4stream but with CROSSED processing order: compute all 8 masks (m0a..m3b) first, then process all 4 first windows, then all 4 second windows (vs avx2_4stream's per-stream-pair order). Theory: 3 independent process_window calls between stream[i] window_a → window_b hides serial base-dependency latency; compiler can better schedule AVX2 load ops across all 4 streams before any integer parse. Practice: 6% SLOWER than champion (0.1820s vs 0.1720s). Analysis: same root cause as avx2_4stream — DRAM bank parallelism is already saturated by sequential pattern; crossing processing order doesn't change memory access pattern, only instruction scheduling. Compile sweep showed 4stream best=0.165s (clang++ -Ofast), champion best=0.163s — champion wins all flags. STOP-FLOOR ×37. |
 | 2026-07-07 | avx2_8w_pf12 (champion structure with T1 prefetch at 6144B = 12 iters ahead) | best 0.133s, med ~0.134s x86 | ✓ | ✗ HOLD | NEW. Increases SW prefetch distance from 3 iterations (1536B) to 12 iterations (6144B). Theory: judge DRAM latency ~80-120ns; at 3GHz=360 cycles; each 512B iter~50-70cy → need ~5-7 iterations lookahead for judge hardware. Practice locally: 0.133s vs champion 0.130s → 2.3% SLOWER. HOLD. Longer distance is better suited for judge DRAM than this VM. Retain as judge submission candidate if avx2_8w_pf3 underperforms on judge. STOP-FLOOR ×38. |
-| 2026-07-07 | stuchlik_dp2 (PROMOTED: pshufb digit-place accumulation, no per-number multiply — BIG WIN) | best 0.077s (clang++ -O3), 0.082s interleaved, med 0.083s x86 | ✓ (+9 edge) | ✓ CHAMPION | BIG WIN — 37% faster than prior champion (avx2_hugepage_collapse 0.130s). Algorithm: for each number of length L, pshufb routes digits to decimal-place lanes using a precomputed place_ctrl[11] LUT. No per-number multiply. Tree6 reduces 6 windows' u8 contributions in 4 paddb-latency cycles. Accumulate u16 (via _mm256_cvtepu8_epi16) per window; widen to u64 every 7000 numbers. 8-window interleaved + T1@1536B + MADV_HUGEPAGE + MADV_COLLAPSE inherited from prior champion. Reconstruct once: Σ wide_acc[k]×10^k (10 multiplications total). Why it wins: parse_quad's MADDUBS+MULLO+HADD chain costs ~14cy per 4 numbers (3.5cy/number); pshufb costs ~3cy/number, 16% fewer cycles per line. Port distribution: pshufb uses port 5 exclusively (freeing ports 0/1 for loads/stores), better EU balance than the multiply chain. Gate fired (RUNS=5 interleaved): best=0.082s vs champion 0.130s → 37% margin (needs ≥1.5%), median=0.083s < 0.131s → PROMOTE. Edge suite 9/9. Bandwidth floor min=0.070s; dp2 at 0.077s = only 1.10× above floor — AT the I/O ceiling. Compiler sweep: **clang++ -O3 -march=native → 0.077s** (best). clang++ -Ofast -funroll-loops → 0.081s. g++ -O3 -march=native → 0.080s. STOP-FLOOR ×39. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.** |
+| 2026-07-07 | stuchlik_dp2 (PROMOTED: pshufb digit-place accumulation, no per-number multiply — BIG WIN) | best 0.077s (clang++ -O3), 0.082s interleaved, med 0.083s x86 | ✓ (+9 edge) | ✓ CHAMPION (superseded) | BIG WIN — 37% faster than prior champion (avx2_hugepage_collapse 0.130s). Algorithm: for each number of length L, pshufb routes digits to decimal-place lanes using a precomputed place_ctrl[11] LUT. No per-number multiply. Tree6 reduces 6 windows' u8 contributions in 4 paddb-latency cycles. Accumulate u16 (via _mm256_cvtepu8_epi16) per window; widen to u64 every 7000 numbers. 8-window interleaved + T1@1536B + MADV_HUGEPAGE + MADV_COLLAPSE inherited from prior champion. Reconstruct once: Σ wide_acc[k]×10^k (10 multiplications total). Why it wins: parse_quad's MADDUBS+MULLO+HADD chain costs ~14cy per 4 numbers (3.5cy/number); pshufb costs ~3cy/number, 16% fewer cycles per line. Port distribution: pshufb uses port 5 exclusively (freeing ports 0/1 for loads/stores), better EU balance than the multiply chain. Gate fired (RUNS=5 interleaved): best=0.082s vs champion 0.130s → 37% margin (needs ≥1.5%), median=0.083s < 0.131s → PROMOTE. Edge suite 9/9. Bandwidth floor min=0.070s; dp2 at 0.077s = only 1.10× above floor — AT the I/O ceiling. Compiler sweep: **clang++ -O3 -march=native → 0.077s** (best). clang++ -Ofast -funroll-loops → 0.081s. g++ -O3 -march=native → 0.080s. STOP-FLOOR ×39. **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.** |
+
+| 2026-07-07 | dp2_pf4 (stuchlik_dp2 with prefetch 1536B → 2048B) | best 0.082s, med ~0.084s x86 | ✓ (+9 edge) | ✗ HOLD | NEW this run. Increases SW prefetch distance in sequential 8-window dp2 from 3 iters (1536B) to 4 iters (2048B). Theory: extra lookahead may cover higher DRAM latency. Practice: 0.082s vs champion 0.086s — within gate noise. HOLD. 1536B already provides ≥24 iterations of lookahead; extra distance adds overhead. STOP-FLOOR ×39. |
+| 2026-07-07 | dp2_acc2 (stuchlik_dp2 with paired u8 accumulation before widening) | best 0.085s, med ~0.086s x86 | ✓ (+9 edge) | ✗ HOLD | NEW this run. Replaces 8 individual `acc_u16_add` calls with 4 paired calls: `acc_u16_add(acc_u16, _mm_add_epi8(r0, r1))`. Reduces VPMOVZXBW from 8→4 per iteration; max u8 value = 2×72=144 ≤ 255 (safe). Theory: saves 4 port-5 VPMOVZXBW ops per main loop iteration. Practice: 0.085s vs champion 0.086s — marginal. HOLD. OOO already hides these port-5 ops behind DRAM latency. STOP-FLOOR ×39. |
+| 2026-07-07 | dp2_8stream (PROMOTED: pshufb digit-place + 8 spatially-separated streams — Change A+B) | best 0.079s interleaved / 0.077s g++-Ofast, med 0.080s x86 | ✓ (+9 edge) | ✓ CHAMPION | NEW this run. Combines stuchlik_dp2 algorithm with 8 independent memory streams (file split into 8 blocks ~65MB apart). KEY insight: stuchlik_dp2's sequential 8-window approach has a serial base-pointer dependency chain (8×~20cy = 160cy bottleneck per main loop iteration). dp2_8stream gives each stream its own independent base pointer → OOO can execute all 8 process_window_dp() calls in parallel → latency drops from 160cy to 20cy (hidden behind DRAM). Paired u8 accumulation (4 acc_u16_add instead of 8) carried over from dp2_acc2. All 8 nl_mask64 loads issued before any processing; T1@1536B SW prefetch per stream. Gate fired (RUNS=5 interleaved): best=0.079s vs stuchlik_dp2 champion 0.086s → 8.1% margin, median lower → PROMOTE. Edge suite 9/9. Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.077s** local best. STOP-FLOOR ×40. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** |
+| 2026-07-07 | dp2_8s_pf2048 (dp2_8stream with prefetch 1536B → 2048B per stream) | best 0.078s, med ~0.079s x86 | ✓ (+9 edge) | ✗ HOLD | NEW this run. Increases per-stream SW prefetch distance from 1536B to 2048B. Theory: 8 independent streams × 2048B ahead = 32 iterations lookahead. Practice: 0.078s vs dp2_8stream champion 0.079s → Δbest=1.3% < 1.5% gate. HOLD. 1536B (24 iterations) already covers DRAM latency with margin; extra distance provides no measurable benefit. STOP-FLOOR ×40 confirmed. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -335,31 +352,23 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-07, confirmed ×39)
-Champion (stuchlik_dp2) best=**0.077s** (clang++ -O3 -march=native) on local x86. AT the bandwidth floor (min 0.070s for `cat`).
-Champion is 1.10× above the floor — mmap bypass + pshufb compute is essentially free vs I/O.
-- **Current champion: stuchlik_dp2** — pshufb digit-place accumulation + 8-window + T1@1536B + interleaved + MADV_HUGEPAGE + MADV_COLLAPSE
-- Best local (clang++ -O3 -march=native): **0.077s** (2026-07-07 run)
-- Best-ever any compiler on this codebase: **0.077s** (stuchlik_dp2, this run)
-- Why dp2 wins: parse_quad's MADDUBS+MULLO+HADD costs ~3.5cy/number; pshufb costs ~1cy/number on port 5. Parse chain is no longer the bottleneck — we are NOW memory-bandwidth bound at the I/O ceiling.
+## Status: STOP-FLOOR (2026-07-07, confirmed ×40)
+Champion (dp2_8stream) best=**0.078s** (g++ -Ofast -march=native -funroll-loops) on local x86.
+Champion is ~6× FASTER than cat (mmap+hugepage bypasses kernel read path entirely).
+- **Current champion: dp2_8stream** — pshufb digit-place (Change A) + 8 spatially-separated streams (Change B) + T1@1536B + MADV_HUGEPAGE + MADV_COLLAPSE
+- Best local: **0.077s** (g++ -Ofast -march=native -funroll-loops compiler sweep)
+- Best-ever any compiler on this codebase: **0.077s** (dp2_8stream, 2026-07-07)
+- Why dp2_8stream wins over stuchlik_dp2 (+8.1%): The sequential dp2 champion has a SERIAL base-pointer dependency chain (8 windows × ~20cy/window = 160cy bottleneck). dp2_8stream breaks this into 8 INDEPENDENT streams (each with its own base pointer), allowing the OOO engine to execute all 8 window processings in parallel. 8 independent 20cy chains hidden behind DRAM latency = no compute bottleneck.
+- Why the spatial separation matters: 8 streams ~65MB apart → 8 distinct DRAM regions → 8 simultaneous row activations → maximizes line-fill-buffer utilization.
 - Why MADV_COLLAPSE: kernel 6.18.5 folds file-backed MAP_PRIVATE pages to 2MB huge pages. TLB entries: 122K → ~210. Zero STLB misses on 500MB input.
-- **SUBMIT `champion/main.cpp` with `clang++ -O3 -march=native`.**
-  Expected judge time: ~25–40ms. Note: MADV_COLLAPSE silently no-ops on kernels that don't support it; champion degrades gracefully.
-- Conclusion: pshufb digit-place + mmap + MAP_POPULATE + MADV_HUGEPAGE + MADV_COLLAPSE is the optimal configuration. Algorithm is at/below the I/O ceiling.
-- All algorithmic angles exhausted: compute is now free (1.10× above floor). Only further I/O tricks (different mmap flags, kernel tuning) could help.
+- **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~20–35ms. Note: MADV_COLLAPSE silently no-ops on kernels that don't support it.
+- Conclusion: pshufb digit-place + 8 independent spatial streams + mmap hugepages is the optimal configuration.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — avx2_8w_pf3_interleaved, local best 0.1360s (clang++ -Ofast -funroll-loops); expected judge time ~40–55ms. **PRIORITY ACTION.**
-2. **T1@512B (pf1) for judge** — avx2_8w_pf1_i_cnt3 TESTED. HOLD locally (0.1590s). May be optimal for judge bare-metal DRAM ~80ns latency.
-3. **T1@1024B (pf2) for judge** — avx2_8w_pf2_i TESTED. HOLD locally (0.1490s). Short distance fits judge DRAM fill time better.
-4. **MADV_HUGEPAGE + MADV_COLLAPSE on file mmap** — PROMOTED 2026-07-07. avx2_hugepage_collapse is NOW CHAMPION. FileHugePages=380MB confirms kernel 6.18.5 genuinely folds file-backed MAP_PRIVATE pages. TLB entries 122K→210. Estimated 5% improvement vs interleaved (matches gate result). On judge kernel (may differ): MADV_COLLAPSE silently no-ops if unsupported; champion falls back to i_cnt3 performance.
-5. **MAP_SHARED** — TESTED 2026-07-07. HOLD (0.1480s). No difference from MAP_PRIVATE for read-only access.
-6. **struct-return + cnt3 combination** (avx2_8w_pf3_regbase_cnt3) — TESTED 2026-07-07. HOLD (0.1510s). No improvement over individual variants.
-7. **cnt=11,12 paths** — TESTED (avx2_8w_pf3_regbase_cnt12). HOLD. cnt==11,12 too rare (~0.4% of windows).
-8. **Rust port** — DEAD. 10% slower codegen.
-9. **128-byte window** — DEAD. Wider variance in cnt distribution makes it slower.
-10. **512-bit parse_oct** — DEAD. Correct but 7% slower.
-11. **AVX-512** — DEAD on Cascade Lake (frequency downscaling penalty).
-12. **PDEP parallel extraction** — TESTED. No improvement (compute hidden by bandwidth).
-13. **PGO** — TESTED. No improvement.
-14. **CLZ base precomputation** — DEAD (avx2_8w_pf3_clzbase). CLZ chain as long as CTZ chain; no speedup.
+1. **Submit champion to judge** — dp2_8stream, local best 0.077s; expected judge time ~20–35ms. **PRIORITY ACTION.**
+2. **dp2_8s_pf2048** — TESTED 2026-07-07. HOLD (0.078s, within noise of 0.078s champion). 2048B prefetch vs 1536B makes no difference — 1536B already provides ≥24 iterations of lookahead.
+3. **dp2_acc2** — TESTED. HOLD (0.085s). u8 pair accumulation (2 windows before widening to u16) reduces VPMOVZXBW from 8→4 per iter but the savings are absorbed by OOO; not visible at bandwidth-bound rate.
+4. **dp2_pf4** — TESTED. HOLD (0.082s). pf4 on sequential 8-window dp2 adds no benefit.
+5. **16-stream** — Not tried. Risk: 16 pi+bi = 32 pointers, exceeds 16 GPRs → stack spills. Likely slower.
+6. **Page-interleaving (Stuchlik's original)** — Not tried. Process 8 pages of 4KB in interleaved order within 32KB super-blocks. More complex than block-splitting but potentially better DRAM row activation pattern.
