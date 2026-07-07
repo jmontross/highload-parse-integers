@@ -69,7 +69,7 @@
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-07-06 22:24 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-07-07 00:24 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
 
   
@@ -113,13 +113,13 @@
 
   <div class="goal">
     <div class="card"><div class="k">Champion wall-time</div>
-      <div class="v">156.0 ms</div></div>
+      <div class="v">135.0 ms</div></div>
     <div class="card"><div class="k">Per line</div>
-      <div class="v">3.12 ns</div></div>
+      <div class="v">2.70 ns</div></div>
     <div class="card"><div class="k">Target (rank 18)</div>
       <div class="v">69.3 ms</div></div>
     <div class="card"><div class="k">Gap</div>
-      <div class="v bad" style="font-size:14px">2.3× off the rank 18 bar — need 156.0 ms → 69.3 ms</div></div>
+      <div class="v bad" style="font-size:14px">1.9× off the rank 18 bar — need 135.0 ms → 69.3 ms</div></div>
   </div>
   
   
@@ -134,9 +134,9 @@
   </div>
   
       <div class="barwrap">
-        <div class="barlabel">climb: 3.12 ns/line → 1.4 ns/line target
+        <div class="barlabel">climb: 2.70 ns/line → 1.4 ns/line target
           <span class="dim">(x86 proxy — the judge is ground truth)</span></div>
-        <div class="bar"><div class="fill" style="width:82%"></div></div>
+        <div class="bar"><div class="fill" style="width:87%"></div></div>
       </div>
   <div class="tasks">
       <div class="task done">
@@ -357,7 +357,7 @@
         <td class="user">★ our champion <span class="tier" style="background:#f0b42922;color:#f0b429;border:1px solid #f0b42955">us</span></td>
         <td class="score">—</td>
         <td class="cc">c++</td>
-        <td class="wall">156,000,000 ns<span class="sub">3.12 ns/line</span></td>
+        <td class="wall">135,000,000 ns<span class="sub">2.70 ns/line</span></td>
         <td class="mem">—</td>
       </tr>
       <tr class="">
@@ -376,422 +376,434 @@
     
       <tr>
         <td class="user">champion ★</td>
-        <td>156.0 ms</td>
-        <td>3.12 ns/line</td>
+        <td>135.0 ms</td>
+        <td>2.70 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_12w_pf3</td>
-        <td>163.0 ms</td>
-        <td>3.26 ns/line</td>
+        <td>139.0 ms</td>
+        <td>2.78 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_12window</td>
-        <td>182.0 ms</td>
-        <td>3.64 ns/line</td>
+        <td>157.0 ms</td>
+        <td>3.14 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_16w_pf3</td>
-        <td>160.0 ms</td>
-        <td>3.20 ns/line</td>
+        <td>137.0 ms</td>
+        <td>2.74 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_16window</td>
-        <td>180.0 ms</td>
-        <td>3.60 ns/line</td>
+        <td>166.0 ms</td>
+        <td>3.32 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_5window</td>
-        <td>163.0 ms</td>
-        <td>3.26 ns/line</td>
+        <td>155.0 ms</td>
+        <td>3.10 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_64b</td>
-        <td>270.0 ms</td>
-        <td>5.40 ns/line</td>
+        <td>255.0 ms</td>
+        <td>5.10 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_6window</td>
-        <td>162.0 ms</td>
-        <td>3.24 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_7window</td>
-        <td>159.0 ms</td>
-        <td>3.18 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_i_nopf</td>
-        <td>156.0 ms</td>
-        <td>3.12 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_nta</td>
-        <td>192.0 ms</td>
-        <td>3.84 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf</td>
-        <td>152.0 ms</td>
-        <td>3.04 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf1</td>
-        <td>159.0 ms</td>
-        <td>3.18 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf1_i_cnt3</td>
-        <td>159.0 ms</td>
-        <td>3.18 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf2_i</td>
-        <td>149.0 ms</td>
-        <td>2.98 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3</td>
-        <td>151.0 ms</td>
-        <td>3.02 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3_clzbase</td>
-        <td>156.0 ms</td>
-        <td>3.12 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3_i2</td>
-        <td>151.0 ms</td>
-        <td>3.02 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3_i_cnt3</td>
-        <td>148.0 ms</td>
-        <td>2.96 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3_interleaved</td>
-        <td>146.0 ms</td>
-        <td>2.92 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_8w_pf3_regbase</td>
         <td>147.0 ms</td>
         <td>2.94 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
+        <td class="user">variants/avx2_7window</td>
+        <td>151.0 ms</td>
+        <td>3.02 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_i_nopf</td>
+        <td>149.0 ms</td>
+        <td>2.98 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_nta</td>
+        <td>200.0 ms</td>
+        <td>4.00 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf</td>
+        <td>140.0 ms</td>
+        <td>2.80 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf1</td>
+        <td>149.0 ms</td>
+        <td>2.98 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf1_i_cnt3</td>
+        <td>146.0 ms</td>
+        <td>2.92 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf2_i</td>
+        <td>139.0 ms</td>
+        <td>2.78 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3</td>
+        <td>134.0 ms</td>
+        <td>2.68 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3_clzbase</td>
+        <td>140.0 ms</td>
+        <td>2.80 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3_i2</td>
+        <td>138.0 ms</td>
+        <td>2.76 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3_i_cnt3</td>
+        <td>135.0 ms</td>
+        <td>2.70 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3_interleaved</td>
+        <td>134.0 ms</td>
+        <td>2.68 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_8w_pf3_regbase</td>
+        <td>136.0 ms</td>
+        <td>2.72 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
         <td class="user">variants/avx2_8w_pf3_regbase_cnt12</td>
-        <td>148.0 ms</td>
-        <td>2.96 ns/line</td>
+        <td>136.0 ms</td>
+        <td>2.72 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf3_regbase_cnt3</td>
-        <td>151.0 ms</td>
-        <td>3.02 ns/line</td>
+        <td>137.0 ms</td>
+        <td>2.74 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf4</td>
-        <td>151.0 ms</td>
-        <td>3.02 ns/line</td>
+        <td>138.0 ms</td>
+        <td>2.76 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf4_i</td>
-        <td>149.0 ms</td>
-        <td>2.98 ns/line</td>
+        <td>134.0 ms</td>
+        <td>2.68 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf5</td>
-        <td>155.0 ms</td>
-        <td>3.10 ns/line</td>
+        <td>136.0 ms</td>
+        <td>2.72 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf_dual</td>
-        <td>155.0 ms</td>
-        <td>3.10 ns/line</td>
+        <td>138.0 ms</td>
+        <td>2.76 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf_half</td>
-        <td>153.0 ms</td>
-        <td>3.06 ns/line</td>
+        <td>139.0 ms</td>
+        <td>2.78 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8w_pf_t0</td>
-        <td>156.0 ms</td>
-        <td>3.12 ns/line</td>
+        <td>147.0 ms</td>
+        <td>2.94 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_8window</td>
-        <td>161.0 ms</td>
-        <td>3.22 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_blockparse</td>
-        <td>286.0 ms</td>
-        <td>5.72 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_clzbase</td>
-        <td>176.0 ms</td>
-        <td>3.52 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_cmov</td>
-        <td>408.0 ms</td>
-        <td>8.16 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_cnt12</td>
-        <td>185.0 ms</td>
-        <td>3.70 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_cnt12_switch</td>
-        <td>193.0 ms</td>
-        <td>3.86 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_cnt6only</td>
-        <td>192.0 ms</td>
-        <td>3.84 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_cnt8910</td>
-        <td>183.0 ms</td>
-        <td>3.66 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_directload</td>
-        <td>188.0 ms</td>
-        <td>3.76 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_dual_cnt12</td>
-        <td>174.0 ms</td>
-        <td>3.48 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_dual_window</td>
-        <td>171.0 ms</td>
-        <td>3.42 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_fastload</td>
-        <td>239.0 ms</td>
-        <td>4.78 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_forceinline</td>
-        <td>189.0 ms</td>
-        <td>3.78 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_hugepage_collapse</td>
-        <td>149.0 ms</td>
-        <td>2.98 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_maddubs</td>
-        <td>219.0 ms</td>
-        <td>4.38 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_mmap_shared</td>
         <td>148.0 ms</td>
         <td>2.96 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
-        <td class="user">variants/avx2_nohadd</td>
-        <td>218.0 ms</td>
-        <td>4.36 ns/line</td>
+        <td class="user">variants/avx2_blockparse</td>
+        <td>264.0 ms</td>
+        <td>5.28 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
-        <td class="user">variants/avx2_nohadd47</td>
+        <td class="user">variants/avx2_clzbase</td>
+        <td>160.0 ms</td>
+        <td>3.20 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_cmov</td>
+        <td>376.0 ms</td>
+        <td>7.52 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_cnt12</td>
+        <td>178.0 ms</td>
+        <td>3.56 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_cnt12_switch</td>
+        <td>181.0 ms</td>
+        <td>3.62 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_cnt6only</td>
+        <td>187.0 ms</td>
+        <td>3.74 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_cnt8910</td>
+        <td>179.0 ms</td>
+        <td>3.58 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_directload</td>
+        <td>181.0 ms</td>
+        <td>3.62 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_dual_cnt12</td>
+        <td>168.0 ms</td>
+        <td>3.36 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_dual_window</td>
+        <td>166.0 ms</td>
+        <td>3.32 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_fastload</td>
+        <td>228.0 ms</td>
+        <td>4.56 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_forceinline</td>
+        <td>175.0 ms</td>
+        <td>3.50 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_hugepage_collapse</td>
+        <td>136.0 ms</td>
+        <td>2.72 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_maddubs</td>
         <td>210.0 ms</td>
         <td>4.20 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
+        <td class="user">variants/avx2_mmap_shared</td>
+        <td>135.0 ms</td>
+        <td>2.70 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_nohadd</td>
+        <td>204.0 ms</td>
+        <td>4.08 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_nohadd47</td>
+        <td>198.0 ms</td>
+        <td>3.96 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
         <td class="user">variants/avx2_parse3</td>
-        <td>267.0 ms</td>
-        <td>5.34 ns/line</td>
+        <td>250.0 ms</td>
+        <td>5.00 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_parse_quad</td>
-        <td>186.0 ms</td>
-        <td>3.72 ns/line</td>
+        <td>180.0 ms</td>
+        <td>3.60 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx2_pdep</td>
+        <td>184.0 ms</td>
+        <td>3.68 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_quad_window</td>
+        <td>162.0 ms</td>
+        <td>3.24 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_triple_window</td>
+        <td>165.0 ms</td>
+        <td>3.30 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_unroll</td>
+        <td>256.0 ms</td>
+        <td>5.12 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_vhigh</td>
+        <td>200.0 ms</td>
+        <td>4.00 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx2_w128</td>
         <td>193.0 ms</td>
         <td>3.86 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
-        <td class="user">variants/avx2_quad_window</td>
-        <td>167.0 ms</td>
-        <td>3.34 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_triple_window</td>
-        <td>172.0 ms</td>
-        <td>3.44 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_unroll</td>
-        <td>267.0 ms</td>
-        <td>5.34 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_vhigh</td>
-        <td>213.0 ms</td>
-        <td>4.26 ns/line</td>
-        <td><span class="badge ok">OK</span></td>
-      </tr>
-      <tr>
-        <td class="user">variants/avx2_w128</td>
-        <td>205.0 ms</td>
-        <td>4.10 ns/line</td>
+        <td class="user">variants/avx512_8w_parse6</td>
+        <td>145.0 ms</td>
+        <td>2.90 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx512_blockparse</td>
-        <td>266.0 ms</td>
-        <td>5.32 ns/line</td>
+        <td>249.0 ms</td>
+        <td>4.98 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx512_cnt47</td>
-        <td>224.0 ms</td>
-        <td>4.48 ns/line</td>
+        <td>206.0 ms</td>
+        <td>4.12 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx512_maddubs</td>
-        <td>226.0 ms</td>
-        <td>4.52 ns/line</td>
+        <td>217.0 ms</td>
+        <td>4.34 ns/line</td>
+        <td><span class="badge ok">OK</span></td>
+      </tr>
+      <tr>
+        <td class="user">variants/avx512_nl_8w</td>
+        <td>139.0 ms</td>
+        <td>2.78 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/avx512_parse_oct</td>
-        <td>192.0 ms</td>
-        <td>3.84 ns/line</td>
+        <td>182.0 ms</td>
+        <td>3.64 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/memchr</td>
-        <td>735.0 ms</td>
-        <td>14.70 ns/line</td>
+        <td>668.0 ms</td>
+        <td>13.36 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/mmap_locked</td>
-        <td>153.0 ms</td>
-        <td>3.06 ns/line</td>
+        <td>137.0 ms</td>
+        <td>2.74 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/read_loop</td>
-        <td>470.0 ms</td>
-        <td>9.40 ns/line</td>
+        <td>441.0 ms</td>
+        <td>8.82 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/read_thp</td>
-        <td>457.0 ms</td>
-        <td>9.14 ns/line</td>
+        <td>429.0 ms</td>
+        <td>8.58 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_blockparse</td>
-        <td>602.0 ms</td>
-        <td>12.04 ns/line</td>
+        <td>553.0 ms</td>
+        <td>11.06 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_branchless</td>
-        <td>393.0 ms</td>
-        <td>7.86 ns/line</td>
+        <td>366.0 ms</td>
+        <td>7.32 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_nlfind</td>
-        <td>562.0 ms</td>
-        <td>11.24 ns/line</td>
+        <td>514.0 ms</td>
+        <td>10.28 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_noreload</td>
-        <td>559.0 ms</td>
-        <td>11.18 ns/line</td>
+        <td>510.0 ms</td>
+        <td>10.20 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_prefetch</td>
-        <td>573.0 ms</td>
-        <td>11.46 ns/line</td>
+        <td>530.0 ms</td>
+        <td>10.60 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/swar_unroll2</td>
-        <td>397.0 ms</td>
-        <td>7.94 ns/line</td>
+        <td>371.0 ms</td>
+        <td>7.42 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
       <tr>
         <td class="user">variants/rust_avx2</td>
-        <td>197.0 ms</td>
-        <td>3.94 ns/line</td>
+        <td>183.0 ms</td>
+        <td>3.66 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
   </table>

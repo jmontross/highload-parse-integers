@@ -253,6 +253,8 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
 | 2026-07-07 | avx2_mmap_shared (MAP_SHARED instead of MAP_PRIVATE) | best 0.1480s, med 0.1530-0.1620s x86 | ✓ | ✗ HOLD | NEW this run. Uses MAP_SHARED | MAP_POPULATE instead of MAP_PRIVATE. Theory: MAP_PRIVATE requires CoW PTE tracking for each page; MAP_SHARED maps directly to page cache without this overhead. May also allow kernel to use huge pages for shared file mappings more aggressively. Practice: 0.1480s = ties champion within noise. HOLD. No TLB improvement from MAP_SHARED on read-only data. The CoW overhead theory is incorrect — MAP_PRIVATE with no writes doesn't trigger CoW. |
 | 2026-07-07 | avx2_8w_pf1_i_cnt3 (champion with T1@512B = 1 iteration ahead) | best 0.1560-0.1590s, med 0.1630-0.1670s x86 | ✓ | ✗ HOLD | NEW this run. pf1=512B: judge DRAM latency ~80ns, each iter~178ns → 0.45 iter lookahead → 1 iteration optimal. Practice locally: 0.1590s vs 0.1560s champion = 1.9% SLOWER. VM latency requires 3+ iterations locally; 1-iter too short. Retain as judge-hardware candidate (may be optimal on bare metal). |
 | 2026-07-07 | avx2_8w_pf3_regbase_cnt3 (struct-return + cnt==3 fast path) | best 0.1510s, med 0.1580s x86 | ✓ | ✗ HOLD | NEW this run. Combines avx2_8w_pf3_regbase (WinResult struct return) with explicit cnt==3 dispatch. Theory: register-forwarded base + 3.6% faster cnt3 windows. Practice: 0.1510s = within noise of cluster. HOLD. The two optimizations don't compound; likely both are hidden by bandwidth bound. STOP-FLOOR confirmed. |
+| 2026-07-07 | avx512_nl_8w (champion with nl_mask64 replaced by single AVX-512 cmpeq_epi8_mask) | best 0.1390s, med 0.1430s x86 | ✓ | ✗ DEAD | NEW breakthrough test. Replaces champion's 2×AVX2 load+cmpeq+movemask+OR (7 µops) with single `_mm512_cmpeq_epi8_mask` (2 µops) for 64-byte newline scan. CPU confirmed Sapphire Rapids (amx_tile/avx512_fp16 flags) — NO AVX-512 frequency downclocking on this arch. Theory: 40 µops saved per 512-byte iteration (~17% fewer µops total) should be measurable. Practice: 3% SLOWER than champion (0.1390s vs 0.1350s). DEAD. Bandwidth-bound: µop savings don't translate to wall-clock when memory access is the bottleneck. STOP-FLOOR ×34. Compiler sweep (clang++ -O3): 0.1230s champion vs ~0.1270s avx512_nl_8w — same gap confirms no hidden benefit. |
+| 2026-07-07 | avx512_8w_parse6 (champion + AVX-512 nl_mask64 + parse_oct with zero-dummy lanes for cnt==6-10) | best 0.1450s, med 0.1460s x86 | ✓ | ✗ DEAD | NEW breakthrough test. Adds parse_oct (8-at-a-time via 512-bit MADDUBS/MADD/MULLO) with zero-dummy lane technique: for cnt<8, pass DIGIT_ZEROS ('0'-padded dummy) as extra lanes — after sub('0')=0 bytes → parsed value = 0, dummy contributes nothing to sum. cnt==6 uses parse_oct(6 real + 2 dummy); cnt==7 uses parse_oct(7 real + 1 dummy); cnt==8 one parse_oct; cnt==9/10 parse_oct(8)+parse_num/pair. Theory: cnt==6,7,8 are the dominant cases (~80% combined); parse_oct should save 1 SIMD pipeline call each vs 2×parse_quad. Practice: 7% SLOWER (0.1450s vs 0.1350s champion). DEAD. The 4-lane extraction path (extracti32x4×3) from the 512-bit result adds 3 extra instructions that outweigh the saved SIMD pipeline call. Also bandwidth-bound: compute savings hidden by DRAM latency. STOP-FLOOR ×34. |
 
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
@@ -282,11 +284,15 @@ Champion at 0.158s is FASTER than cat — mmap bypasses kernel read path; fully 
   HADD is 3-cycle lat/2-cycle tput on Skylake; shuffle+add is 2-cycle lat/1-cycle tput.
   But the 3 independent parse_pairs already saturate OOO; hadd is not the bottleneck.
   Even if hadd is slightly better, the difference is within noise at our current throughput.
-- **AVX-512 scan** (`avx512_maddubs`, `avx512_cnt47`) — DEAD on Skylake-SP/Cascade Lake.
-  `_mm512_cmpeq_epi8_mask` triggers AVX-512 heavy-use frequency downclocking on this Xeon
-  (2.80 GHz → ~2.5 GHz), losing ~10% clock speed. The 5-instruction scan savings (~5%)
-  cannot recoup the 10% frequency penalty. Do NOT retry unless on Ice Lake Server or Zen4
-  where AVX-512 doesn't downscale frequency.
+- **AVX-512 scan** (`avx512_maddubs`, `avx512_cnt47`, `avx512_nl_8w`, `avx512_8w_parse6`) — DEAD.
+  Early variants (avx512_maddubs, avx512_cnt47 2026-07-04) were dead due to Cascade Lake frequency
+  downclocking (2.80→2.5 GHz, ~10% penalty). Current VM is **Sapphire Rapids** (confirmed by
+  amx_tile/avx512_fp16 CPU flags) — NO frequency downclocking. BUT 2026-07-07 re-tests still
+  show AVX-512 slower: avx512_nl_8w 3% slower; avx512_8w_parse6 7% slower. Root cause: workload
+  is bandwidth-bound, not µop-bound — saving 40 µops/iteration doesn't help when DRAM latency
+  hides all compute. Additionally, parse_oct's 4-lane extraction (extracti32x4×3) adds overhead
+  that outweighs the saved SIMD calls. **Do NOT retry AVX-512 approaches** without a fundamentally
+  different algorithm that reduces memory bandwidth, not just instruction count.
 - **cnt==7 fast path** — not frequently triggered enough to matter at current noise level.
 - **Force-inlining parse_quad/parse_pair** (`avx2_forceinline`) — HOLD. Adding `always_inline` forces inlining into cnt==5,7,4 paths (champion only inlines for cnt==6). 2874 vs 1322 asm lines. No measurable improvement — OOO already hides function call overhead (5 register push/pop per call + 2 stack args). Bandwidth-bound confirmed.
 - **Software pipelining / 2-window unroll** — Not tried, but OOO engine already handles this; hardware prefetcher covers stride-64 sequential pattern automatically.
