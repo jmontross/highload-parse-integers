@@ -388,16 +388,30 @@ Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path)
   page-interleaving (no DRAM benefit vs block-split), subtract-based newline detection (bandwidth-bound),
   per-stream u16 accumulators (more port-5 ops), 256-bit PSHUF pairing (worse latency via VINSERTI128),
   PDEP position extraction (bandwidth-bound), count-loop optimization (s_i spills negligible vs DRAM latency),
-  dp2_8s_pf1024 (1024B prefetch, tied), dp2_8s_unify_stop (unified stop counter, saves 7 GPRs but overhead hidden by DRAM).
+  dp2_8s_pf1024 (1024B prefetch, tied), dp2_8s_unify_stop (unified stop counter, saves 7 GPRs but overhead hidden by DRAM),
+  dp2_8s_twoaccum (two independent u16 accumulators for streams 0-3 / 4-7: DEAD, 3% slower — port-5 vpaddw reduction irrelevant when bandwidth-bound),
+  dp2_8s_pf2048 retested vs dp2_8s_subdetect (HOLD, best=0.082s vs champ 0.083s, gate needs ≤0.0817s — just above threshold).
+- **STOP-FLOOR confirmed ×50+ as of 2026-07-08.** Champion dp2_8s_subdetect at 0.082-0.083s best, bandwidth floor 0.062-0.082s (VM oscillation). Champion at 1.32× above floor on fast VM; algorithm is fully bandwidth-bound. All angles exhausted.
+
+## Run log 2026-07-08 (continuation)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_pf2048 | HOLD | 0.0820 | 0.0835 | gate needs ≤0.0817, gets 0.0820 | 2048B prefetch retested against dp2_8s_subdetect directly; gate missed by 0.0003s |
+| dp2_8s_twoaccum | DEAD | 0.0860 | 0.0870 | +3.6% slower | Two independent u16 accumulators (accA: streams 0-3, accB: streams 4-7); serial vpaddw reduction irrelevant when bandwidth-bound |
+| champion dp2_8s_subdetect | OK | 0.0830 | 0.0840 | — | Edge: 9/9. STOP-FLOOR ×50+. |
+
+Floor (cat): 0.062-0.082s (VM oscillation across session). STOP-FLOOR verdict: champion 0.083s < 2× floor 0.062s = 0.124s.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_subdetect, g++ -O3 -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
+1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
-3. **dp2_8s_pf2048** — TESTED. HOLD. 2048B prefetch vs 1536B makes no difference.
+3. **dp2_8s_pf2048** — TESTED 2026-07-08 ×2. HOLD. 2048B prefetch vs 1536B makes no difference.
 4. **dp2_8s_pf1024** — TESTED 2026-07-08. HOLD (0.081s tied). All prefetch distances 512-2048B equivalent.
 5. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
-6. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
-7. **Page-interleaving (Stuchlik's original)** — Not tried. With MADV_COLLAPSE (2MB huge pages) + 8-bank DRAM interleave already implicit, unlikely to help.
-8. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Untried. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
-9. **16-stream** — Untried. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
-10. **LUT-based Stuchlik pshufb** — The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
+6. **dp2_8s_twoaccum** — TESTED 2026-07-08. DEAD (0.086s, ~3% slower). vpaddw serial chain reduction not visible when bandwidth-bound.
+7. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
+8. **Page-interleaving (Stuchlik's original)** — Not tried. With MADV_COLLAPSE (2MB huge pages) + 8-bank DRAM interleave already implicit, unlikely to help.
+9. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Untried. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
+10. **16-stream** — Untried. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
+11. **LUT-based Stuchlik pshufb** — The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.

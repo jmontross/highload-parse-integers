@@ -1,9 +1,7 @@
-// dp2_8s_subdetect.cpp — dp2_8s_itercount with subtract-based newline detection.
-// Instead of cmpeq_epi8(v, '\n'), compute sub_epi8(v, '0') and movemask the sign bit:
-// '\n' (0x0A) - '0' (0x30) = 0xDA (bit7 set); digits 0-9: 0x00-0x09 (bit7 clear).
-// Saves 2 vmovemask+cmpeq per nl_mask64 call = 16 fewer vector compare ops per main iter.
-// Safety: 100 iters × 4 acc_u16_add × max 144 per call = 57,600 < 65535 ✓
-// Also removes ret_cnt parameter from process_window_dp → popcll result not returned.
+// dp2_8s_twoaccum.cpp — two independent u16 accumulators to halve vpaddw dependency chain.
+// accA accumulates (r0+r1) and (r2+r3); accB accumulates (r4+r5) and (r6+r7).
+// At widen time: widen_u16(accA + accB). Reduces per-accumulator serial vpaddw chain
+// from 4 to 2, giving OOO scheduler more freedom; combined at widen_u16 call (every 100 iters).
 
 #include <cstdio>
 #include <cstdint>
@@ -79,11 +77,14 @@ acc_u16_add(__m256i& acc_u16, __m128i contrib_u8) {
 }
 
 static __attribute__((noinline)) void
-widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
+widen_u16(__m256i& accA, __m256i& accB, uint64_t* wide_acc) {
+    // Combine two accumulators before widening to save one widen call vs separate widening
+    __m256i combined = _mm256_adds_epu16(accA, accB);  // saturating add for safety
     alignas(32) uint16_t lanes[16];
-    _mm256_store_si256((__m256i*)lanes, acc_u16);
+    _mm256_store_si256((__m256i*)lanes, combined);
     for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
-    acc_u16 = _mm256_setzero_si256();
+    accA = _mm256_setzero_si256();
+    accB = _mm256_setzero_si256();
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -290,19 +291,23 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *s6=(adj_end[6]>adj_start[6]+96)?adj_end[6]-96:adj_start[6];
         const unsigned char *s7=(adj_end[7]>adj_start[7]+96)?adj_end[7]-96:adj_start[7];
 
-        __m256i acc_u16 = _mm256_setzero_si256();
+        // Two independent u16 accumulators: accA for streams 0-3, accB for streams 4-7.
+        // Halves vpaddw serial dependency chain per accumulator (2 instead of 4 per iter).
+        // Safety: each acc gets 2 × max144 = 288/iter × 100 iters = 28,800 < 65,535 ✓
+        __m256i accA = _mm256_setzero_si256();
+        __m256i accB = _mm256_setzero_si256();
         int iter_count = 0;
 
         while (__builtin_expect(p0 < s0 & p1 < s1 & p2 < s2 & p3 < s3 &
                                 p4 < s4 & p5 < s5 & p6 < s6 & p7 < s7, 1)) {
-            _mm_prefetch((const char*)(p0 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p1 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p2 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p3 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p4 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p5 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p6 + 2048), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p7 + 2048), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 1536), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 1536), _MM_HINT_T1);
 
             uint64_t m0 = nl_mask64(p0);
             uint64_t m1 = nl_mask64(p1);
@@ -322,27 +327,26 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64;
             __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64;
 
-            acc_u16_add(acc_u16, _mm_add_epi8(r0, r1));
-            acc_u16_add(acc_u16, _mm_add_epi8(r2, r3));
-            acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));
-            acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));
+            // Two independent accumulator chains — compiler can schedule accA and accB in parallel
+            acc_u16_add(accA, _mm_add_epi8(r0, r1));
+            acc_u16_add(accA, _mm_add_epi8(r2, r3));
+            acc_u16_add(accB, _mm_add_epi8(r4, r5));
+            acc_u16_add(accB, _mm_add_epi8(r6, r7));
 
-            // Fixed-interval widening: every 100 iterations instead of num_count.
-            // Saves 8 integer adds (c0..c7 accumulation) per iteration.
             if (__builtin_expect(++iter_count >= 100, 0)) {
-                widen_u16(acc_u16, wide_acc);
+                widen_u16(accA, accB, wide_acc);
                 iter_count = 0;
             }
         }
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
-            acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
+            acc_u16_add(accA, process_window_dp((pi), (bi), nl_mask64(pi))); \
             (pi) += 64; \
             if (__builtin_expect(++iter_count >= 100, 0)) { \
-                widen_u16(acc_u16, wide_acc); iter_count = 0; } \
+                widen_u16(accA, accB, wide_acc); iter_count = 0; } \
         } \
-        widen_u16(acc_u16, wide_acc); \
+        widen_u16(accA, accB, wide_acc); \
         iter_count = 0; \
         scalar_tail((bi), (ei), wide_acc);
 
