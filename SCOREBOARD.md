@@ -412,6 +412,14 @@ Floor (cat): 0.062-0.082s (VM oscillation across session). STOP-FLOOR verdict: c
 
 Compiler sweep today: g++ -O3 -march=native → **0.083s** best (fastest; beats g++-13 0.084s, clang++ 0.093s). VM today: floor=0.259s (better than recent slow-VM days at 0.540-0.695s). STOP-FLOOR ×51 confirmed.
 
+## Run log 2026-07-08 (continuation — scheduled run ×52)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_subdetect | OK | 0.0940 | 0.0970 | — | Edge: 9/9. STOP-FLOOR ×52. Floor=0.230s (medium VM). Champion 2.44× faster than cat. |
+
+Compiler sweep today: **g++-13 -O3 -march=native → 0.0930s** best (g++-13 beats -Ofast/-funroll-loops by 5% today — VM state shifts which path wins; -Ofast is best on fast-VM days at 0.082s). STOP-FLOOR ×52 confirmed. No new variants — all angles exhausted. All dp2 variants cluster 0.094-0.104s (within noise). Directive's Change A (pshufb digit-place) and Change B (8 independent spatial streams) are both implemented in current champion. **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days per prior sweeps). Expected judge time: ~69-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
