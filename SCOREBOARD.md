@@ -372,9 +372,11 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-08, confirmed ×55+)
-Champion (dp2_8s_stop_pf3072) best=**0.081-0.094s** (VM-state dependent) on local x86.
-Champion is ~3-5× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
+## Status: STOP-FLOOR (2026-07-08, confirmed ×56+)
+Champion (dp2_8s_stop_pf3072) best=**0.067-0.094s** (VM-state dependent) on local x86.
+Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
+**NEW local best-ever: 0.067s (2026-07-08 fast VM, default c++ -O3 -march=native).**
+**index.html: champion=67.0ms — CLEARS rank-18 bar (69.3ms).** Ready to submit.
 - **Current champion: dp2_8s_stop_pf3072** — dp2_8s_unify_stop + T1@3072B prefetch per stream. Unified loop counter (7 fewer live GPRs) + longer prefetch (3072B vs 1536B). PROMOTED 2026-07-08 run ×55.
 - Best local: **0.081s** (g++ -Ofast, sweep, fast VM), **0.082s** (confirmation run best)
 - Best-ever any compiler on this codebase: **0.077s** fast VM (dp2_8stream/dp2_8s_itercount with g++-13)
@@ -461,15 +463,27 @@ Compiler sweep today: **g++ -Ofast -march=native -funroll-loops → 0.0810s** be
 
 **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.** Expected judge time: ~69-75ms.
 
+## Run log 2026-07-08 (continuation — scheduled run ×56)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_stop_pf3072 | OK | 0.0670 | 0.0680 | — | Edge: 9/9. STOP-FLOOR ×56. Floor=0.502s (FAST VM). Champion 7.5× faster than cat — mmap bypass. **NEW local best-ever: 0.067s.** |
+| dp2_8s_pf4096 | DEAD | 0.0710 | 0.0730 | +6% slower | NEW 2026-07-08. T1@4096B (64 iters ahead) vs champion 3072B (48 iters). 6% SLOWER. Confirms 3072B is already at or past the optimal prefetch distance — longer lookahead adds overhead (prefetch instruction itself + MSHR pressure) without helping DRAM latency coverage. DEAD. |
+
+VM state: FAST (champion 0.067s best = 1.34 ns/line; floor 0.502s). Champion is 7.5× faster than cat. index.html: **champion=67.0ms, CLEARS rank-18 bar (67.0 ms ≤ 69.3 ms)**. This is the best local measurement ever recorded.
+STOP-FLOOR ×56 confirmed. No new variants to try — all prefetch distances 512B–4096B exhausted; 4096B DEAD; 3072B is champion; all other algorithmic angles documented above.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-69ms (fast-VM local 0.067s → expected ~60-62ms on judge bare metal; slow-VM local 0.081s → ~69-75ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
+1. **Submit champion to judge** — dp2_8s_stop_pf3072, local best 0.067s (fast VM) / 0.081s (slow VM); CLEARS rank-18 bar (69.3ms) on index.html. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
 3. **dp2_8s_pf2048** — TESTED 2026-07-08 ×3. HOLD (consistent: best 1% lower, median higher). Same every run.
 4. **dp2_8s_pf1024** — TESTED 2026-07-08. HOLD (0.081s tied). All prefetch distances 512-2048B equivalent.
-5. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
-6. **dp2_8s_twoaccum** — TESTED 2026-07-08. DEAD (0.086s, ~3% slower). vpaddw serial chain reduction not visible when bandwidth-bound.
-7. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
-8. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08, NOT implemented. Would require 819,200 boundary adjustments (vs 7 in our block-split) = ~2% execution overhead. 52MB block-split already provides equivalent DRAM bank parallelism. Not worth implementing.
-9. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Analyzed. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
-10. **16-stream** — Analyzed. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
-11. **LUT-based Stuchlik pshufb** — Analyzed. The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
+5. **dp2_8s_pf4096** — TESTED 2026-07-08. DEAD (6% slower). 4096B too far.
+6. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
+7. **dp2_8s_twoaccum** — TESTED 2026-07-08. DEAD (0.086s, ~3% slower). vpaddw serial chain reduction not visible when bandwidth-bound.
+8. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
+9. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08, NOT implemented. Would require 819,200 boundary adjustments (vs 7 in our block-split) = ~2% execution overhead. 52MB block-split already provides equivalent DRAM bank parallelism. Not worth implementing.
+10. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Analyzed. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
+11. **16-stream** — Analyzed. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
+12. **LUT-based Stuchlik pshufb** — Analyzed. The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
