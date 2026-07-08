@@ -1,10 +1,9 @@
-// dp2_8s_stop_pf3072.cpp — dp2_8s_unify_stop + T1 prefetch at 3072B per stream.
-// Combines: unified loop counter (fewer GPR spills) + longer prefetch distance.
-// Hypothesis: the two optimizations may compound on this VM state.
-// Eliminates s0..s7 from live variables (7 fewer live GPRs in main loop):
-// current live count ≈25 GPRs → ≈18, reducing stack spills from ~10 to ~3.
-// Each removed stack load saves ~4cy; ~7 loads × 4cy = 28cy per iteration.
-// Safety: safe_iters derived from the SHORTEST segment; all streams safe.
+// dp2_8s_pf3072.cpp — dp2_8s_subdetect with T1 prefetch at 3072B (48 iters) per stream.
+// Tests whether longer prefetch lookahead helps on slower-memory VM states.
+// Previous distances tried: 512B (HOLD), 1024B (HOLD), 1536B (champion), 2048B (HOLD).
+// Saves 2 vmovemask+cmpeq per nl_mask64 call = 16 fewer vector compare ops per main iter.
+// Safety: 100 iters × 4 acc_u16_add × max 144 per call = 57,600 < 65535 ✓
+// Also removes ret_cnt parameter from process_window_dp → popcll result not returned.
 
 #include <cstdio>
 #include <cstdint>
@@ -88,6 +87,8 @@ widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
+    // Subtract '0' from each byte: '\n' (0x0A) → 0xDA (sign bit 1), digits → 0x00-0x09 (sign 0).
+    // movemask extracts sign bits, giving the newline bitmask without a separate cmpeq.
     const __m256i ascii0 = _mm256_set1_epi8('0');
     __m256i s0 = _mm256_sub_epi8(_mm256_loadu_si256((const __m256i*)p), ascii0);
     __m256i s1 = _mm256_sub_epi8(_mm256_loadu_si256((const __m256i*)(p + 32)), ascii0);
@@ -96,6 +97,7 @@ static inline uint64_t nl_mask64(const unsigned char* p) {
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
 }
 
+// No ret_cnt — caller doesn't track number count.
 static __attribute__((always_inline)) __m128i process_window_dp(
     const unsigned char* __restrict__ p,
     const unsigned char* __restrict__& base,
@@ -270,16 +272,6 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         for (int i = 0; i < 7; i++) adj_end[i] = adj_start[i + 1];
         adj_end[7] = end;
 
-        // Compute safe iteration count from the shortest segment.
-        // All streams advance 64B/iter from their start; safe_iters iterations
-        // keeps every stream >= 96 bytes from its segment end.
-        size_t min_seg = SIZE_MAX;
-        for (int i = 0; i < 8; i++) {
-            size_t seg = (size_t)(adj_end[i] - adj_start[i]);
-            if (seg < min_seg) min_seg = seg;
-        }
-        size_t safe_iters = (min_seg > 96) ? (min_seg - 96) / 64 : 0;
-
         const unsigned char *p0=adj_start[0], *b0=adj_start[0];
         const unsigned char *p1=adj_start[1], *b1=adj_start[1];
         const unsigned char *p2=adj_start[2], *b2=adj_start[2];
@@ -289,10 +281,20 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *p6=adj_start[6], *b6=adj_start[6];
         const unsigned char *p7=adj_start[7], *b7=adj_start[7];
 
+        const unsigned char *s0=(adj_end[0]>adj_start[0]+96)?adj_end[0]-96:adj_start[0];
+        const unsigned char *s1=(adj_end[1]>adj_start[1]+96)?adj_end[1]-96:adj_start[1];
+        const unsigned char *s2=(adj_end[2]>adj_start[2]+96)?adj_end[2]-96:adj_start[2];
+        const unsigned char *s3=(adj_end[3]>adj_start[3]+96)?adj_end[3]-96:adj_start[3];
+        const unsigned char *s4=(adj_end[4]>adj_start[4]+96)?adj_end[4]-96:adj_start[4];
+        const unsigned char *s5=(adj_end[5]>adj_start[5]+96)?adj_end[5]-96:adj_start[5];
+        const unsigned char *s6=(adj_end[6]>adj_start[6]+96)?adj_end[6]-96:adj_start[6];
+        const unsigned char *s7=(adj_end[7]>adj_start[7]+96)?adj_end[7]-96:adj_start[7];
+
         __m256i acc_u16 = _mm256_setzero_si256();
         int iter_count = 0;
 
-        for (size_t n = safe_iters; __builtin_expect(n > 0, 1); --n) {
+        while (__builtin_expect(p0 < s0 & p1 < s1 & p2 < s2 & p3 < s3 &
+                                p4 < s4 & p5 < s5 & p6 < s6 & p7 < s7, 1)) {
             _mm_prefetch((const char*)(p0 + 3072), _MM_HINT_T1);
             _mm_prefetch((const char*)(p1 + 3072), _MM_HINT_T1);
             _mm_prefetch((const char*)(p2 + 3072), _MM_HINT_T1);
@@ -325,6 +327,8 @@ static uint64_t solve(const unsigned char* data, size_t size) {
             acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));
             acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));
 
+            // Fixed-interval widening: every 100 iterations instead of num_count.
+            // Saves 8 integer adds (c0..c7 accumulation) per iteration.
             if (__builtin_expect(++iter_count >= 100, 0)) {
                 widen_u16(acc_u16, wide_acc);
                 iter_count = 0;

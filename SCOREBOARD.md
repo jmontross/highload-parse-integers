@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_subdetect (PROMOTED 2026-07-08, current)** — `dp2_8s_itercount with subtract-based newline detection: sub_epi8(v,'0')+movemask replaces cmpeq_epi8(v,'\\n')+movemask`
+- **dp2_8s_stop_pf3072 (PROMOTED 2026-07-08, current)** — `dp2_8s_unify_stop + T1 prefetch at 3072B (48 iters) per stream: combines unified loop counter (7 fewer live GPRs) with longer prefetch lookahead`
+  — Unify_stop eliminates s0..s7 from live variables (7 fewer live GPRs, reducing stack spills ~7). 3072B prefetch (48 iterations ahead) vs champion's 1536B (24 iters). Combined effect: gate fired (RUNS=5): best=0.0810s vs dp2_8s_subdetect 0.0830s → 2.4% margin, median 0.0840s < 0.0860s. Edge 9/9. Confirmation RUNS=5: champion (stop_pf3072) best=0.0820s, med=0.0840s; STOP-FLOOR ×55. Compiler sweep: **g++ -Ofast -march=native -funroll-loops → 0.0810s** best. Prior unify_stop was HOLD (median failed); prior pf3072 was tied. Their combination at this VM state produced a measurable win through combined register+prefetch relief. STOP-FLOOR ×55.
+  **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~69-75ms.
+- **dp2_8s_subdetect (PROMOTED 2026-07-08, superseded by dp2_8s_stop_pf3072)** — `dp2_8s_itercount with subtract-based newline detection: sub_epi8(v,'0')+movemask replaces cmpeq_epi8(v,'\\n')+movemask`
   — Saves one vector constant register: original nl_mask64 needs set1('\\n') while PSHUF needs set1('0');
   sharing set1('0') for both saves register pressure and allows compiler better scheduling.
   Consistent 2.2% improvement with clang++ (best=0.087s vs 0.089s; median=0.089s vs 0.091s; gate ×2).
@@ -368,11 +372,11 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-08, confirmed ×49+)
-Champion (dp2_8s_subdetect) best=**0.082-0.094s** (VM-state dependent) on local x86.
-Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
-- **Current champion: dp2_8s_subdetect** — dp2_8s_itercount with subtract-based newline detection (saves 1 vector constant register; sub_epi8(v,'0') shares constant with PSHUF instead of separate cmpeq/set1('\\n'))
-- Best local: **0.082-0.084s** (g++-13 -Ofast, fast VM), **0.092-0.095s** (slow VM today)
+## Status: STOP-FLOOR (2026-07-08, confirmed ×55+)
+Champion (dp2_8s_stop_pf3072) best=**0.081-0.094s** (VM-state dependent) on local x86.
+Champion is ~3-5× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
+- **Current champion: dp2_8s_stop_pf3072** — dp2_8s_unify_stop + T1@3072B prefetch per stream. Unified loop counter (7 fewer live GPRs) + longer prefetch (3072B vs 1536B). PROMOTED 2026-07-08 run ×55.
+- Best local: **0.081s** (g++ -Ofast, sweep, fast VM), **0.082s** (confirmation run best)
 - Best-ever any compiler on this codebase: **0.077s** fast VM (dp2_8stream/dp2_8s_itercount with g++-13)
 - SW prefetch confirmed essential (dp2_8s_nopf 7% slower) — HW prefetcher cannot track 8 streams 65MB apart.
 - dp2_8s_pf512 (512B per stream) ties champion; may be optimal on judge bare metal (lower DRAM latency).
@@ -437,6 +441,17 @@ Compiler sweep today: **g++ -O3 -march=native → 0.0940s** best. dp2_8s_pf2048 
 | variants/dp2_8s_pf2048 | HOLD | 0.0910 | 0.0950 | best 1.1% lower but median HIGHER | Gate: need ≤0.0906s; got 0.0910s (missed by 0.0004s). Median 0.0950s > champ 0.0930s. HOLD. |
 
 Compiler sweep: not run (all angles exhausted). STOP-FLOOR ×54 confirmed. All 90+ variants tried and documented.
+
+## Run log 2026-07-08 (continuation — scheduled run ×55)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_subdetect | OK | 0.0830 | 0.0860 | — | Prior champion. |
+| dp2_8s_pf3072 | HOLD | 0.0830 | 0.0840 | tied champion best, median lower | New: T1 prefetch at 3072B per stream. Best tied, median lower → gate misses Δbest=0%. |
+| dp2_8s_stop_pf3072 | PROMOTE | 0.0810 | 0.0840 | 2.4% margin, median 0.0840 < 0.0860 | NEW CHAMPION. Unify_stop + 3072B prefetch combined → gate fired (RUNS=5 interleaved). |
+| PROMOTED → champion dp2_8s_stop_pf3072 | OK | 0.0820 | 0.0840 | — | Confirmation RUNS=5: best=0.0820s, med=0.0840s. STOP-FLOOR ×55. |
+
+Compiler sweep today: **g++ -Ofast -march=native -funroll-loops → 0.0810s** best (beats g++-13 0.0840s, clang++ 0.0890s). Why the win: dp2_8s_unify_stop replaced 8-way AND loop condition with precomputed safe_iters counter (7 fewer s_i live GPRs → less spilling); 3072B (48-iter) prefetch lookahead vs champion's 1536B (24-iter) may better cover DRAM latency on today's VM state. Combined effect crosses the 1.5% gate threshold where either alone was HOLD. STOP-FLOOR ×55 confirmed.
 
 **Directive analysis (2026-07-08 run)**: The directive's Change A (pshufb digit-place accumulation) and Change B (8 spatially-separated streams) are BOTH fully implemented in champion dp2_8s_subdetect. The one remaining untried angle from the directive is Stuchlik's exact page-interleaving (4KB granularity). Analysis shows it is NOT expected to help:
 - Page-interleaving with 4KB pages would require 8×(420MB/4KB)=819,200 newline-boundary adjustments vs our current 7 adjustments — ~2% execution overhead.
