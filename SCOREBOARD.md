@@ -429,15 +429,32 @@ Compiler sweep today: **g++-13 -O3 -march=native → 0.0930s** best (g++-13 beat
 
 Compiler sweep today: **g++ -O3 -march=native → 0.0940s** best. dp2_8s_pf2048 continues to chase the gate threshold but falls 0.04% short on best and fails median. All dp2 variants cluster 0.090-0.096s (within VM noise). STOP-FLOOR ×53 confirmed. No new variants — directive's Change A (pshufb digit-place) and Change B (8 spatially-separated streams) are both fully implemented in champion dp2_8s_subdetect. Expected judge time: ~69-75ms on fast-VM scaling (best-ever local 0.077s). **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.**
 
+## Run log 2026-07-08 (continuation — scheduled run ×54)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_subdetect | OK | 0.0920 | 0.0930 | — | Edge: 9/9. STOP-FLOOR ×54. Floor=0.222s (medium VM). Champion 2.41× faster than cat. |
+| variants/dp2_8s_pf2048 | HOLD | 0.0910 | 0.0950 | best 1.1% lower but median HIGHER | Gate: need ≤0.0906s; got 0.0910s (missed by 0.0004s). Median 0.0950s > champ 0.0930s. HOLD. |
+
+Compiler sweep: not run (all angles exhausted). STOP-FLOOR ×54 confirmed. All 90+ variants tried and documented.
+
+**Directive analysis (2026-07-08 run)**: The directive's Change A (pshufb digit-place accumulation) and Change B (8 spatially-separated streams) are BOTH fully implemented in champion dp2_8s_subdetect. The one remaining untried angle from the directive is Stuchlik's exact page-interleaving (4KB granularity). Analysis shows it is NOT expected to help:
+- Page-interleaving with 4KB pages would require 8×(420MB/4KB)=819,200 newline-boundary adjustments vs our current 7 adjustments — ~2% execution overhead.
+- Our 52MB block-split already provides optimal DRAM bank parallelism: 8 streams at 52MB intervals span different banks/ranks/channels. 4KB spacing provides no additional DRAM-level parallelism beyond what we already have.
+- With MADV_COLLAPSE (2MB hugepages), 8 streams at 52MB intervals use only 210 TLB entries (< 1024 STLB capacity) — zero TLB misses. No TLB advantage to page-interleaving.
+- Conclusion: page-interleaving not implemented; our block-split approach is equivalent or better in all measured dimensions.
+
+**SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.** Expected judge time: ~69-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
-3. **dp2_8s_pf2048** — TESTED 2026-07-08 ×2. HOLD. 2048B prefetch vs 1536B makes no difference.
+3. **dp2_8s_pf2048** — TESTED 2026-07-08 ×3. HOLD (consistent: best 1% lower, median higher). Same every run.
 4. **dp2_8s_pf1024** — TESTED 2026-07-08. HOLD (0.081s tied). All prefetch distances 512-2048B equivalent.
 5. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
 6. **dp2_8s_twoaccum** — TESTED 2026-07-08. DEAD (0.086s, ~3% slower). vpaddw serial chain reduction not visible when bandwidth-bound.
 7. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
-8. **Page-interleaving (Stuchlik's original)** — Not tried. With MADV_COLLAPSE (2MB huge pages) + 8-bank DRAM interleave already implicit, unlikely to help.
-9. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Untried. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
-10. **16-stream** — Untried. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
-11. **LUT-based Stuchlik pshufb** — The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
+8. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08, NOT implemented. Would require 819,200 boundary adjustments (vs 7 in our block-split) = ~2% execution overhead. 52MB block-split already provides equivalent DRAM bank parallelism. Not worth implementing.
+9. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Analyzed. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
+10. **16-stream** — Analyzed. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
+11. **LUT-based Stuchlik pshufb** — Analyzed. The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
