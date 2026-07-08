@@ -318,6 +318,9 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 | 2026-07-08 | Scheduled run — STOP-FLOOR ×47 (slow VM state, no new champion) | champion best 0.092-0.094s, floor 0.543-0.695s x86 | ✓ (+9 edge) | — STOP-FLOOR ×47 | VM in slow state today (floor 0.543s vs typical 0.474s). Champion dp2_8s_subdetect best=0.092-0.094s. Compiler sweep: g++ -O3 -march=native → 0.095s best (on slow VM). Assembly analysis confirms: AVX-512 extended registers (ymm21, xmm22) used by clang on SPR to reduce GPR spills; tree6 linearized (5 serial VPADDB) vs balanced tree (3 levels); GPR register pressure unavoidable with 8 streams but hidden by ~300cy DRAM latency. All angles exhausted (see Status section). No new variants attempted — STOP-FLOOR algorithm optimal. Champion dp2_8s_itercount best 0.092s tied within noise; verdict HOLD. SUBMIT champion with g++-13 -Ofast -march=native -funroll-loops; expected judge ~69-75ms. |
 | 2026-07-08 | dp2_8s_subdetect (PROMOTED: subtract-based newline detection — vector constant reduction) | best 0.082-0.084s (g++-13 Ofast) / 0.087-0.088s (clang++ -O3), med 0.083-0.089s x86 | ✓ (+9 edge) | ✓ CHAMPION | NEW 2026-07-08. Replaces `cmpeq_epi8(v, set1('\\n'))+movemask` in nl_mask64 with `sub_epi8(v, set1('0'))+movemask`. Correctness: '\\n' (0x0A)-'0'(0x30)=0xDA (sign bit set); digits 0-9 stay 0x00-0x09 (no sign). Key insight: original code needs TWO vector constants (set1('\\n') for nl_mask64 + set1('0') for PSHUF); new code needs only ONE (set1('0') for both), reducing register pressure. Consistent 2.2% improvement with clang++ (best 0.087s vs 0.089s, median 0.089s vs 0.091s; gate ×2). Tied with g++-13 within noise. Compiler sweep: **g++-13 -Ofast -march=native -funroll-loops → 0.082-0.083s** local best. Full run.sh RUNS=3: STOP-FLOOR (champion 0.084s < 2 × floor 0.237s). Champion is 2.82× FASTER than cat (mmap bypass). Floor today: 0.080-0.082s; champion 0.084s = 1.025-1.05× above floor — AT the I/O ceiling. STOP-FLOOR ×46. **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.** Expected judge time: ~69-75ms. |
 
+| 2026-07-08 | dp2_8s_pf1024 (prefetch 1024B = 16 iters ahead per stream) | best 0.081s, med 0.084s x86 | ✓ (+9 edge) | ✗ HOLD | NEW 2026-07-08. Fills the gap between dp2_8s_pf512 (512B) and champion's 1536B distance. Theory: judge DRAM latency ~80ns; each 64B iteration costs ~83ns at 6.2GB/s → need 80/83 ≈ 1 iter lookahead = 64B, so 1024B = 16× excess. At 3 GHz: 80ns = 240cy; 64B iter ~250cy → 1 iter sufficient. On VM (300ns latency, 80ns/iter): need ~3.75 iters → 240B; 1024B still ~4× excess. Practice: best=0.081s tied champion, median=0.084s tied → HOLD (0% Δbest). Confirms prefetch distance is irrelevant once minimum coverage (512B) is met — bandwidth-bound. STOP-FLOOR ×48. |
+| 2026-07-08 | dp2_8s_unify_stop (single iteration counter replaces 8-way AND loop condition) | best 0.082s, med 0.084s x86 | ✓ (+9 edge) | ✗ HOLD | NEW 2026-07-08. Computes safe_iters=(min_segment_len-96)/64 before main loop; replaces `p0<s0 & p1<s1 & ... & p7<s7` (8 GPR comparisons) with `for (size_t n = safe_iters; n-- > 0;)`. Eliminates s0..s7 from live variables (7 fewer live GPRs, cuts spills from ~10 to ~3). Theory: 7 fewer stack loads × ~4cy each = 28cy saved per iteration of ~250cy DRAM cost. Practice: best=0.082s, med=0.084s = tied champion within noise → HOLD. GPR spilling overhead is already hidden by DRAM latency (250cy >> 28cy). STOP-FLOOR ×48 confirmed. Compiler sweep today: g++ -O3 -march=native -funroll-loops best at 0.082s (beats clang++ 0.089s on today's VM state). |
+
 ## Tried & dead (don't repeat without a new angle)
 - Pure scalar micro-tweaks (branch vs branchless vs memchr) — all ~equal; latency-bound.
 - `__builtin_prefetch` ahead of the scan (`swar_prefetch`) — prefetch evicts more
@@ -364,7 +367,7 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-08, confirmed ×47)
+## Status: STOP-FLOOR (2026-07-08, confirmed ×48+)
 Champion (dp2_8s_subdetect) best=**0.082-0.094s** (VM-state dependent) on local x86.
 Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
 - **Current champion: dp2_8s_subdetect** — dp2_8s_itercount with subtract-based newline detection (saves 1 vector constant register; sub_epi8(v,'0') shares constant with PSHUF instead of separate cmpeq/set1('\\n'))
@@ -383,12 +386,17 @@ Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path)
 - All reasonable angles exhausted: 16-stream (register spill risk), 2w-per-stream (dead, I-cache pressure),
   page-interleaving (no DRAM benefit vs block-split), subtract-based newline detection (bandwidth-bound),
   per-stream u16 accumulators (more port-5 ops), 256-bit PSHUF pairing (worse latency via VINSERTI128),
-  PDEP position extraction (bandwidth-bound), count-loop optimization (s_i spills negligible vs DRAM latency).
+  PDEP position extraction (bandwidth-bound), count-loop optimization (s_i spills negligible vs DRAM latency),
+  dp2_8s_pf1024 (1024B prefetch, tied), dp2_8s_unify_stop (unified stop counter, saves 7 GPRs but overhead hidden by DRAM).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_subdetect, g++-13 -Ofast best 0.082-0.083s; expected judge time ~69-75ms. **PRIORITY.**
-2. **dp2_8s_pf512** — TESTED. HOLD (best=0.092s = tied, median tied). May be optimal on judge bare metal.
-3. **dp2_8s_pf2048** — TESTED. HOLD (0.093s). 2048B prefetch vs 1536B makes no difference.
-4. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). 16 outstanding loads + 2× larger loop body = I-cache pressure dominates. Do NOT retry.
-5. **Page-interleaving (Stuchlik's original)** — Not tried. Process 8 pages of 4KB in interleaved order. With MADV_COLLAPSE (2MB huge pages), all 8 adjacent 4KB pages fall in same huge page = 1 TLB entry, no benefit. Sequential DRAM access pattern already achieves 8-bank parallelism via DRAM interleave; page-interleaving likely adds complexity without bandwidth gain at this level.
-6. **Subtract-based detection** — DONE (dp2_8s_subdetect, current champion). Saves one vector constant register; 2.2% consistent improvement with clang++.
+1. **Submit champion to judge** — dp2_8s_subdetect, g++ -O3 -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
+2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
+3. **dp2_8s_pf2048** — TESTED. HOLD. 2048B prefetch vs 1536B makes no difference.
+4. **dp2_8s_pf1024** — TESTED 2026-07-08. HOLD (0.081s tied). All prefetch distances 512-2048B equivalent.
+5. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
+6. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
+7. **Page-interleaving (Stuchlik's original)** — Not tried. With MADV_COLLAPSE (2MB huge pages) + 8-bank DRAM interleave already implicit, unlikely to help.
+8. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Untried. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
+9. **16-stream** — Untried. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
+10. **LUT-based Stuchlik pshufb** — The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
