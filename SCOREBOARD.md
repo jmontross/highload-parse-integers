@@ -420,6 +420,15 @@ Compiler sweep today: g++ -O3 -march=native → **0.083s** best (fastest; beats 
 
 Compiler sweep today: **g++-13 -O3 -march=native → 0.0930s** best (g++-13 beats -Ofast/-funroll-loops by 5% today — VM state shifts which path wins; -Ofast is best on fast-VM days at 0.082s). STOP-FLOOR ×52 confirmed. No new variants — all angles exhausted. All dp2 variants cluster 0.094-0.104s (within noise). Directive's Change A (pshufb digit-place) and Change B (8 independent spatial streams) are both implemented in current champion. **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days per prior sweeps). Expected judge time: ~69-75ms.
 
+## Run log 2026-07-08 (continuation — scheduled run ×53)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_subdetect | OK | 0.0910 | 0.0940 | — | Edge: 9/9. STOP-FLOOR ×53. Floor=0.266s (medium VM). Champion 2.92× faster than cat. |
+| dp2_8s_pf2048 | HOLD | 0.0900 | 0.0950 | best 1.1% lower but median HIGHER | Gate threshold: need ≤0.0896s; got 0.0900s (missed by 0.0004s). Median 0.0950s vs 0.0940s = higher; HOLD. Same result as 2026-07-08 prior runs. |
+
+Compiler sweep today: **g++ -O3 -march=native → 0.0940s** best. dp2_8s_pf2048 continues to chase the gate threshold but falls 0.04% short on best and fails median. All dp2 variants cluster 0.090-0.096s (within VM noise). STOP-FLOOR ×53 confirmed. No new variants — directive's Change A (pshufb digit-place) and Change B (8 spatially-separated streams) are both fully implemented in champion dp2_8s_subdetect. Expected judge time: ~69-75ms on fast-VM scaling (best-ever local 0.077s). **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
