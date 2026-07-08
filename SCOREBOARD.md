@@ -391,7 +391,7 @@ Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path)
   dp2_8s_pf1024 (1024B prefetch, tied), dp2_8s_unify_stop (unified stop counter, saves 7 GPRs but overhead hidden by DRAM),
   dp2_8s_twoaccum (two independent u16 accumulators for streams 0-3 / 4-7: DEAD, 3% slower — port-5 vpaddw reduction irrelevant when bandwidth-bound),
   dp2_8s_pf2048 retested vs dp2_8s_subdetect (HOLD, best=0.082s vs champ 0.083s, gate needs ≤0.0817s — just above threshold).
-- **STOP-FLOOR confirmed ×50+ as of 2026-07-08.** Champion dp2_8s_subdetect at 0.082-0.083s best, bandwidth floor 0.062-0.082s (VM oscillation). Champion at 1.32× above floor on fast VM; algorithm is fully bandwidth-bound. All angles exhausted.
+- **STOP-FLOOR confirmed ×51+ as of 2026-07-08.** Champion dp2_8s_subdetect at 0.082-0.084s best (VM state dependent), bandwidth floor 0.062-0.259s (VM oscillation). On medium-fast VM (floor=0.259s) champion is 3.08× faster than cat. All angles exhausted.
 
 ## Run log 2026-07-08 (continuation)
 
@@ -402,6 +402,15 @@ Champion is ~2.8-5.7× FASTER than cat (mmap+hugepage bypasses kernel read path)
 | champion dp2_8s_subdetect | OK | 0.0830 | 0.0840 | — | Edge: 9/9. STOP-FLOOR ×50+. |
 
 Floor (cat): 0.062-0.082s (VM oscillation across session). STOP-FLOOR verdict: champion 0.083s < 2× floor 0.062s = 0.124s.
+
+## Run log 2026-07-08 (continuation — scheduled run ×51)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_subdetect | OK | 0.0840 | — | — | Edge: 9/9. STOP-FLOOR ×51. Floor=0.259s (medium-fast VM). Champion 3.08× faster than cat. |
+| dp2_8s_pf1024 | HOLD | 0.0820 | 0.0860 | best 2.4% lower but median HIGHER | HOLD: need both best AND median lower; median fails. |
+
+Compiler sweep today: g++ -O3 -march=native → **0.083s** best (fastest; beats g++-13 0.084s, clang++ 0.093s). VM today: floor=0.259s (better than recent slow-VM days at 0.540-0.695s). STOP-FLOOR ×51 confirmed.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_subdetect, g++ -Ofast -funroll-loops best 0.081-0.083s; expected judge time ~69-75ms. **PRIORITY.**
