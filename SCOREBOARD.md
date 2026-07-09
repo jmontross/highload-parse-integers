@@ -372,7 +372,7 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-08, confirmed ×56+)
+## Status: STOP-FLOOR (2026-07-09, confirmed ×57+)
 Champion (dp2_8s_stop_pf3072) best=**0.067-0.094s** (VM-state dependent) on local x86.
 Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
 **NEW local best-ever: 0.067s (2026-07-08 fast VM, default c++ -O3 -march=native).**
@@ -473,6 +473,19 @@ Compiler sweep today: **g++ -Ofast -march=native -funroll-loops → 0.0810s** be
 VM state: FAST (champion 0.067s best = 1.34 ns/line; floor 0.502s). Champion is 7.5× faster than cat. index.html: **champion=67.0ms, CLEARS rank-18 bar (67.0 ms ≤ 69.3 ms)**. This is the best local measurement ever recorded.
 STOP-FLOOR ×56 confirmed. No new variants to try — all prefetch distances 512B–4096B exhausted; 4096B DEAD; 3072B is champion; all other algorithmic angles documented above.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-69ms (fast-VM local 0.067s → expected ~60-62ms on judge bare metal; slow-VM local 0.081s → ~69-75ms).
+
+## Run log 2026-07-09 (scheduled run ×57)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_stop_pf3072 | OK | 0.0790 | 0.0820 | — | Edge: 9/9. STOP-FLOOR ×57. Floor=0.387-0.438s (medium-fast VM). |
+| dp2_8s_unify_stop | HOLD (noise) | 0.0800 | 0.0830 | tied within noise | Run 1 showed PROMOTE (champion was 0.0850s slow, variant 0.0810s → 4.7% margin). Confirmation runs: champion 0.079-0.081s, variant 0.080-0.081s → STOP-FLOOR. VM oscillation between pf1536 and pf3072 prefetch distances. Champion stays. |
+| dp2_8s_pf4096 | HOLD (re-check) | 0.0800 | 0.0810 | tied within noise | Previously DEAD at 0.071s (6% slower on 2026-07-08 FAST VM). Today at 0.080s = tied with champion. All prefetch distances 512B-4096B are equivalent on today's VM — confirming bandwidth-bound conclusion. Not promoted (tied best). |
+
+VM state: medium-fast (floor=0.387-0.438s). Champion best 0.079s = 1.58 ns/line. All dp2 variants cluster 0.079-0.085s. VM oscillation: run 1 fired PROMOTE for dp2_8s_unify_stop (champion measured slow at 0.085s); confirmation runs showed STOP-FLOOR. No new champion.
+STOP-FLOOR ×57 confirmed. All algorithmic angles exhausted — both Change A (pshufb digit-place) and Change B (8 independent spatial streams) are fully implemented in champion.
+Compiler sweep: g++ -O3 -march=native best at 0.081s; g++ -Ofast -march=native -funroll-loops best at 0.081s (tie); clang++ -O3 0.086s.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms.
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_stop_pf3072, local best 0.067s (fast VM) / 0.081s (slow VM); CLEARS rank-18 bar (69.3ms) on index.html. **PRIORITY.**
