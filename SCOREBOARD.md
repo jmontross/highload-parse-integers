@@ -585,6 +585,19 @@ Both new variants confirm STOP-FLOOR. The double-loop structure (fixed_widen) an
 STOP-FLOOR ×64 confirmed. index.html: champion=91.0ms, 1.3× off rank-18 bar on medium VM. Fast-VM best 0.067s → ~60ms judge time (clears rank-18 bar).
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-09 (scheduled run ×65)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_pf4096 | OK | 0.0730 | 0.0810 | — | Edge: 9/9. STOP-FLOOR ×65. Floor=0.2420s (medium VM). Champion 3.31× faster than cat. |
+| dp2_8s_pf3072_32 | DEAD | 0.0740 | 0.0850 | 1.4% SLOWER | NEW 2026-07-09. dp2_8s_stop_pf3072 + second prefetch at p+3072+32 per stream (correctly covers second 32B of the 64B future window, which may be in a different cache line than p+3072). Theory: nl_mask64 does two 32B AVX2 loads at p and p+32; when (p+3072)%64 >= 32, those two loads land in DIFFERENT cache lines; a single prefetch at p+3072 misses the second 32B ~50% of iterations. dp2_8s_pf_double (prior) used +3072+64 (next window start) NOT +3072+32 (second 32B half). Practice: 0.0740s vs champion 0.0730s = 1.4% SLOWER. DEAD. Root cause: HW prefetcher already handles the stride-32 sub-pattern within each stream's sequential access; the extra 8 prefetch µops/iter add ~2cy overhead with no benefit at bandwidth-bound operating point. |
+| dp2_8s_pf4096_32 | DEAD | 0.0780 | 0.0860 | 6.8% SLOWER | NEW 2026-07-09. Same +32 idea at 4096B distance (champion's prefetch distance). 16 prefetch instructions vs champion's 8 = 6.8% SLOWER. Same root cause: HW prefetcher covers the +32 stride; extra µops are pure overhead. |
+
+VM state: medium (floor=0.2420s). Champion best 0.073s = 1.46 ns/line. All dp2 variants cluster 0.073-0.099s — bandwidth-bound, no new winner.
+The +32 split-prefetch idea is definitively DEAD: HW prefetcher tracks both 32B sub-loads within each sequential stream; explicit SW coverage adds overhead without benefit. Confirms STOP-FLOOR.
+STOP-FLOOR ×65 confirmed. index.html: champion=73.0ms, 1.1× off rank-18 bar.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms (fast-VM local best 0.067s → ~60ms judge).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_pf4096 (local best 0.067s on fast VM); CLEARS rank-18 bar (69.3ms). **PRIORITY.**
 2. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Best judge candidate alongside current champion.
@@ -596,3 +609,4 @@ STOP-FLOOR ×64 confirmed. index.html: champion=91.0ms, 1.3× off rank-18 bar on
 8. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
 9. **dp2_8s_fixed_widen** — DEAD (2026-07-09): double-loop structure 3.3% SLOWER; iter_count overhead already hidden by DRAM.
 10. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference; bandwidth-bound.
+11. **dp2_8s_pf4096_32 / dp2_8s_pf3072_32** — DEAD (2026-07-09): +32 split-prefetch adds overhead without benefit; HW prefetcher already covers both 32B sub-loads.
