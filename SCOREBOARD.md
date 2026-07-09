@@ -376,11 +376,12 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-09, confirmed ×62+)
+## Status: STOP-FLOOR (2026-07-09, confirmed ×63+)
 Champion (dp2_8s_pf4096) best=**0.067-0.094s** (VM-state dependent) on local x86.
-Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
+Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.067-0.080s; medium VM floor: 0.223s; slow VM floor: 0.540-0.690s.
 **NEW local best-ever: 0.067s (2026-07-08 fast VM, default c++ -O3 -march=native).**
-**index.html: champion=67.0ms — CLEARS rank-18 bar (69.3ms).** Ready to submit.
+**index.html: champion=67.0ms — CLEARS rank-18 bar (69.3ms) on fast VM.** Ready to submit.
+- dp2_8s_pf4096_double (2026-07-09): DEAD — 16 prefetch µops/iter (vs 8) adds ~4cy overhead/iteration; not offset by better cache-line coverage. At bandwidth-bound operating point (~250cy DRAM), prefetch overhead visible as 1.22% slowdown.
 - **Current champion: dp2_8s_pf4096** — T1@4096B prefetch per stream. Promoted 2026-07-09 (VM oscillation from dp2_8s_stop_pf3072). On fast VM, dp2_8s_stop_pf3072 (3072B) was 6% faster. PROMOTED 2026-07-09 run ×62.
 - Best local: **0.081s** (g++ -Ofast, sweep, fast VM), **0.082s** (confirmation run best)
 - Best-ever any compiler on this codebase: **0.077s** fast VM (dp2_8stream/dp2_8s_itercount with g++-13)
@@ -555,18 +556,26 @@ Compiler sweep: g++ -O3 -march=native → 0.0800s best (tied with -Ofast). clang
 STOP-FLOOR ×62 confirmed. dp2_8s_pf_double and dp2_8s_pf2560 added as HOLD — both near-wins but below gate.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-09 (scheduled run ×63)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_pf4096 | OK | 0.0820 | 0.0840 | — | Edge: 9/9. STOP-FLOOR ×63. Floor=0.2230s (medium VM). Champion 2.72× faster than cat. |
+| dp2_8s_pf4096_double | DEAD | 0.0830 | 0.0830 | 1.22% SLOWER | NEW 2026-07-09. Dual T1 prefetch at 4096B+64B per stream: extends pf_double (3072B+64B, HOLD) to champion's 4096B distance. pf_double@3072B showed 1.0-1.25% improvement but below gate; hypothesis was applying same to 4096B might cross gate. Practice: 0.0830s = 1.22% SLOWER than champion. DEAD. 16 prefetch µops/iter vs champion's 8 = 8 extra PREFETCHT1 per 64B window = ~4cy overhead; at ~250cy DRAM latency, that's 1.6% compute overhead consistent with the observed slowdown. The extra cache-line coverage benefit was smaller than the instruction overhead. |
+| dp2_8s_pf2560 | HOLD | 0.0810 | 0.0830 | best 1.22%, median lower | Re-tested. best=0.0810s vs champion 0.0820s. Gate needs ≤0.0808s (1.5% of 0.0820s); got 0.0810s (misses by 0.0002s). Median 0.0830s < 0.0840s (passes). ONE CONDITION FAILS → HOLD. Consistent near-miss. |
+| dp2_8s_pf_double (3072+64) | HOLD | 0.0810 | 0.0820 | best 1.22%, median lower | Re-tested. Same cluster as pf2560 — best 0.0810s, gate threshold 0.0808s missed by 0.0002s. |
+| dp2_8s_unify_stop | HOLD | 0.0810 | 0.0820 | best 1.22%, median lower | Same cluster. |
+
+VM state: medium (floor=0.2230s). Champion best 0.082s = 1.64 ns/line. All dp2 variants cluster 0.081-0.085s within noise. dp2_8s_pf4096_double is DEAD (adds overhead without benefit). The three best variants (pf2560, pf_double, unify_stop) consistently miss gate by 0.0002s — at bandwidth floor, noise dominates.
+STOP-FLOOR ×63 confirmed. index.html: champion=82.0ms, 1.2× off rank-18 bar.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms (fast-VM local best 0.067s → judge ~60ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_pf4096 (local best 0.067s on fast VM, 0.080s on medium VM); CLEARS rank-18 bar (69.3ms). **PRIORITY.**
-2. **dp2_8s_stop_pf3072** — Now in variants/. Was champion, may be better on fast VM (3072B < 4096B on fast hardware). Retain as judge candidate.
-3. **dp2_8s_pf_double** — HOLD 2026-07-09 (best 1.25% below gate). Dual prefetch covers both cache lines at prefetch distance. Near-win but bandwidth-bound limits further gain.
-4. **dp2_8s_pf2560** — HOLD 2026-07-09 (tied champion). Grid-point filler between 2048B and 3072B.
-5. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
-6. **dp2_8s_pf2048** — TESTED 2026-07-08 ×3. HOLD (consistent: best 1% lower, median higher). Same every run.
-7. **dp2_8s_pf1024** — TESTED 2026-07-08. HOLD (0.081s tied). All prefetch distances 512-2048B equivalent.
-8. **dp2_8s_unify_stop** — TESTED 2026-07-08. HOLD (0.082s, 7 GPR savings hidden by DRAM latency).
-9. **dp2_8s_twoaccum** — TESTED 2026-07-08. DEAD (0.086s, ~3% slower). vpaddw serial chain reduction not visible when bandwidth-bound.
-10. **dp2_8s_2w** — TESTED 2026-07-07. DEAD (0.099s, 8.8% slower). I-cache + intra-stream dependency.
-11. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08, NOT implemented. Would require 819,200 boundary adjustments (vs 7 in our block-split) = ~2% execution overhead. 52MB block-split already provides equivalent DRAM bank parallelism. Not worth implementing.
-12. **256-bit pair-PSHUF (2 numbers per 256-bit shuffle)** — Analyzed. Would halve port-5 pressure (6→3 PSHUFs for cnt==6), but port-5 is not the bottleneck (bandwidth-bound, 6 PSHUF at 6cy << 250cy DRAM). Not worth implementing.
-13. **16-stream** — Analyzed. Would need 16 p_i + 16 b_i > 32 GPRs → severe spilling. LFBs may already be saturated at 8 streams.
-14. **LUT-based Stuchlik pshufb** — Analyzed. The full LUT approach (indexed by newline_mask + carry) would eliminate CTZ loop overhead, but CTZ chain (~12cy) << DRAM latency (250cy). LUT would need careful boundary handling and debug time. Not expected to win given bandwidth-bound conclusion.
+1. **Submit champion to judge** — dp2_8s_pf4096 (local best 0.067s on fast VM); CLEARS rank-18 bar (69.3ms). **PRIORITY.**
+2. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Best judge candidate alongside current champion.
+3. **dp2_8s_pf2560/pf_double/unify_stop** — All HOLD at 0.0810s (0.0002s above gate). Not promotable — would need VM variability or better hardware to flip.
+4. **All other prefetch distances** — 512B–4096B all equivalent on medium VM. None promotable.
+5. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08. Not worth implementing: 819,200 boundary adjustments vs 7, no DRAM bank benefit beyond our block-split.
+6. **256-bit pair-PSHUF** — Port-5 not bottleneck; bandwidth-bound conclusion.
+7. **16-stream** — GPR register spill risk; LFBs likely saturated at 8 streams.
+8. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
