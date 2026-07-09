@@ -376,7 +376,7 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-09, confirmed ×63+)
+## Status: STOP-FLOOR (2026-07-09, confirmed ×64+)
 Champion (dp2_8s_pf4096) best=**0.067-0.094s** (VM-state dependent) on local x86.
 Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.067-0.080s; medium VM floor: 0.223s; slow VM floor: 0.540-0.690s.
 **NEW local best-ever: 0.067s (2026-07-08 fast VM, default c++ -O3 -march=native).**
@@ -401,7 +401,9 @@ Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fa
   PDEP position extraction (bandwidth-bound), count-loop optimization (s_i spills negligible vs DRAM latency),
   dp2_8s_pf1024 (1024B prefetch, tied), dp2_8s_unify_stop (unified stop counter, saves 7 GPRs but overhead hidden by DRAM),
   dp2_8s_twoaccum (two independent u16 accumulators for streams 0-3 / 4-7: DEAD, 3% slower — port-5 vpaddw reduction irrelevant when bandwidth-bound),
-  dp2_8s_pf2048 retested vs dp2_8s_subdetect (HOLD, best=0.082s vs champ 0.083s, gate needs ≤0.0817s — just above threshold).
+  dp2_8s_pf2048 retested vs dp2_8s_subdetect (HOLD, best=0.082s vs champ 0.083s, gate needs ≤0.0817s — just above threshold),
+  dp2_8s_fixed_widen (2026-07-09: double-loop structure eliminates iter_count from hot loop — DEAD, 3.3% SLOWER; iter_count overhead hidden by DRAM latency, double-loop changes scheduling unfavorably),
+  dp2_8s_t2_4096 (2026-07-09: _MM_HINT_T2 LLC prefetch vs T1 L2 at 4096B — DEAD/HOLD, no measurable difference; bandwidth-bound).
 - **STOP-FLOOR confirmed ×51+ as of 2026-07-08.** Champion dp2_8s_subdetect at 0.082-0.084s best (VM state dependent), bandwidth floor 0.062-0.259s (VM oscillation). On medium-fast VM (floor=0.259s) champion is 3.08× faster than cat. All angles exhausted.
 
 ## Run log 2026-07-08 (continuation)
@@ -570,6 +572,19 @@ VM state: medium (floor=0.2230s). Champion best 0.082s = 1.64 ns/line. All dp2 v
 STOP-FLOOR ×63 confirmed. index.html: champion=82.0ms, 1.2× off rank-18 bar.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms (fast-VM local best 0.067s → judge ~60ms).
 
+## Run log 2026-07-09 (scheduled run ×64)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_pf4096 | OK | 0.0910 | 0.0950 | — | Edge: 9/9. STOP-FLOOR ×64. Floor=0.2320s (medium VM). Champion 2.55× faster than cat. |
+| dp2_8s_fixed_widen | HOLD | 0.0940 | 0.0960 | 3.3% SLOWER | NEW 2026-07-09. Double-loop structure: outer iterates widen-groups, inner exactly 100 iters. Eliminates iter_count variable and conditional branch from hot loop; fixed inner count lets compiler unroll. Theory: 1-2cy/iter saved (iter_count add + compare + predict). Practice: 0.0940s = 3.3% SLOWER than champion (0.0910s). HOLD. Root cause: iter_count overhead (2 instructions per ~250cy DRAM iteration = ~0.8%) is already hidden behind DRAM latency; the double-loop code structure changes instruction scheduling in ways that hurt (larger loop body, different branch pattern). Bandwidth-bound conclusion confirmed. |
+| dp2_8s_t2_4096 | HOLD | 0.0940 | 0.0960 | tied cluster | NEW 2026-07-09. _MM_HINT_T2 (LLC prefetch) instead of _MM_HINT_T1 (L2 prefetch) at 4096B distance. Theory: at 4096B ahead / 64B per iter = 64 iters until access; L2 will have evicted the data by then on a 420MB streaming workload; T2 fills into L3 which stays hot longer (260MB L3, ~62% file fits). Practice: 0.0940s = tied with all-dp2 cluster; no improvement over T1. Root cause: bandwidth-bound — the LLC→L2→L1 transfer latency is already hidden by the DRAM prefetch pipeline; whether data sits in L2 vs L3 at access time makes no measurable difference. HOLD. |
+
+VM state: medium (floor=0.2320s). Champion best 0.091s = 1.82 ns/line. All dp2 variants cluster 0.091-0.100s within noise (dp2_8s_pf2048/pf3072/pf4096/fixed_widen/t2_4096 all at 0.094s; champion at 0.091s from favorable interleaved sample).
+Both new variants confirm STOP-FLOOR. The double-loop structure (fixed_widen) and T2 prefetch hint (t2_4096) join the list of exhausted angles.
+STOP-FLOOR ×64 confirmed. index.html: champion=91.0ms, 1.3× off rank-18 bar on medium VM. Fast-VM best 0.067s → ~60ms judge time (clears rank-18 bar).
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_pf4096 (local best 0.067s on fast VM); CLEARS rank-18 bar (69.3ms). **PRIORITY.**
 2. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Best judge candidate alongside current champion.
@@ -579,3 +594,5 @@ STOP-FLOOR ×63 confirmed. index.html: champion=82.0ms, 1.2× off rank-18 bar.
 6. **256-bit pair-PSHUF** — Port-5 not bottleneck; bandwidth-bound conclusion.
 7. **16-stream** — GPR register spill risk; LFBs likely saturated at 8 streams.
 8. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
+9. **dp2_8s_fixed_widen** — DEAD (2026-07-09): double-loop structure 3.3% SLOWER; iter_count overhead already hidden by DRAM.
+10. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference; bandwidth-bound.
