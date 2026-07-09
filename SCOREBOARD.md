@@ -525,6 +525,18 @@ Compiler sweep: g++ -O3 -march=native → 0.0800s (best); g++ -Ofast -march=nati
 STOP-FLOOR ×60 confirmed. Both directive Changes A (pshufb digit-place) and B (8 independent spatial streams) fully implemented. All algorithmic angles exhausted.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (tied with -Ofast today; -Ofast better on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-09 (scheduled run ×61)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_stop_pf3072 | OK | 0.0820 | 0.0840 | — | Edge: 9/9. STOP-FLOOR ×61. Floor=0.168s min/0.469s med (medium VM). Champion 2.0× faster than floor min. |
+| dp2_8s_interleaved | DEAD | 0.1000 | 0.1000 | 22% SLOWER | NEW 2026-07-09. Interleaved (pf+nl_mask64+process_window per stream sequentially) vs champion's "all prefetch → all masks → all process". Theory: less peak live registers (m_i freed before m_{i+1} computed), OOO overlap of AVX2 loads with integer compute. Practice: 22% SLOWER (0.100s vs 0.082s). DEAD. Root cause: "all masks first" keeps all 8 nl_mask64 loads outstanding simultaneously (8-way MLP); interleaved serializes them (only 1 load outstanding at a time, waiting for process_window to complete before issuing next load). In the avx2 era, interleaved worked because 8 SEQUENTIAL windows could use hardware prefetcher as 1 stream; here 8 spatially-separated streams (52MB apart) require concurrent explicit issue. Confirmed: "all masks first" is essential for maximum DRAM parallelism with scattered streams. |
+
+VM state: medium (floor=0.168s min / 0.469s med). Champion best 0.082s = 1.64 ns/line. Floor min implies 3.36 ns/line, so champion is 2.05× faster than floor min, 5.7× faster than floor median (mmap bypass). All dp2 variants cluster 0.082-0.090s within noise.
+Compiler sweep today: g++ -O3 -march=native → 0.0800s best (marginally better than g++-13 and clang++ -O3).
+STOP-FLOOR ×61 confirmed. dp2_8s_interleaved added as DEAD — eliminates "interleaved" from future candidates.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days per prior sweeps). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_stop_pf3072, local best 0.067s (fast VM) / 0.081s (slow VM); CLEARS rank-18 bar (69.3ms) on index.html. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
