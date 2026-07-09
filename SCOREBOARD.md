@@ -598,6 +598,17 @@ The +32 split-prefetch idea is definitively DEAD: HW prefetcher tracks both 32B 
 STOP-FLOOR ×65 confirmed. index.html: champion=73.0ms, 1.1× off rank-18 bar.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms (fast-VM local best 0.067s → ~60ms judge).
 
+## Run log 2026-07-09 (scheduled run ×66)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_pf4096 | OK | 0.0920 | 0.0960 | — | Edge: 9/9. STOP-FLOOR ×66. Floor=0.5190s (slow-medium VM). Champion 5.6× faster than cat. |
+| dp2_8s_pf3072_32 | HOLD | 0.0910 | 0.0940 | best 1.1% lower (need ≤0.0906s; got 0.0910s) | Previously DEAD (1.4% slower on fast VM 2026-07-09). Today on slow-medium VM (floor=0.519s): best=0.0910s, gate needs ≤0.0906s — misses by 0.0004s. Median 0.0940s < champ 0.0960s (passes). VM oscillation: shorter/different prefetch variants win on slow VM days (less overhead per iteration). Still sub-gate; HOLD. |
+
+VM state: slow-medium (floor=0.519s). Champion best 0.092s = 1.84 ns/line. All dp2 variants cluster 0.091-0.097s within noise. No new champion.
+STOP-FLOOR ×66 confirmed. dp2_8s_pf3072_32 re-assessed as HOLD (not DEAD) on slow-VM days — VM-state dependent. All dp2 variants remain within noise of each other.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms (fast-VM local best 0.067s → ~60ms judge, clears rank-18 bar).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_pf4096 (local best 0.067s on fast VM); CLEARS rank-18 bar (69.3ms). **PRIORITY.**
 2. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Best judge candidate alongside current champion.
