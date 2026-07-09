@@ -1,7 +1,9 @@
-// dp2_8s_pf4096.cpp — dp2_8s_stop_pf3072 with T1 prefetch at 4096B per stream.
-// Tests 4096B lookahead (64 iters ahead) vs champion's 3072B (48 iters ahead).
-// Fills the gap between dp2_8s_pf2048 (HOLD) and dp2_8s_pf3072 (became champion
-// as stop_pf3072). On slow VM days with latency > 300ns, more lookahead may help.
+// dp2_8s_stop_pf3072.cpp — dp2_8s_unify_stop + T1 prefetch at 3072B per stream.
+// Combines: unified loop counter (fewer GPR spills) + longer prefetch distance.
+// Hypothesis: the two optimizations may compound on this VM state.
+// Eliminates s0..s7 from live variables (7 fewer live GPRs in main loop):
+// current live count ≈25 GPRs → ≈18, reducing stack spills from ~10 to ~3.
+// Each removed stack load saves ~4cy; ~7 loads × 4cy = 28cy per iteration.
 // Safety: safe_iters derived from the SHORTEST segment; all streams safe.
 
 #include <cstdio>
@@ -291,14 +293,14 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         int iter_count = 0;
 
         for (size_t n = safe_iters; __builtin_expect(n > 0, 1); --n) {
-            _mm_prefetch((const char*)(p0 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p1 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p2 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p3 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p4 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p5 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p6 + 4096), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p7 + 4096), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 2560), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 2560), _MM_HINT_T1);
 
             uint64_t m0 = nl_mask64(p0);
             uint64_t m1 = nl_mask64(p1);
