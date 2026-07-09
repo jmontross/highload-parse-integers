@@ -372,7 +372,7 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-09, confirmed ×58+)
+## Status: STOP-FLOOR (2026-07-09, confirmed ×59+)
 Champion (dp2_8s_stop_pf3072) best=**0.067-0.094s** (VM-state dependent) on local x86.
 Champion is ~3-8× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.070-0.080s; slow VM floor: 0.540-0.690s.
 **NEW local best-ever: 0.067s (2026-07-08 fast VM, default c++ -O3 -march=native).**
@@ -486,6 +486,17 @@ VM state: medium-fast (floor=0.387-0.438s). Champion best 0.079s = 1.58 ns/line.
 STOP-FLOOR ×57 confirmed. All algorithmic angles exhausted — both Change A (pshufb digit-place) and Change B (8 independent spatial streams) are fully implemented in champion.
 Compiler sweep: g++ -O3 -march=native best at 0.081s; g++ -Ofast -march=native -funroll-loops best at 0.081s (tie); clang++ -O3 0.086s.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms.
+
+## Run log 2026-07-09 (scheduled run ×59)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_stop_pf3072 | OK | 0.0930 | 0.0950 | — | Edge: 9/9. STOP-FLOOR ×59. Floor=0.2650s (medium VM). |
+| dp2_8s_pf2048 | HOLD | 0.0910 | 0.0950 | best 2.2% lower, median tied | Gate needs ≤0.0916s; got 0.0910s (passes best threshold). But median 0.0950s = champion → HOLD (need both). |
+
+VM state: medium (floor=0.265s). Champion best 0.093s = 1.86 ns/line. Compiler sweep: g++-13 -O3 -march=native → 0.094s best. All dp2 variants cluster 0.091-0.095s within noise.
+STOP-FLOOR ×59 confirmed. Both directive changes A (pshufb digit-place) and B (8 independent spatial streams) fully implemented. All algorithmic angles exhausted.
+**SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`** (best today per sweep). Or `g++ -Ofast -march=native -funroll-loops` for fast-VM days. Expected judge time: ~60-75ms.
 
 ## Run log 2026-07-09 (scheduled run ×58)
 
