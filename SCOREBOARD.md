@@ -513,6 +513,18 @@ Compiler sweep: g++-13 -O3 -march=native → 0.0750s (best today); g++ -Ofast �
 STOP-FLOOR ×58 confirmed. All algorithmic and prefetch-distance angles exhausted.
 **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`** (best today). Or `g++ -Ofast -march=native -funroll-loops` for fast-VM days per prior sweeps. Expected judge time: ~60-75ms.
 
+## Run log 2026-07-09 (scheduled run ×60)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_stop_pf3072 | OK | 0.0800 | 0.0810 | — | Edge: 9/9. STOP-FLOOR ×60. Floor=0.234s (medium VM). |
+| dp2_8s_itercount (best variant) | HOLD | 0.0810 | 0.0830 | need ≤0.0788s; got 0.0810 | All dp2 variants cluster 0.081-0.085s; none clears 1.5% gate. |
+
+VM state: medium (floor=0.234s). Champion best 0.080s = 1.60 ns/line. All dp2 prefetch variants (pf512/1024/2048/3072/4096, unify_stop, subdetect, itercount) cluster 0.081-0.085s within noise — confirming bandwidth-bound conclusion. No new winner.
+Compiler sweep: g++ -O3 -march=native → 0.0800s (best); g++ -Ofast -march=native -funroll-loops → 0.0800s (tied); g++-13 -Ofast → 0.0800s; clang++ → 0.0860s. g++ -O3/-Ofast tied today.
+STOP-FLOOR ×60 confirmed. Both directive Changes A (pshufb digit-place) and B (8 independent spatial streams) fully implemented. All algorithmic angles exhausted.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (tied with -Ofast today; -Ofast better on fast-VM days). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_stop_pf3072, local best 0.067s (fast VM) / 0.081s (slow VM); CLEARS rank-18 bar (69.3ms) on index.html. **PRIORITY.**
 2. **dp2_8s_pf512** — TESTED. HOLD (best tied, median tied). May be optimal on judge bare metal.
