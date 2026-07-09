@@ -5,3 +5,4 @@ bench_parsers
 *.o
 *.out
 .expected_*
+champion/prog
