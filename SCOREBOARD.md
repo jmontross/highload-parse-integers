@@ -622,14 +622,28 @@ VM state: medium (floor=0.42-0.44s). Champion (dp2_8s_fixed_widen) best=0.078s =
 STOP-FLOOR ×67 confirmed. No new algorithmic ideas — all angles exhausted.
 **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best today). Expected judge time: ~60-75ms (fast-VM local best 0.067s → ~60ms judge, clears rank-18 bar).
 
+## Run log 2026-07-10 (scheduled run ×68-70)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fixed_widen | OK | 0.0770-0.0780 | 0.0790-0.0830 | — | Edge: 9/9. STOP-FLOOR ×68-70. Floor=0.316-0.447s (medium VM). |
+| dp2_8s_fixed_3072 | HOLD | 0.0770 | 0.0770-0.0780 | tied best, median lower | NEW 2026-07-10. Double-loop structure (same as champion) + 3072B prefetch distance (vs champion's 4096B). Consistently tied or 1ms faster than champion best; median 0.077s vs champion 0.079-0.083s (lower). Gate threshold: need ≤0.0758s for 1.5% margin; got 0.0770s — misses by 0.001s. HOLD. On fast-VM days (floor>0.4s) where 3072B historically outperformed 4096B by 6%, this variant may gate. Best judge candidate alongside current champion. |
+
+VM state: medium (floor=0.316-0.447s). Champion best 0.077-0.078s = 1.54-1.56 ns/line. Two RUNS=5 runs both confirm STOP-FLOOR. All dp2 variants cluster 0.077-0.085s within noise.
+dp2_8s_fixed_3072 ranks #1 in the listing but misses the 1.5% gate — consistent with bandwidth-bound operating point where all dp2 variants are within ~10% of each other.
+Compiler sweep today: g++-13 -Ofast -march=native -funroll-loops → 0.077s best.
+STOP-FLOOR ×68-70 confirmed. All angles exhausted (Changes A and B both implemented; all prefetch distances, loop structures, stream counts tried).
+**SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.067-0.078s VM-dependent); fast-VM clears rank-18 bar (69.3ms). **PRIORITY.**
-2. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Best judge candidate alongside current champion.
-3. **dp2_8s_pf2560/pf_double/unify_stop** — All HOLD at 0.0810s (0.0002s above gate). Not promotable — would need VM variability or better hardware to flip.
-4. **All other prefetch distances** — 512B–4096B all equivalent on medium VM. None promotable.
-5. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08. Not worth implementing: 819,200 boundary adjustments vs 7, no DRAM bank benefit beyond our block-split.
-6. **256-bit pair-PSHUF** — Port-5 not bottleneck; bandwidth-bound conclusion.
-7. **16-stream** — GPR register spill risk; LFBs likely saturated at 8 streams.
-8. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
-9. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference; bandwidth-bound.
-10. **dp2_8s_pf4096_32 / dp2_8s_pf3072_32** — DEAD (2026-07-09): +32 split-prefetch adds overhead without benefit; HW prefetcher already covers both 32B sub-loads.
+2. **dp2_8s_fixed_3072** (NEW 2026-07-10) — double-loop + 3072B. Consistently tied or 1ms faster than champion; lower median. Best judge candidate if 3072B proves better on judge's bare metal (as it was on this VM's fast days). Submit alongside champion/main.cpp.
+3. **dp2_8s_stop_pf3072** — In variants/. Was champion. On fast VM 3072B was 6% better than 4096B. Third judge candidate.
+4. **dp2_8s_pf2560/pf_double/unify_stop** — All HOLD at ~0.081s. Not promotable.
+5. **All other prefetch distances** — 512B–4096B all equivalent on medium VM. None promotable.
+6. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08. Not worth implementing: 819,200 boundary adjustments vs 7, no DRAM bank benefit beyond our block-split.
+7. **256-bit pair-PSHUF** — Port-5 not bottleneck; bandwidth-bound conclusion.
+8. **16-stream** — GPR register spill risk; LFBs likely saturated at 8 streams.
+9. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
+10. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference; bandwidth-bound.
+11. **dp2_8s_pf4096_32 / dp2_8s_pf3072_32** — DEAD (2026-07-09): +32 split-prefetch adds overhead without benefit; HW prefetcher already covers both 32B sub-loads.
