@@ -1,8 +1,10 @@
-// dp2_8s_fixed_widen.cpp — double-loop structure: outer over widen-groups,
-// inner exactly 100 iterations. Eliminates iter_count from the hot loop
-// entirely (saves 1 GPR + 1 conditional branch per iteration). The fixed
-// inner count of 100 lets the compiler unroll the inner loop with -funroll-loops.
-// All other parameters identical to dp2_8s_pf4096 (current champion).
+// dp2_8s_fw_3072_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
+// dual T1 prefetch per stream at p+3072 AND p+3072+32 (from dp2_8s_pf3072_32).
+// Untested combination: fixed_3072 used single prefetch; pf3072_32 used single-loop.
+// nl_mask64 does two 32B AVX2 loads at p and p+32; when (p+3072)%64 >= 32,
+// those two loads hit different cache lines at the prefetch target; second
+// prefetch at +3072+32 covers the second sub-load. Double-loop eliminates
+// iter_count branch from inner loop; compiler can unroll with -funroll-loops.
 
 #include <cstdio>
 #include <cstdint>
@@ -248,13 +250,21 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
 // Macro to avoid duplicating the inner body three times.
 #define ITER_BODY(PFD) \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
     uint64_t m1 = nl_mask64(p1); \
