@@ -1,9 +1,11 @@
-// dp2_8s_stop_pf3072.cpp — dp2_8s_unify_stop + T1 prefetch at 3072B per stream.
-// Combines: unified loop counter (fewer GPR spills) + longer prefetch distance.
-// Hypothesis: the two optimizations may compound on this VM state.
-// Eliminates s0..s7 from live variables (7 fewer live GPRs in main loop):
-// current live count ≈25 GPRs → ≈18, reducing stack spills from ~10 to ~3.
-// Each removed stack load saves ~4cy; ~7 loads × 4cy = 28cy per iteration.
+// dp2_8s_pf3072_32.cpp — stop_pf3072 + second prefetch at +32 per stream.
+// nl_mask64 makes two 32-byte AVX2 loads: at p and p+32. When (p+3072)%64 >= 32,
+// these two loads hit DIFFERENT cache lines at the prefetch target — a single
+// prefetch at p+3072 misses the second 32B ~50% of iterations.
+// Second prefetch at p+3072+32 covers the second AVX2 load correctly.
+// dp2_8s_pf_double used +3072+64 (next window), NOT +3072+32 (second half of SAME window).
+// dp2_8s_stop_pf3072 is better on fast-VM days (vs champion's 4096B); combining
+// with +32 coverage may give marginal benefit on those same fast-VM runs.
 // Safety: safe_iters derived from the SHORTEST segment; all streams safe.
 
 #include <cstdio>
@@ -294,21 +296,21 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t n = safe_iters; __builtin_expect(n > 0, 1); --n) {
             _mm_prefetch((const char*)(p0 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p0 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p1 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p1 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p2 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p2 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p3 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p3 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p4 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p4 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p5 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p5 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p6 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p6 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 3072 + 32), _MM_HINT_T1);
             _mm_prefetch((const char*)(p7 + 3072), _MM_HINT_T1);
-            _mm_prefetch((const char*)(p7 + 3072 + 64), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 3072 + 32), _MM_HINT_T1);
 
             uint64_t m0 = nl_mask64(p0);
             uint64_t m1 = nl_mask64(p1);
