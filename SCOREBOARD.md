@@ -635,6 +635,19 @@ Compiler sweep today: g++-13 -Ofast -march=native -funroll-loops → 0.077s best
 STOP-FLOOR ×68-70 confirmed. All angles exhausted (Changes A and B both implemented; all prefetch distances, loop structures, stream counts tried).
 **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×72)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fixed_widen | OK | 0.0770-0.0790 | 0.0790-0.0820 | — | Edge: 9/9. STOP-FLOOR ×72. Floor=0.421-0.527s (fast VM). |
+| dp2_8s_fixed_3072 | HOLD | 0.0770-0.0780 | 0.0770-0.0790 | tied best, median ≈equal | Consistently tied or 1ms faster on best; median tied or slightly lower. Gate: need ≤0.0778s (1.5%), gets 0.0780s — misses by 0.0002s. Lower median confirms more consistent performance. HOLD. |
+
+VM state: fast (floor=0.421-0.527s). Champion best 0.077-0.079s = 1.54-1.58 ns/line. RUNS=3 and RUNS=5 both confirm STOP-FLOOR. All dp2 variants cluster 0.077-0.090s within noise.
+Compiler sweep on champion today: `g++ -Ofast -march=native -funroll-loops → 0.080s`, `g++-13 -Ofast → 0.080s`, `clang++ -O3 → 0.088s`. g++ consistently wins.
+Compiler sweep on dp2_8s_fixed_3072: same cluster (0.080-0.083ms), no clear advantage over champion.
+STOP-FLOOR ×72 confirmed. All algorithmic, prefetch, and loop-structure angles are fully exhausted.
+**SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
+
 ## Run log 2026-07-10 (scheduled run ×71)
 
 | Variant | Result | Best(s) | Med(s) | vs champ best | Note |
