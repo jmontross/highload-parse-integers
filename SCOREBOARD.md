@@ -391,15 +391,15 @@ Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+h
 - **5-window loop** (`avx2_5window`) — HOLD. Ties champion best (0.1790s) but 0% Δbest — gate requires ≥1.5%. Median 0.1850s vs champion 0.1890s (lower). No improvement over quad_window. Confirms MLP saturation at ~4 concurrent mask loads.
 - **8-window loop** (`avx2_8window`) — WAS DEAD (3.4% slower at 0.1850s vs 0.1790s in noisy VM run). **RE-TESTED 2026-07-06: NOW CHAMPION** (0.1460s vs quad_window 0.1540s, better VM state). I-cache pressure concern was overestimated; today's measurements show 8-window consistently better.
 
-## Status: STOP-FLOOR (2026-07-10, confirmed ×79+)
+## Status: STOP-FLOOR (2026-07-10, confirmed ×80+)
 Champion (dp2_8s_fw_3072_32) best=**0.056-0.091s** (VM-state dependent) on local x86.
 Champion is ~3-10× FASTER than cat (mmap+hugepage bypasses kernel read path). Fast VM floor: 0.056-0.080s; medium VM floor: 0.223s; slow VM floor: 0.540-0.690s.
 **NEW local best-ever: 0.056s (2026-07-10 fast VM, same-code variant measurement).**
-**index.html: champion=69.0ms — AT rank-18 bar (69.3ms); clears on fast-VM runs.** Ready to submit.
+**index.html: champion=77ms on medium-fast VM; clears rank-18 bar (69.3ms) on fast-VM runs.** Ready to submit.
 - dp2_8s_pf4096_double (2026-07-09): DEAD — 16 prefetch µops/iter (vs 8) adds ~4cy overhead/iteration; not offset by better cache-line coverage. At bandwidth-bound operating point (~250cy DRAM), prefetch overhead visible as 1.22% slowdown.
 - **Current champion: dp2_8s_fw_3072_32** — double-loop + dual T1 prefetch per stream at p_i+3072 AND p_i+3072+32. Promoted 2026-07-10 run ×79: gate fired (10% margin vs pf2048 champion; edge 9/9); confirmation STOP-FLOOR ×79. All dp2 variants within noise of each other.
-- Best local: **0.091s** (today, fast VM g++ -O3), **0.067s** best-ever (2026-07-08 fast VM)
-- Best-ever any compiler on this codebase: **0.067s** fast VM (dp2_8s_stop_pf3072 with g++ -O3 -march=native)
+- Best local: **0.077s** (2026-07-10 medium-fast VM), **0.056s** best-ever (2026-07-10 fast VM, same-code noise measurement)
+- Best-ever confirmed: **0.067s** fast VM (2026-07-08, dp2_8s_stop_pf3072 with g++ -O3 -march=native)
 - SW prefetch confirmed essential (dp2_8s_nopf 7% slower) — HW prefetcher cannot track 8 streams 65MB apart.
 - dp2_8s_pf512 (512B per stream) ties champion; may be optimal on judge bare metal (lower DRAM latency).
 - dp2_8s_2w (2 windows per stream = 16 outstanding loads) is 8.8% SLOWER — larger loop body I-cache pressure.
@@ -407,7 +407,7 @@ Champion is ~3-10× FASTER than cat (mmap+hugepage bypasses kernel read path). F
 - Why MADV_COLLAPSE: kernel 6.18.5 folds file-backed MAP_PRIVATE pages to 2MB huge pages. Zero STLB misses.
 - Why subtract-based detection: eliminates set1('\\n') constant, shares set1('0') with PSHUF, ~2% register pressure reduction.
 - Assembly analysis (2026-07-08): compiler uses AVX-512 extended registers (ymm21, xmm22) on SPR to reduce GPR spilling across 8-stream loop. tree6 is linearized to chain (5 serial VPADDB) vs balanced tree (3 levels) — but hidden by DRAM latency. GPR register pressure: 8 p_i + 8 b_i + 8 s_i > 16 GPRs → some spilling unavoidable, but hidden by ~300cy DRAM latency per iteration.
-- **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today: 0.091s).
+- **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today: 0.077s).
   Expected judge time: ~69-75ms (best-VM scaling). Note: MADV_COLLAPSE silently no-ops on kernels that don't support it.
 - Conclusion: pshufb digit-place + 8 independent spatial streams + mmap hugepages + subtract-based newline detection = optimal.
 - All reasonable angles exhausted: 16-stream (register spill risk), 2w-per-stream (dead, I-cache pressure),
@@ -418,8 +418,9 @@ Champion is ~3-10× FASTER than cat (mmap+hugepage bypasses kernel read path). F
   dp2_8s_twoaccum (two independent u16 accumulators for streams 0-3 / 4-7: DEAD, 3% slower — port-5 vpaddw reduction irrelevant when bandwidth-bound),
   dp2_8s_pf2048 retested vs dp2_8s_subdetect (HOLD, best=0.082s vs champ 0.083s, gate needs ≤0.0817s — just above threshold),
   dp2_8s_fixed_widen (2026-07-09: double-loop structure eliminates iter_count from hot loop — DEAD, 3.3% SLOWER; iter_count overhead hidden by DRAM latency, double-loop changes scheduling unfavorably),
-  dp2_8s_t2_4096 (2026-07-09: _MM_HINT_T2 LLC prefetch vs T1 L2 at 4096B — DEAD/HOLD, no measurable difference; bandwidth-bound).
-- **STOP-FLOOR confirmed ×79+ as of 2026-07-10.** Champion dp2_8s_fw_3072_32 at 0.063-0.091s best (VM state dependent). All angles exhausted.
+  dp2_8s_t2_4096 (2026-07-09: _MM_HINT_T2 LLC prefetch vs T1 L2 at 4096B — DEAD/HOLD, no measurable difference; bandwidth-bound),
+  dp2_8s_fw_2048_32 (2026-07-10: double-loop + dual T1 at 2048B and 2048B+32, HOLD — ties champion best at 0.077s, median 0.080s > champion 0.079s; fills gap between single-loop pf2048 and double-loop fw_3072_32, confirms distance is not the differentiator).
+- **STOP-FLOOR confirmed ×80+ as of 2026-07-10.** Champion dp2_8s_fw_3072_32 at 0.063-0.091s best (VM state dependent). All angles exhausted.
 
 ## Run log 2026-07-08 (continuation)
 
@@ -729,8 +730,21 @@ Compiler sweep (confirmation, floor=0.548s): **g++ -O3 -march=native → 0.066s*
 STOP-FLOOR ×79 confirmed. All algorithmic, prefetch, dual-prefetch, loop-structure, and stream-count angles fully exhausted.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today). Or `g++ -Ofast -march=native -funroll-loops` (best on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×80)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_3072_32 | OK | 0.0770 | 0.0790 | — | Edge: 9/9. STOP-FLOOR ×80. Floor=0.385s (medium-fast VM). Champion 5.0× faster than cat. |
+| dp2_8s_fw_2048_32 | HOLD | 0.0770 | 0.0800 | tied best, median HIGHER | NEW 2026-07-10. Double-loop + dual T1 at 2048B and 2048B+32 per stream. Fills last gap: champion uses 3072B dual, pf2048 uses 2048B single. Best=0.0770s = tied champion; median=0.0800s > champion 0.0790s → HOLD (need both conditions). RUNS=3 fired a false PROMOTE for dp2_8s_fixed_3072 (VM oscillation artifact); RUNS=5 showed STOP-FLOOR. 2048B dual-prefetch distance equivalent to 3072B — confirms bandwidth-bound conclusion across the full prefetch distance × loop-structure grid. |
+
+VM state: medium-fast (floor=0.385s). Champion best 0.077s = 1.54 ns/line. dp2_8s_fw_2048_32 ties champion best but loses on median.
+RUNS=3 false PROMOTE (VM oscillation → dp2_8s_fixed_3072 at 0.077s): standard VM noise, RUNS=5 corrects to STOP-FLOOR.
+Compiler sweep not run (SWEEP=0). All dp2 variants cluster 0.077-0.084s within noise.
+STOP-FLOOR ×80 confirmed. **All prefetch-distance × loop-structure combinations now fully exhausted.**
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today 0.077s). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.063-0.069s VM-dependent); fast-VM best 0.056s → judge ~55ms. **PRIORITY.**
+1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.063-0.077s VM-dependent); fast-VM best 0.056s → judge ~55ms. **PRIORITY.**
 2. **dp2_8s_fixed_3072** — Superseded. Within noise. All dp2 variants equivalent.
 3. **dp2_8s_pf3072_32** — Superseded. Within noise.
 4. **dp2_8s_stop_pf3072** — In variants/. Was champion 2026-07-08.
@@ -742,4 +756,5 @@ STOP-FLOOR ×79 confirmed. All algorithmic, prefetch, dual-prefetch, loop-struct
 10. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
 11. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference.
 12. **dp2_8s_pf4096_32** — DEAD (2026-07-09): +32 split-prefetch at 4096B adds overhead without benefit.
-13. All 95+ variants and all structural angles (loop, prefetch, streams, I/O, compiler) are exhausted. Algorithm is at bandwidth ceiling.
+13. **dp2_8s_fw_2048_32** — HOLD (2026-07-10): double-loop + dual 2048B prefetch, tied champion best, median higher.
+14. All 96+ variants and all structural angles (loop, prefetch, streams, I/O, compiler) are exhausted. Algorithm is at bandwidth ceiling.
