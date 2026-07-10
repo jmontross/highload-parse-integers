@@ -755,19 +755,23 @@ Compiler sweep (RUNS=3): **g++ -O3 -march=native → 0.078s** best. All dp2 vari
 STOP-FLOOR ×81 confirmed. 1-ahead interleave angle exhausted. OOO engine fully handles overlap without hints.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today 0.078s). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×82)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_3072_32 | OK | 0.0930 | 0.0970 | — | Edge: 9/9. STOP-FLOOR ×82. Floor=0.324s (medium-slow VM). Champion 3.5× faster than cat. |
+| dp2_8s_fw_3072_64 | HOLD | 0.0920 | 0.0950 | best 1.1% lower (need ≤0.0916s; got 0.0920s) | NEW 2026-07-10. Double-loop + dual T1 at p+3072 AND p+3072+64 per stream (vs champion's +3072+32). The +64 targets the NEXT 64B aligned cache line after the prefetch window (same geometry as dp2_8s_pf_double which was PROMOTED). Practice: best=0.0920s, gate needs ≤0.0916s — misses by 0.0004s. Median 0.0950s < champ 0.0970s (lower, but best condition fails). HOLD. All prefetch-distance × offset combinations confirmed bandwidth-bound. |
+| dp2_8s_fw_4096_32 | HOLD | 0.0930 | 0.1010 | tied champion best, median HIGHER | NEW 2026-07-10. Double-loop + dual T1 at p+4096 AND p+4096+32 per stream. Fills last grid point (dp2_8s_pf4096_32 existed but used single-loop; this adds double-loop). Practice: best=0.0930s tied champion; median=0.1010s > champion 0.0970s → clear HOLD. Double-loop does not help at 4096B distance. |
+
+VM state: medium-slow (floor=0.324s). Champion best 0.093s = 1.86 ns/line. All dp2 variants cluster 0.092-0.103s within noise.
+Both new variants join the HOLD cluster (within 1.1% of champion, below the 1.5% gate). Fills the last two grid points: double-loop × {3072+64B, 4096+32B} — all combinations now exhausted.
+Compiler sweep today: **g++ -O3 -march=native → 0.093s** best (same as champion).
+STOP-FLOOR ×82 confirmed. **All 99+ variants and all structural combinations (loop×prefetch-distance×offset×streams×accumulation×I/O) are exhausted.**
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today). Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms, clears rank-18 bar 69.3ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.063-0.077s VM-dependent); fast-VM best 0.056s → judge ~55ms. **PRIORITY.**
-2. **dp2_8s_fixed_3072** — Superseded. Within noise. All dp2 variants equivalent.
-3. **dp2_8s_pf3072_32** — Superseded. Within noise.
-4. **dp2_8s_stop_pf3072** — In variants/. Was champion 2026-07-08.
-5. **dp2_8s_pf2048** — Promoted then superseded ×78; within noise.
-6. **All other prefetch distances** — 512B–4096B all equivalent on medium VM. None promotable.
-7. **Page-interleaving (Stuchlik's original)** — ANALYZED 2026-07-08. Not worth implementing.
-8. **256-bit pair-PSHUF** — Port-5 not bottleneck; bandwidth-bound conclusion.
-9. **16-stream** — GPR register spill risk; LFBs likely saturated at 8 streams.
-10. **LUT-based Stuchlik pshufb** — CTZ chain (~12cy) << DRAM latency (250cy); not expected to win.
-11. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference.
-12. **dp2_8s_pf4096_32** — DEAD (2026-07-09): +32 split-prefetch at 4096B adds overhead without benefit.
-13. **dp2_8s_fw_2048_32** — HOLD (2026-07-10): double-loop + dual 2048B prefetch, tied champion best, median higher.
-14. **dp2_8s_fw_il** — HOLD (2026-07-10 run ×81): 1-ahead interleaved mask+process with double-loop + dual T1 prefetch. 5% slower than champion. OOO engine already handles overlap; explicit interleaving adds no benefit.
-15. All 97+ variants and all structural angles (loop, prefetch, streams, I/O, compiler, interleave) are exhausted. Algorithm is at bandwidth ceiling.
+1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.056-0.093s VM-dependent); fast-VM best 0.056s → judge ~55ms. **PRIORITY.**
+2. All 99+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
+3. **dp2_8s_fw_3072_64** — HOLD (2026-07-10 ×82): double-loop + dual T1 at 3072+64B; 1.1% below gate.
+4. **dp2_8s_fw_4096_32** — HOLD (2026-07-10 ×82): double-loop + dual T1 at 4096+32B; tied champion best, median higher.
+5. All dp2_8s prefetch distance × offset × loop-structure combinations now fully exhausted (grid: {512,1024,1536,2048,2560,3072,4096}B × {single, +0, +32, +64}B offset × {single-loop, double-loop}).
