@@ -635,6 +635,21 @@ Compiler sweep today: g++-13 -Ofast -march=native -funroll-loops → 0.077s best
 STOP-FLOOR ×68-70 confirmed. All angles exhausted (Changes A and B both implemented; all prefetch distances, loop structures, stream counts tried).
 **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (best on fast-VM days). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×71)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fixed_widen | OK | 0.0780 | 0.0780 | — | Edge: 9/9. STOP-FLOOR ×71. Floor=0.081s (FAST VM). Champion 3.7% FASTER than cat — mmap bypass. |
+| dp2_8s_pf4096 | HOLD | 0.0820 | 0.0820 | 5.1% slower | Previous champion variant. On this fast VM, fixed_widen wins clearly. |
+| dp2_8s_fixed_3072 | HOLD | 0.0780 | 0.0790 | tied best | Double-loop + 3072B: tied champion best (0.078s), median 0.079s > champion 0.078s. Below gate. |
+| dp2_8s_stop_pf3072 | HOLD | 0.0810 | 0.0820 | 3.8% slower | On this VM state, 4096B (champion) beats 3072B. |
+
+VM state: FAST (floor=0.081s min). Champion best 0.0780s = 1.56 ns/line. Champion is 0.003s FASTER than cat (mmap+hugepage bypasses kernel read path entirely). All dp2 variants: 0.078s-0.082s within noise.
+Compiler sweep: g++-13 -Ofast -march=native -funroll-loops → 0.078s (best). g++ -O3 → 0.084s. clang++ → 0.085-0.088s. g++ consistently wins on this champion code.
+STOP-FLOOR ×71 confirmed. Champion 0.078s < 2×floor 0.081s = 0.162s — at bandwidth ceiling.
+No new variants attempted — all algorithmic, prefetch, and loop-structure angles are fully exhausted (Changes A and B from directive, all prefetch distances 512B-4096B, stream counts 4/8, loop structures, I/O strategies).
+**SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`** (0.078s local best today). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.067-0.078s VM-dependent); fast-VM clears rank-18 bar (69.3ms). **PRIORITY.**
 2. **dp2_8s_fixed_3072** (NEW 2026-07-10) — double-loop + 3072B. Consistently tied or 1ms faster than champion; lower median. Best judge candidate if 3072B proves better on judge's bare metal (as it was on this VM's fast days). Submit alongside champion/main.cpp.
