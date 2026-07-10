@@ -805,7 +805,21 @@ VM state: medium-fast (floor=0.226s initial RUNS=3) → medium (floor=0.506s con
 STOP-FLOOR ×85 confirmed. index.html: champion=75.0ms, 1.1× off rank-18 bar.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (best today 0.075s). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×86)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| prior champion dp2_8s_fixed_widen | SUPERSEDED (initial) | 0.0950 | 0.0980 | — | Run ×86 initial RUNS=3 baseline. Floor=0.2620s (medium-slow VM). |
+| dp2_8s_fw_2048_32 | PROMOTE (RUNS=3) | 0.0910 | 0.0930 | 4.2% margin | Gate fired: best=0.091s vs champion 0.095s → 4.2% margin, median 0.093s < 0.098s. Edge 9/9. Promoted to champion. |
+| dp2_8s_fw_2048_32 (now champion) | STOP-FLOOR (RUNS=5 confirmation) | 0.0920 | 0.1010 | — | Confirmation (floor=0.3720s): champion best=0.092s; best variant (same code) best=0.091s (need ≤0.0906s; misses by 0.0004s), median 0.094s vs champ 0.101s (lower). STOP-FLOOR ×86. Compiler sweep: g++ -O3 → 0.092s best; **g++-13 -Ofast -funroll-loops → WRONG output (compiler bug with dual-prefetch ITER_BODY + -funroll-loops)**. |
+| dp2_8s_fixed_widen | RE-PROMOTED (reverted) | — | — | — | dp2_8s_fw_2048_32 promoted but REVERTED: (1) was previously HOLD on ×80 (tied best, median HIGHER → standard VM oscillation); (2) g++-13 -Ofast -funroll-loops gives WRONG output — unsafe for judge submission if g++-13 flags used; (3) dp2_8s_fixed_widen is correct on ALL compilers including g++-13 -Ofast -funroll-loops. Reverted champion/main.cpp to dp2_8s_fixed_widen. |
+
+VM state: medium-slow (floor=0.262-0.372s across RUNS=3/RUNS=5). dp2_8s_fw_2048_32 promoted then reverted. Root cause: VM oscillation (×80 showed HOLD for same variant); g++-13 correctness issue with dual-prefetch ITER_BODY (16 prefetch calls) + -Ofast -funroll-loops.
+**Current champion: dp2_8s_fixed_widen** (re-restored). Best compiler: `g++ -Ofast -march=native -funroll-loops` → ~0.075-0.078s.
+STOP-FLOOR ×86 confirmed. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (correct on all compilers). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
 2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
 3. All dp2_8s prefetch distance × offset × loop-structure combinations now fully exhausted (grid: {512,1024,1536,2048,2560,3072,4096}B × {single, +0, +32, +64}B offset × {single-loop, double-loop}).
+4. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B) is a VM-oscillation variant: HOLD ×80, PROMOTE ×86, reverted. Has g++-13 -Ofast -funroll-loops bug. Do not promote again without verifying g++-13 correctness first.
