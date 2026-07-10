@@ -743,6 +743,18 @@ Compiler sweep not run (SWEEP=0). All dp2 variants cluster 0.077-0.084s within n
 STOP-FLOOR ×80 confirmed. **All prefetch-distance × loop-structure combinations now fully exhausted.**
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today 0.077s). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-10 (scheduled run ×81)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_3072_32 | OK | 0.0790 | 0.0810 | — | Edge: 9/9. STOP-FLOOR ×81. Floor=0.272s min/0.509s median (slow-medium VM). |
+| dp2_8s_fw_il | HOLD | 0.0830 | 0.0890 | 5% slower | NEW 2026-07-10. Double-loop + dual T1 at 3072B+32B + TRUE 1-ahead interleaved mask+process: m[i] computed, m[i+1] loaded, process(m[i]) runs — theory: AVX2 loads (ports 2/3) for m[i+1] overlap integer processing (ports 0/1/5) for r[i]. Result: HOLD (0.083s > champion 0.079s). OOO engine already achieves this overlap in champion's all-masks-then-all-process structure. No benefit from explicit interleaving. |
+
+VM state: slow-medium (floor=0.272-0.509s, wide jitter). Champion best 0.079s = 1.58 ns/line. dp2_8s_fw_il 5% slower — explicit mask+process interleaving adds no benefit over champion's bulk structure.
+Compiler sweep (RUNS=3): **g++ -O3 -march=native → 0.078s** best. All dp2 variants 0.079-0.102s within noise.
+STOP-FLOOR ×81 confirmed. 1-ahead interleave angle exhausted. OOO engine fully handles overlap without hints.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today 0.078s). Expected judge time: ~60-75ms.
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.063-0.077s VM-dependent); fast-VM best 0.056s → judge ~55ms. **PRIORITY.**
 2. **dp2_8s_fixed_3072** — Superseded. Within noise. All dp2 variants equivalent.
@@ -757,4 +769,5 @@ STOP-FLOOR ×80 confirmed. **All prefetch-distance × loop-structure combination
 11. **dp2_8s_t2_4096** — DEAD (2026-07-09): T2 (LLC) vs T1 (L2) makes no measurable difference.
 12. **dp2_8s_pf4096_32** — DEAD (2026-07-09): +32 split-prefetch at 4096B adds overhead without benefit.
 13. **dp2_8s_fw_2048_32** — HOLD (2026-07-10): double-loop + dual 2048B prefetch, tied champion best, median higher.
-14. All 96+ variants and all structural angles (loop, prefetch, streams, I/O, compiler) are exhausted. Algorithm is at bandwidth ceiling.
+14. **dp2_8s_fw_il** — HOLD (2026-07-10 run ×81): 1-ahead interleaved mask+process with double-loop + dual T1 prefetch. 5% slower than champion. OOO engine already handles overlap; explicit interleaving adds no benefit.
+15. All 97+ variants and all structural angles (loop, prefetch, streams, I/O, compiler, interleave) are exhausted. Algorithm is at bandwidth ceiling.
