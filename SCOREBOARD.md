@@ -862,6 +862,25 @@ Compiler sweep: g++ -Ofast -march=native -funroll-loops → **0.078s** best; g++
 **All grid points now fully exhausted. STOP-FLOOR ×89 confirmed.**
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (0.078s today). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-11 (scheduled run ×90)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.074 | 0.076 | — | RUNS=3, floor=0.182s min/0.428s median (medium-fast VM). Edge 9/9. |
+| dp2_8s_fw_2048_32 | HOLD | 0.073 | 0.075 | best 1.4% lower (need ≤0.0729s; got 0.073) | Misses gate by 0.0001s. g++-13 -Ofast correctness bug persists — cannot promote even if it gates. |
+| dp2_8s_fw_3072_64 | HOLD | 0.073 | — | tied | Cluster with fw_2048_32. No improvement over champion. |
+| dp2_8s_fw_4096_32 | HOLD | 0.073 | — | tied | Cluster. |
+| dp2_8s_pf3072_32 | HOLD | 0.073 | — | tied | Cluster. |
+| dp2_8s_pf4096_double | HOLD | 0.073 | — | tied | Cluster. |
+| dp2_8s_pf_double | HOLD | 0.073 | — | tied | Cluster. |
+| dp2_8s_subdetect | HOLD | 0.073 | — | tied | Cluster. |
+| dp2_8s_u8tree | WRONG | — | — | — | 4-way u8 tree overflows u8 (4×72=288>255). Dead end. |
+
+VM state: medium-fast (floor=0.182s min / 0.428s median). Champion dp2_8s_fixed_widen 0.074s is 2.5× faster than cat. STOP-FLOOR ×90 confirmed.
+Six variants tie at 0.073s best but all miss the promotion gate (need ≤0.0729s from 0.074 champion; dp2_8s_fw_2048_32 misses by 0.0001s and has an -Ofast correctness bug). All dp2_8s variants cluster 0.073-0.084s within noise. Grid fully exhausted ×2.
+**STOP-FLOOR ×90 confirmed. Memory bandwidth ceiling reached. No further algorithmic wins available without new hardware.**
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
 2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
