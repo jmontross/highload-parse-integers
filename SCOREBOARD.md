@@ -881,6 +881,20 @@ Six variants tie at 0.073s best but all miss the promotion gate (need ≤0.0729s
 **STOP-FLOOR ×90 confirmed. Memory bandwidth ceiling reached. No further algorithmic wins available without new hardware.**
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
 
+## Run log 2026-07-11 (scheduled run ×91)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0790 | 0.0800 | — | RUNS=3, floor=0.404s min/0.487s median (slow-medium VM). Edge 9/9. Champion 5.1× faster than cat. |
+| dp2_8s_4acc | HOLD/same | 0.0790 | 0.0800 | 0% margin (tied) | NEW 2026-07-11. 4 independent u16 accumulators (one per stream pair) to break the champion's 4-cycle serial add_epi16 chain. Theory: 4 concurrent add_epi16 ops (1 cycle effective) vs champion's 4 serial (4 cycles). Practice: TIED on both best and median. The serial accumulation chain is NOT on the critical path — the OOO engine already overlaps the 1-cycle-latency add chain with other work (memory loads, process_window_dp). Dead end: accumulation structure cannot be improved. |
+| dp2_8s_2w_fixed | DEAD | 0.0900 | 0.0940 | 14% SLOWER | NEW 2026-07-11. 2 windows per stream + double-loop (inner=50). Double-loop structure (from champion) applied to dp2_8s_2w (which used single-loop + iter_count). 16 outstanding cache-miss requests vs champion's 8. Practice: 14% SLOWER. Root cause: 2-window body has 2× the register pressure (16 mask vars + 16 result vars + 8 prefetches vs 8/8/8), spilling to stack. Also: inner=50 gives same overflow budget as champion's inner=100 but halves the unroll depth for -funroll-loops. The extra register pressure and reduced unroll outweigh any MLP benefit (already at bandwidth ceiling). Dead end. |
+
+VM state: slow-medium (floor=0.404s min / 0.487s median). Champion 0.079s = 1.58 ns/line; 5.1× faster than cat.
+dp2_8s_4acc: accumulation structure is NOT the bottleneck. The 4-cycle serial add_epi16 chain (add_epi16 latency=1, throughput=0.5) is already covered by the OOO engine's ability to execute other operations while waiting. Adding 4 independent registers achieves no speedup — confirms accumulation is off the critical path.
+dp2_8s_2w_fixed: 2-window per stream approach has too much register pressure on x86-64's 16 GPRs (8 p-pointers + 8 b-pointers + loop counter = 17+ GPRs → forced stack spills). dp2_8s_2w (single-loop) also suffers the same issue. The 8-stream × 1-window structure of the champion is the optimal fit for x86-64 register file.
+STOP-FLOOR ×91 confirmed. All structural dimensions (accumulation parallelism, window count, stream count, prefetch, loop structure) now fully exhausted.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
 2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
@@ -888,3 +902,5 @@ Six variants tie at 0.073s best but all miss the promotion gate (need ≤0.0729s
 4. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B) is a VM-oscillation variant: HOLD ×80, PROMOTE ×86, reverted. Has g++-13 -Ofast -funroll-loops bug. Do NOT promote.
 5. dp2_8s_fw_4096_64 (double-loop + dual T1@4096+64B): HOLD ×89 — last grid point, no improvement. Grid complete.
 6. dp2_8s_u8tree (WRONG) is a dead end — 4-way u8 tree overflows; 2-way pair is the maximum safe tree depth at u8 before widening.
+7. dp2_8s_4acc (HOLD ×91) — 4 independent accumulators: accumulation NOT the bottleneck. OOO handles 1-cycle chain without help.
+8. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream + double-loop: register pressure causes stack spills, 14% slower. Window count × stream count grid exhausted.
