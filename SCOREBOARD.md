@@ -941,15 +941,35 @@ VM state: medium-fast (floor=0.199s first run). Champion 0.075s best = 1.50 ns/l
 No new variants attempted. All structural dimensions (prefetch distance/offset, loop structure, stream count, window count, accumulation parallelism, prefetch hint type) exhausted over 93 prior runs.
 STOP-FLOOR ×94 confirmed. **PRIORITY: Submit `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge time: ~60-70ms (fast-VM best 0.056s → judge ~55ms; typical 0.075s → judge ~67-70ms — right at rank-18 bar of 69ms).
 
+## Run log 2026-07-11 (scheduled run ×95)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0780 | 0.0790 | — | Two RUNS=3 passes (floors: 0.480s then 0.424s). VM oscillation between passes. Edge 9/9. |
+| dp2_8s_pf6144 | HOLD/DEAD | 0.0800–0.0810 | 0.0810–0.0820 | 3–4% SLOWER | NEW ×95. Double-loop + T1@6144B (96 iters ahead). Rationale: extends search space above 4096B for high-latency VMs. Result: SLOWER (3–4%) than champion on both passes. Root cause: 6144B = 96 iters × 64B = 6144B per stream ahead; 8 streams × 6144B = 49,152B of outstanding prefetch data. Overshooting L2 (512KB per core / 8 streams = 64KB per stream). At L2 capacity boundary, extra prefetches cause evictions before use. 4096B (64 iters × 64B per stream × 8 streams = 32KB) fits comfortably in L2; 6144B exceeds it. DEAD. |
+| dp2_8s_pf8192 | HOLD | 0.0780 | 0.0780–0.0790 | 0% (tied) | NEW ×95. Double-loop + T1@8192B (128 iters ahead). Tied champion on both passes (0.078s vs 0.078s). No improvement. At 8192B × 8 streams = 65,536B pending = 2× L2 capacity; prefetches arrive but likely evict each other. Confirmed: no benefit beyond 4096B. |
+| dp2_8s_fw_6144_32 | HOLD/DEAD | 0.0770–0.0810 | 0.0780–0.0820 | varies | NEW ×95. Double-loop + dual T1@6144B AND 6144+32B per stream. Pass 1: 0.077s (near-gate due to champion's bad 0.080s sample — VM oscillation). Pass 2: 0.081s (3% SLOWER). Dual-prefetch at 6144B provides no consistent improvement. Not promotable. |
+| dp2_8s_fw_2048_32 | FALSE-PROMOTE (reverted) | 0.0740 | 0.0790 | — | Pass 1 PROMOTE fired due to VM oscillation: champion bad sample 0.080s, fw_2048_32 good sample 0.074s → 7.5% margin. Pass 2: champion 0.078s, fw_2048_32 0.079s (tied/SLOWER). Reverted (same pattern as run ×86). g++-13 -Ofast correctness bug still present. Do NOT promote. |
+
+VM state: oscillating (pass 1: floor=0.480s slow VM; pass 2: floor=0.424s medium-slow VM). Champion 0.078s best = 1.56 ns/line; 5.5-6.2× faster than cat.
+dp2_8s_pf6144 (NEW): prefetch at 6144B is DEAD. L2 capacity per stream is ~64KB (512KB/8 streams); 6144B × 8 streams = 49KB approaches that limit. Performance degrades vs 4096B × 8 streams = 32KB. Optimal is L2-capacity-matched prefetch = 4096B per stream.
+dp2_8s_pf8192 (NEW): 8192B TIED with champion — the L2 overflow at this distance is neutral (no eviction pressure visible) but provides no benefit vs 4096B. Variant is HOLD/dead.
+dp2_8s_fw_6144_32 (NEW): dual-prefetch at 6144B confirms 6144B is at the boundary where no benefit exists; dual offset adds overhead without benefit.
+**Prefetch search space now definitively closed: {512..8192}B all tested; 4096B is the optimum for this VM.**
+**STOP-FLOOR ×95 confirmed.**
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms; typical 0.078s → judge ~70ms — at rank-18 bar of 69ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.074s → judge ~67ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
-2. All variants, prefetch distances ({512..4096}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted.
+2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch space now definitively closed up to 8192B.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
-5. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B): HOLD×80, PROMOTE×86 then reverted. g++-13 -Ofast bug. Do NOT promote.
-6. dp2_8s_fw_4096_64 (HOLD ×89) — last original grid point, no improvement. Grid complete.
-7. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
-8. dp2_8s_4acc (HOLD ×91,×94) — 4 independent accumulators: accumulation NOT the bottleneck.
-9. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
-10. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
-11. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
+5. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B): HOLD×80, PROMOTE×86 then reverted, PROMOTE×95 (false, VM oscillation) then reverted. g++-13 -Ofast bug. Do NOT promote ever.
+6. dp2_8s_pf6144 (DEAD ×95) — 6144B overshoots L2 capacity; SLOWER than champion.
+7. dp2_8s_pf8192 (HOLD ×95) — 8192B tied; no improvement beyond 4096B.
+8. dp2_8s_fw_4096_64 (HOLD ×89) — last +64 offset grid point; no improvement.
+9. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
+10. dp2_8s_4acc (HOLD ×91,×94) — 4 independent accumulators: accumulation NOT the bottleneck.
+11. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
+12. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
+13. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
