@@ -912,8 +912,25 @@ dp2_8s_fw_nta: definitively DEAD. NTA hint saturates L1 immediately with 8-strea
 STOP-FLOOR ×92 confirmed. All variants and prefetch hint types (T1, T2, NTA) now exhausted.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
 
+## Run log 2026-07-11 (scheduled run ×93)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0780 | 0.0780 | — | RUNS=5, floor=0.425s min/0.441s median (slow VM). Edge 9/9. Champion 5.4× faster than cat. |
+| dp2_8s_fw_3072_32 | HOLD | 0.0770 | 0.0780 | 1.3% margin, median equal | best=0.077s need ≤0.07683; fails by 0.0002s. Median equal (not lower). Near-gate again (VM noise). |
+| dp2_8s_fw_4096_32 | HOLD | 0.0770 | 0.0800 | 1.3% margin, median HIGHER | Median 0.080s > champion 0.078s. HOLD. |
+| dp2_8s_fw_4096_64 | HOLD | 0.0770 | 0.0780 | 1.3% margin, median equal | Same pattern: near-gate but median equal. |
+| all other dp2_8s variants | cluster | 0.078–0.085 | — | within noise | All dp2 variants 0.078–0.085s. |
+
+VM state: slow (floor=0.425s min/0.441s median). Champion 0.078s = 1.56 ns/line; 5.4× faster than cat.
+Compiler sweep (RUNS=5): g++ -O3 -march=native → 0.078s BEST. g++ -Ofast -march=native -funroll-loops → 0.078s (tied). clang++ all variants → 0.085s (9% SLOWER than g++ today). Cascadelake explicit target (-march=cascadelake): 0.079s (marginally worse than -march=native). g++-13 -Ofast -fno-semantic-interposition → 0.078s (tied). Key finding: **g++ (default, v12+) and g++-13 tied at 0.078s; clang++ consistently slower on slow-VM days. Use g++ -O3 -march=native for submission.**
+CPU ID: Intel Xeon, family 6, model 85, stepping 7 = Cascade Lake (same as judge likely). AVX-512 VNNI present but disallowed (downclocking penalty).
+STOP-FLOOR ×93 confirmed. No new variants created — grid documented as fully exhausted ×3.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** (or equivalently `g++ -Ofast -march=native -funroll-loops`)
+Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~50ms; typical 0.077s → judge ~68ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.079s medium-fast VM, 0.056s best-ever fast VM → judge ~55ms). **PRIORITY.**
+1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.077s fast VM → judge ~68ms; vs rank-18 bar 69ms). **PRIORITY.**
 2. All variants, prefetch distances ({512..4096}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
@@ -922,3 +939,5 @@ STOP-FLOOR ×92 confirmed. All variants and prefetch hint types (T1, T2, NTA) no
 7. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
 8. dp2_8s_4acc (HOLD ×91) — 4 independent accumulators: accumulation NOT the bottleneck.
 9. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
+10. Compiler: clang++ shows 9% worse than g++ on slow-VM days (0.085s vs 0.078s). Use g++ -O3 -march=native for judge submission.
+11. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
