@@ -830,8 +830,25 @@ VM state: medium-fast (floor=0.266s). Champion dp2_8s_fixed_widen 0.077s is 3.5�
 No new variants exist to try. The complete variant grid {512,1024,1536,2048,2560,3072,4096}B × {+0,+32,+64}B × {single-loop, double-loop} × {4,8}-stream × dp2 accumulation × mmap/hugepage I/O is fully exhausted.
 **Champion is ready for judge submission.** `g++ -Ofast -march=native -funroll-loops` expected judge ~60-75ms (local best-ever 0.056s fast VM → ~55ms). index.html: champion=77.0ms, 1.1× off rank-18 bar (69.3ms).
 
+## Run log 2026-07-11 (scheduled run ×88)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0910 | 0.0950 | — | RUNS=5, floor=0.477s min/0.525s median (medium-slow VM). Champion best=0.091s, median=0.095s. Edge 9/9. |
+| dp2_8s_u8tree | WRONG | — | — | — | NEW 2026-07-11. Full u8 tree before widening: 6×add_epi8+1×cvtepu8_epi16+1×add_epi16 per ITER_BODY. WRONG because 4-way u8 tree overflows: max per lane = 4 streams × max72 per stream = 288 > 255 (u8 wraps). The existing 2-way pair (r0+r1 → max144) is already the safe maximum depth. Dead end — accumulation structure is already optimal. |
+| dp2_8s_fw_4096_32 | HOLD | 0.0900 | 0.0930 | 1.1% margin (need ≤0.0897s; got 0.0900s) | Best variant this run. Standard VM oscillation: misses gate by 0.0003s. |
+| all other dp2_8s variants | HOLD/cluster | 0.091–0.100 | — | within noise | All dp2 variants cluster 0.090-0.100s within noise. |
+
+VM state: medium-slow (floor=0.477s min / 0.525s median). Champion best 0.091s = 1.82 ns/line; 5.2× faster than cat.
+dp2_8s_u8tree WRONG: the 4-way tree (adding 4 stream results before widening) overflows u8 when per-stream contribution approaches 72 (cnt=8 window, all 9s). The existing 2-way pair (max 144 < 255) is the correct and already-optimal accumulation depth. No further micro-optimization of accumulation is possible within u8.
+All dp2 variants cluster 0.090-0.100s within noise. STOP-FLOOR ×88 confirmed.
+Compiler sweep: g++ -O3 -march=native → 0.094s; g++ -Ofast -funroll-loops → 0.092s; g++-13 → 0.093-0.096s; clang++ → 0.100-0.101s.
+**Champion dp2_8s_fixed_widen is ready for judge submission.** Best local ever 0.056s (fast VM) → judge ~55ms; typical medium-VM 0.075-0.091s → judge ~60-75ms.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
 2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
 3. All dp2_8s prefetch distance × offset × loop-structure combinations now fully exhausted (grid: {512,1024,1536,2048,2560,3072,4096}B × {single, +0, +32, +64}B offset × {single-loop, double-loop}).
 4. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B) is a VM-oscillation variant: HOLD ×80, PROMOTE ×86, reverted. Has g++-13 -Ofast -funroll-loops bug. Do not promote again without verifying g++-13 correctness first.
+5. dp2_8s_u8tree (WRONG) is a dead end — 4-way u8 tree overflows; 2-way pair is the maximum safe tree depth at u8 before widening.
