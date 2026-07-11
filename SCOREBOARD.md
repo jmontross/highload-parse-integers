@@ -929,15 +929,27 @@ STOP-FLOOR ×93 confirmed. No new variants created — grid documented as fully 
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** (or equivalently `g++ -Ofast -march=native -funroll-loops`)
 Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~50ms; typical 0.077s → judge ~68ms).
 
+## Run log 2026-07-11 (scheduled run ×94)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0750 | 0.0790 | — | RUNS=3, floor=0.199s min/0.532s median (medium-fast VM then slow VM oscillation). Edge 9/9. |
+| dp2_8s_4acc | HOLD | 0.0740 | 0.0750 | 0% margin (tied; need ≤0.0729s) | Tied best, median ≤ champion median. Gate requires 1.5% margin — not met. |
+| all other dp2_8s variants | cluster | 0.074–0.085 | — | within noise | All dp2 variants cluster within noise of champion. |
+
+VM state: medium-fast (floor=0.199s first run). Champion 0.075s best = 1.50 ns/line; gen_index.py reports champion 74ms vs rank-18 bar 69.3ms (1.1× off).
+No new variants attempted. All structural dimensions (prefetch distance/offset, loop structure, stream count, window count, accumulation parallelism, prefetch hint type) exhausted over 93 prior runs.
+STOP-FLOOR ×94 confirmed. **PRIORITY: Submit `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge time: ~60-70ms (fast-VM best 0.056s → judge ~55ms; typical 0.075s → judge ~67-70ms — right at rank-18 bar of 69ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.077s fast VM → judge ~68ms; vs rank-18 bar 69ms). **PRIORITY.**
+1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.074s → judge ~67ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..4096}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
 5. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B): HOLD×80, PROMOTE×86 then reverted. g++-13 -Ofast bug. Do NOT promote.
 6. dp2_8s_fw_4096_64 (HOLD ×89) — last original grid point, no improvement. Grid complete.
 7. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
-8. dp2_8s_4acc (HOLD ×91) — 4 independent accumulators: accumulation NOT the bottleneck.
+8. dp2_8s_4acc (HOLD ×91,×94) — 4 independent accumulators: accumulation NOT the bottleneck.
 9. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
-10. Compiler: clang++ shows 9% worse than g++ on slow-VM days (0.085s vs 0.078s). Use g++ -O3 -march=native for judge submission.
+10. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
 11. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
