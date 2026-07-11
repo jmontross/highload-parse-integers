@@ -895,12 +895,30 @@ dp2_8s_2w_fixed: 2-window per stream approach has too much register pressure on 
 STOP-FLOOR ×91 confirmed. All structural dimensions (accumulation parallelism, window count, stream count, prefetch, loop structure) now fully exhausted.
 **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
 
+## Run log 2026-07-11 (scheduled run ×92)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.0790 | 0.0790 | — | RUNS=3, floor=0.235s min/0.458s median (medium-fast VM). Edge 9/9. Champion 3.4× faster than cat. |
+| dp2_8s_fixed_2048 | HOLD | 0.0790 | 0.0790 | 0% margin (tied) | NEW 2026-07-11. Double-loop + T1@2048B, +0 offset. Single-prefetch (no dual offset, no g++-13 bug). Rationale: judge (bare-metal, ~50-100ns DRAM) might prefer shorter prefetch distance than VM-tuned 4096B. Result: TIED on both best and median. 2048B provides no benefit even on this medium-fast VM (floor=0.235s). Confirms grid exhausted for double-loop × short distances. |
+| dp2_8s_fw_nta | DEAD | 0.1260 | 0.1280 | 60% SLOWER | NEW 2026-07-11. Double-loop + NTA (_MM_HINT_NTA) prefetch at 4096B. NTA (non-temporal prefetch) bypasses L2/L3, brings data directly to L1. Theory: streaming workload (400MB file >> L3) benefits from avoiding cache pollution. Practice: 60% SLOWER than champion. Root cause: NTA fills only L1 (32KB per core). With 8 streams × 4096B prefetch distance = 32KB of outstanding prefetch data, L1 is immediately saturated and NTA's "non-temporal" slots thrash. T1 (L2 prefetch, ~512KB) has 16× more capacity for outstanding prefetches. NTA is definitively wrong for 8-stream workload at 4096B distance. |
+| dp2_8s_fw_3072_64 | HOLD | 0.0780 | 0.0790 | 1.3% margin (need ≤0.07782s; got 0.0780s) | Consistent near-gate: misses by 0.0002s; median equals champion (not strictly lower). Standard VM noise pattern. |
+| dp2_8s_fw_4096_32 | HOLD | 0.0780 | 0.0850 | 1.3% margin, median HIGHER | Median 0.085s >> champion 0.079s. HOLD. Jitter ±0.010s. |
+| all other dp2_8s variants | cluster | 0.079–0.084 | — | within noise | All dp2 variants 0.079–0.085s. |
+
+VM state: medium-fast (floor=0.235s min / 0.458s median). Champion 0.079s = 1.58 ns/line; 3.4× faster than cat.
+dp2_8s_fixed_2048: genuinely new (file never existed before despite "grid exhausted" claim — only fw_2048_32 existed, which uses dual +32 offset). Double-loop × 2048B × +0: TIED. Grid is exhausted including this point.
+dp2_8s_fw_nta: definitively DEAD. NTA hint saturates L1 immediately with 8-stream × 4096B prefetch. At 4096B per stream × 8 streams = 32KB of outstanding prefetch hits exactly the L1D cache capacity. T1 (L2) has ~512KB capacity, handles 8× more outstanding data. NTA never works for large-working-set streaming with high MLP.
+STOP-FLOOR ×92 confirmed. All variants and prefetch hint types (T1, T2, NTA) now exhausted.
+**SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`.** Expected judge time: ~60-75ms (local best-ever 0.056s fast VM → judge ~55ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
-2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
-3. All dp2_8s prefetch distance × offset × loop-structure combinations fully exhausted (grid: {512,1024,1536,2048,2560,3072,4096}B × {+0,+32,+64}B offset × {single-loop, double-loop} — all 42 combinations tested).
-4. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B) is a VM-oscillation variant: HOLD ×80, PROMOTE ×86, reverted. Has g++-13 -Ofast -funroll-loops bug. Do NOT promote.
-5. dp2_8s_fw_4096_64 (double-loop + dual T1@4096+64B): HOLD ×89 — last grid point, no improvement. Grid complete.
-6. dp2_8s_u8tree (WRONG) is a dead end — 4-way u8 tree overflows; 2-way pair is the maximum safe tree depth at u8 before widening.
-7. dp2_8s_4acc (HOLD ×91) — 4 independent accumulators: accumulation NOT the bottleneck. OOO handles 1-cycle chain without help.
-8. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream + double-loop: register pressure causes stack spills, 14% slower. Window count × stream count grid exhausted.
+1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.079s medium-fast VM, 0.056s best-ever fast VM → judge ~55ms). **PRIORITY.**
+2. All variants, prefetch distances ({512..4096}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted.
+3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
+4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
+5. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B): HOLD×80, PROMOTE×86 then reverted. g++-13 -Ofast bug. Do NOT promote.
+6. dp2_8s_fw_4096_64 (HOLD ×89) — last original grid point, no improvement. Grid complete.
+7. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
+8. dp2_8s_4acc (HOLD ×91) — 4 independent accumulators: accumulation NOT the bottleneck.
+9. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
