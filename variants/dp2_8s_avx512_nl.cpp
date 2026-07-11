@@ -1,7 +1,13 @@
-// dp2_8s_fw_2048_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
-// dual T1 prefetch per stream at p+2048 AND p+2048+32.
-// Fills gap: champion (fw_3072_32) uses 3072B; pf2048 (single-loop) uses 2048B single.
-// This is the double-loop + dual-prefetch variant at 2048B distance, previously untested.
+// dp2_8s_avx512_nl.cpp — champion + AVX-512 nl_mask64.
+// Replace 2×AVX2 loads + 2×movemask + OR + SHL (8 µops) with
+// 1×AVX-512 load + 1×vpsubb zmm + 1×vpmovm2b (3 µops) per stream per iter.
+// Saves 40 µops/outer-iter across 8 streams (from 64 to 24 for mask computation).
+// Risk: Cascade Lake ~5% frequency reduction when zmm registers are dirty.
+// Guard: __AVX512BW__ — fallback to AVX2 nl_mask64 if not available.
+// dp2_8s_pf_double used +3072+64 (next window), NOT +3072+32 (second half of SAME window).
+// dp2_8s_stop_pf3072 is better on fast-VM days (vs champion's 4096B); combining
+// with +32 coverage may give marginal benefit on those same fast-VM runs.
+// Safety: safe_iters derived from the SHORTEST segment; all streams safe.
 
 #include <cstdio>
 #include <cstdint>
@@ -85,12 +91,19 @@ widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
+#ifdef __AVX512BW__
+    const __m512i ascii0 = _mm512_set1_epi8('0');
+    __m512i v = _mm512_loadu_si512((const __m512i*)p);
+    __m512i s = _mm512_sub_epi8(v, ascii0);
+    return (uint64_t)_mm512_movepi8_mask(s);
+#else
     const __m256i ascii0 = _mm256_set1_epi8('0');
     __m256i s0 = _mm256_sub_epi8(_mm256_loadu_si256((const __m256i*)p), ascii0);
     __m256i s1 = _mm256_sub_epi8(_mm256_loadu_si256((const __m256i*)(p + 32)), ascii0);
     uint32_t m0 = (uint32_t)_mm256_movemask_epi8(s0);
     uint32_t m1 = (uint32_t)_mm256_movemask_epi8(s1);
     return (uint64_t)m0 | ((uint64_t)m1 << 32);
+#endif
 }
 
 static __attribute__((always_inline)) __m128i process_window_dp(
@@ -243,48 +256,6 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body (prefetch + mask + process + accumulate).
-// Macro to avoid duplicating the inner body three times.
-#define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
-    { \
-    uint64_t m0 = nl_mask64(p0); \
-    uint64_t m1 = nl_mask64(p1); \
-    uint64_t m2 = nl_mask64(p2); \
-    uint64_t m3 = nl_mask64(p3); \
-    uint64_t m4 = nl_mask64(p4); \
-    uint64_t m5 = nl_mask64(p5); \
-    uint64_t m6 = nl_mask64(p6); \
-    uint64_t m7 = nl_mask64(p7); \
-    __m128i r0 = process_window_dp(p0, b0, m0); p0 += 64; \
-    __m128i r1 = process_window_dp(p1, b1, m1); p1 += 64; \
-    __m128i r2 = process_window_dp(p2, b2, m2); p2 += 64; \
-    __m128i r3 = process_window_dp(p3, b3, m3); p3 += 64; \
-    __m128i r4 = process_window_dp(p4, b4, m4); p4 += 64; \
-    __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64; \
-    __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64; \
-    __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64; \
-    acc_u16_add(acc_u16, _mm_add_epi8(r0, r1)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r2, r3)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r4, r5)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r6, r7)); \
-    }
-
 static uint64_t solve(const unsigned char* data, size_t size) {
     if (size == 0) return 0;
 
@@ -309,6 +280,9 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         for (int i = 0; i < 7; i++) adj_end[i] = adj_start[i + 1];
         adj_end[7] = end;
 
+        // Compute safe iteration count from the shortest segment.
+        // All streams advance 64B/iter from their start; safe_iters iterations
+        // keeps every stream >= 96 bytes from its segment end.
         size_t min_seg = SIZE_MAX;
         for (int i = 0; i < 8; i++) {
             size_t seg = (size_t)(adj_end[i] - adj_start[i]);
@@ -326,35 +300,64 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *p7=adj_start[7], *b7=adj_start[7];
 
         __m256i acc_u16 = _mm256_setzero_si256();
+        int iter_count = 0;
 
-        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
-        // Key: no iter_count variable or conditional in the inner loop.
-        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
-        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
-        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
-        size_t groups = safe_iters / 100;
-        size_t remain = safe_iters % 100;
+        for (size_t n = safe_iters; __builtin_expect(n > 0, 1); --n) {
+            _mm_prefetch((const char*)(p0 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p0 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6 + 3072 + 32), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7 + 3072 + 32), _MM_HINT_T1);
 
-        for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
-            for (int k = 100; --k >= 0;) {
-                ITER_BODY(2048)
+            uint64_t m0 = nl_mask64(p0);
+            uint64_t m1 = nl_mask64(p1);
+            uint64_t m2 = nl_mask64(p2);
+            uint64_t m3 = nl_mask64(p3);
+            uint64_t m4 = nl_mask64(p4);
+            uint64_t m5 = nl_mask64(p5);
+            uint64_t m6 = nl_mask64(p6);
+            uint64_t m7 = nl_mask64(p7);
+
+            __m128i r0 = process_window_dp(p0, b0, m0); p0 += 64;
+            __m128i r1 = process_window_dp(p1, b1, m1); p1 += 64;
+            __m128i r2 = process_window_dp(p2, b2, m2); p2 += 64;
+            __m128i r3 = process_window_dp(p3, b3, m3); p3 += 64;
+            __m128i r4 = process_window_dp(p4, b4, m4); p4 += 64;
+            __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64;
+            __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64;
+            __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64;
+
+            acc_u16_add(acc_u16, _mm_add_epi8(r0, r1));
+            acc_u16_add(acc_u16, _mm_add_epi8(r2, r3));
+            acc_u16_add(acc_u16, _mm_add_epi8(r4, r5));
+            acc_u16_add(acc_u16, _mm_add_epi8(r6, r7));
+
+            if (__builtin_expect(++iter_count >= 100, 0)) {
+                widen_u16(acc_u16, wide_acc);
+                iter_count = 0;
             }
-            widen_u16(acc_u16, wide_acc);
         }
-        // Remainder (< 100 iterations, safe without widening mid-loop)
-        for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2048)
-        }
-        widen_u16(acc_u16, wide_acc);
-
-#undef ITER_BODY
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
             acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
             (pi) += 64; \
+            if (__builtin_expect(++iter_count >= 100, 0)) { \
+                widen_u16(acc_u16, wide_acc); iter_count = 0; } \
         } \
         widen_u16(acc_u16, wide_acc); \
+        iter_count = 0; \
         scalar_tail((bi), (ei), wide_acc);
 
         STREAM_TAIL(p0, b0, adj_end[0])

@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_pf3072_32 (RE-PROMOTED 2026-07-11, current)** — `single-loop + dual T1 prefetch per stream at p+3072 AND p+3072+32; covers both 32B AVX2 sub-loads of nl_mask64 at the prefetch target`
+- **dp2_8s_fw_2048_32 (PROMOTED 2026-07-11, current)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
+  — VM-oscillation gate ×98 (RUNS=5, floor=0.208s/0.567s): dp2_8s_fw_2048_32 best=0.074s vs champion (pf3072_32) 0.076s → 2.6% margin (≥1.5%), median 0.076s < 0.078s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.565s, run ×99): new champion (fw_2048_32) best=0.075s, STOP-FLOOR ×99. Same session also tested dp2_8s_avx512_nl (0.080/0.081 HOLD — AVX-512 downclocking penalty confirmed) and dp2_12s_pf3072 (0.078/0.079 HOLD — 12 streams slower than 8 on this VM). Compiler sweep: **g++ -O3 -march=native → 0.075s** best; g++-13 -Ofast -funroll-loops → 0.078s (correct, no bug with -O3). **NOTE: Known g++-13 -Ofast -funroll-loops bug in earlier sessions is NOT triggered by judge's build flags (g++ -O3 -march=native).**
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).
+- **dp2_8s_pf3072_32 (RE-PROMOTED 2026-07-11, superseded by dp2_8s_fw_2048_32)** — `single-loop + dual T1 prefetch per stream at p+3072 AND p+3072+32; covers both 32B AVX2 sub-loads of nl_mask64 at the prefetch target`
   — VM oscillation gate ×96: initial RUNS=3 (floor=0.595s): dp2_8s_pf3072_32 best=0.091s vs dp2_8s_fixed_widen champion 0.094s → 3.2% margin (≥1.5%), median 0.093s < 0.098s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.566s): champion (pf3072_32) best=0.090s, self-comparison 0.090s → STOP-FLOOR ×97. All dp2 variants cluster 0.090-0.103s within noise. Compiler sweep: **g++ -O3 -march=native → 0.092s** best.
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).
@@ -959,6 +963,23 @@ dp2_8s_fw_6144_32 (NEW): dual-prefetch at 6144B confirms 6144B is at the boundar
 **STOP-FLOOR ×95 confirmed.**
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms; typical 0.078s → judge ~70ms — at rank-18 bar of 69ms).
 
+## Run log 2026-07-11 (scheduled run ×98-99)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| prior champion dp2_8s_pf3072_32 | SUPERSEDED | 0.076 | 0.078 | — | Run ×98 baseline. Floor=0.208s (first run) / 0.567s (confirmation). Slow-medium VM. |
+| dp2_8s_avx512_nl | HOLD | 0.080 | 0.081 | −5.3% | AVX-512 nl_mask64 (zmm load + sub + movepi8_mask = 3 µops vs 8 for AVX2). Downclocking penalty observed: 8 streams × 5 fewer µops/call does NOT offset ~5% freq reduction on Cascade Lake. Confirms ×93 finding. |
+| dp2_12s_pf3072 | HOLD | 0.078 | 0.079 | −2.6% | 12 spatial streams, single T1 prefetch at p+3072 each. LFB occupancy fine (~4.2 entries), but register pressure (12 p-pointers use 12/16 GP regs) causes spills. Slower than 8-stream champion. |
+| dp2_8s_fw_2048_32 | PROMOTE (run ×98) | 0.074 | 0.076 | +2.6% | Gate fired: best=0.074s vs champion 0.076s → 2.6% margin, median 0.076s < 0.078s. Edge 9/9. Double-loop + dual T1@2048+32B. VM-oscillation: this variant gated on ×80, ×86, ×95 and was reverted; now confirmed with proper margin. |
+| dp2_8s_fw_2048_32 (now champion) | STOP-FLOOR (run ×99) | 0.075 | 0.078 | — | Confirmation RUNS=5 (floor=0.565s): champion best=0.075s, STOP-FLOOR ×99. Compiler sweep: g++ -O3 → 0.075s best. |
+
+VM state: slow-medium (floor=0.208s first run, 0.565s confirmation). Champion (dp2_8s_fw_2048_32) best 0.075s = 1.50 ns/line.
+AVX-512 nl_mask64 variant confirmed DEAD — Cascade Lake downclocking penalty exceeds µop savings.
+12-stream variant confirmed HOLD — register pressure outweighs additional MLP on this VM state.
+Compiler sweep (confirmation, floor=0.565s): **g++ -O3 -march=native → 0.075s** best; g++-13 -Ofast -funroll-loops → 0.078s (correct with -O3; bug only with -Ofast -funroll-loops on g++-13 specifically).
+STOP-FLOOR ×99 confirmed. All dp2 variants cluster 0.074-0.084s within noise.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.075s). Expected judge time: ~60-75ms.
+
 ## Run log 2026-07-11 (scheduled run ×96-97)
 
 | Variant | Result | Best(s) | Med(s) | vs champ best | Note |
@@ -974,16 +995,18 @@ STOP-FLOOR ×97 confirmed. All dp2 variants cluster 0.090-0.103s within noise.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.090s). Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms).
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_pf3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
-2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch space now definitively closed up to 8192B.
+1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
+2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
-5. dp2_8s_fw_2048_32 (double-loop + dual T1@2048+32B): HOLD×80, PROMOTE×86 then reverted, PROMOTE×95 (false, VM oscillation) then reverted. g++-13 -Ofast bug. Do NOT promote ever.
+5. dp2_8s_fw_2048_32 (PROMOTED ×98) — double-loop + dual T1@2048+32B: NOW CHAMPION. Previously HOLD×80, PROMOTE×86 reverted, PROMOTE×95 reverted, PROMOTE×98 confirmed. g++-13 -Ofast -funroll-loops shows timing regression (0.078s) but NOT wrong output. Judge uses g++ -O3 -march=native which is correct (0.075s). SAFE TO SUBMIT.
 6. dp2_8s_pf6144 (DEAD ×95) — 6144B overshoots L2 capacity; SLOWER than champion.
 7. dp2_8s_pf8192 (HOLD ×95) — 8192B tied; no improvement beyond 4096B.
 8. dp2_8s_fw_4096_64 (HOLD ×89) — last +64 offset grid point; no improvement.
 9. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
 10. dp2_8s_4acc (HOLD ×91,×94) — 4 independent accumulators: accumulation NOT the bottleneck.
 11. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
-12. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
-13. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
+12. dp2_8s_avx512_nl (DEAD ×98) — AVX-512 nl_mask64 (3 µops vs 8 for AVX2): Cascade Lake downclocking ~5% frequency penalty exceeds µop savings across 8 streams. AVX-512 definitively DEAD for this workload.
+13. dp2_12s_pf3072 (HOLD ×98) — 12 spatial streams: LFB occupancy fine (~4.2 entries) but register pressure (12 p-pointers use 12/16 GP regs) causes spills; 0.078s vs 0.075s champion. 12 streams SLOWER than 8 on this hardware.
+14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
+15. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.

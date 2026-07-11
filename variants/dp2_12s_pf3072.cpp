@@ -1,7 +1,12 @@
-// dp2_8s_fw_2048_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
-// dual T1 prefetch per stream at p+2048 AND p+2048+32.
-// Fills gap: champion (fw_3072_32) uses 3072B; pf2048 (single-loop) uses 2048B single.
-// This is the double-loop + dual-prefetch variant at 2048B distance, previously untested.
+// dp2_12s_pf3072.cpp — 12 spatially-separated streams (vs champion's 8).
+// Motivation: LFB on Cascade Lake holds 12 entries; with 8 streams × single
+// prefetch at 3072B, effective LFB occupancy ≈ 8 × (17/48) ≈ 2.8 entries.
+// Adding 4 more streams uses the spare LFB capacity, potentially helping
+// on cold-start judge where DRAM latency matters more.
+// Register pressure: p0..p11 in GP registers, b0..b11 via reference update.
+// Note: 12 GP registers for p-pointers + 1 for loop counter = 13; leaves 3
+// scratch registers (x86-64 has 16 GP). b-pointers live at function call edges
+// (compiler spills as needed). Prefetch: 12 × T1@3072B = 12 µops/iter (vs 16).
 
 #include <cstdio>
 #include <cstdint>
@@ -243,128 +248,129 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body (prefetch + mask + process + accumulate).
-// Macro to avoid duplicating the inner body three times.
-#define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
-    { \
-    uint64_t m0 = nl_mask64(p0); \
-    uint64_t m1 = nl_mask64(p1); \
-    uint64_t m2 = nl_mask64(p2); \
-    uint64_t m3 = nl_mask64(p3); \
-    uint64_t m4 = nl_mask64(p4); \
-    uint64_t m5 = nl_mask64(p5); \
-    uint64_t m6 = nl_mask64(p6); \
-    uint64_t m7 = nl_mask64(p7); \
-    __m128i r0 = process_window_dp(p0, b0, m0); p0 += 64; \
-    __m128i r1 = process_window_dp(p1, b1, m1); p1 += 64; \
-    __m128i r2 = process_window_dp(p2, b2, m2); p2 += 64; \
-    __m128i r3 = process_window_dp(p3, b3, m3); p3 += 64; \
-    __m128i r4 = process_window_dp(p4, b4, m4); p4 += 64; \
-    __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64; \
-    __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64; \
-    __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64; \
-    acc_u16_add(acc_u16, _mm_add_epi8(r0, r1)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r2, r3)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r4, r5)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r6, r7)); \
-    }
-
 static uint64_t solve(const unsigned char* data, size_t size) {
     if (size == 0) return 0;
 
     uint64_t wide_acc[10] = {};
 
-    if (size < 8 * 800) {
+    if (size < 12 * 800) {
         scalar_tail(data, data + size, wide_acc);
         goto reconstruct;
     }
 
     {
         const unsigned char* end = data + size;
-        const unsigned char* adj_start[8];
-        const unsigned char* adj_end[8];
+        const unsigned char* adj_start[12];
+        const unsigned char* adj_end[12];
 
         adj_start[0] = data;
-        for (int i = 1; i < 8; i++) {
-            const unsigned char* q = data + (size_t)i * (size / 8);
+        for (int i = 1; i < 12; i++) {
+            const unsigned char* q = data + (size_t)i * (size / 12);
             while (q < end && *q != '\n') ++q;
             adj_start[i] = (q < end) ? q + 1 : end;
         }
-        for (int i = 0; i < 7; i++) adj_end[i] = adj_start[i + 1];
-        adj_end[7] = end;
+        for (int i = 0; i < 11; i++) adj_end[i] = adj_start[i + 1];
+        adj_end[11] = end;
 
         size_t min_seg = SIZE_MAX;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 12; i++) {
             size_t seg = (size_t)(adj_end[i] - adj_start[i]);
             if (seg < min_seg) min_seg = seg;
         }
         size_t safe_iters = (min_seg > 96) ? (min_seg - 96) / 64 : 0;
 
-        const unsigned char *p0=adj_start[0], *b0=adj_start[0];
-        const unsigned char *p1=adj_start[1], *b1=adj_start[1];
-        const unsigned char *p2=adj_start[2], *b2=adj_start[2];
-        const unsigned char *p3=adj_start[3], *b3=adj_start[3];
-        const unsigned char *p4=adj_start[4], *b4=adj_start[4];
-        const unsigned char *p5=adj_start[5], *b5=adj_start[5];
-        const unsigned char *p6=adj_start[6], *b6=adj_start[6];
-        const unsigned char *p7=adj_start[7], *b7=adj_start[7];
+        const unsigned char *p0=adj_start[0],  *b0=adj_start[0];
+        const unsigned char *p1=adj_start[1],  *b1=adj_start[1];
+        const unsigned char *p2=adj_start[2],  *b2=adj_start[2];
+        const unsigned char *p3=adj_start[3],  *b3=adj_start[3];
+        const unsigned char *p4=adj_start[4],  *b4=adj_start[4];
+        const unsigned char *p5=adj_start[5],  *b5=adj_start[5];
+        const unsigned char *p6=adj_start[6],  *b6=adj_start[6];
+        const unsigned char *p7=adj_start[7],  *b7=adj_start[7];
+        const unsigned char *p8=adj_start[8],  *b8=adj_start[8];
+        const unsigned char *p9=adj_start[9],  *b9=adj_start[9];
+        const unsigned char *p10=adj_start[10], *b10=adj_start[10];
+        const unsigned char *p11=adj_start[11], *b11=adj_start[11];
 
         __m256i acc_u16 = _mm256_setzero_si256();
+        int iter_count = 0;
 
-        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
-        // Key: no iter_count variable or conditional in the inner loop.
-        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
-        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
-        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
-        size_t groups = safe_iters / 100;
-        size_t remain = safe_iters % 100;
+        for (size_t n = safe_iters; __builtin_expect(n > 0, 1); --n) {
+            _mm_prefetch((const char*)(p0  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p1  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p2  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p3  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p4  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p5  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p6  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p7  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p8  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p9  + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p10 + 3072), _MM_HINT_T1);
+            _mm_prefetch((const char*)(p11 + 3072), _MM_HINT_T1);
 
-        for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
-            for (int k = 100; --k >= 0;) {
-                ITER_BODY(2048)
+            uint64_t m0  = nl_mask64(p0);
+            uint64_t m1  = nl_mask64(p1);
+            uint64_t m2  = nl_mask64(p2);
+            uint64_t m3  = nl_mask64(p3);
+            uint64_t m4  = nl_mask64(p4);
+            uint64_t m5  = nl_mask64(p5);
+            uint64_t m6  = nl_mask64(p6);
+            uint64_t m7  = nl_mask64(p7);
+            uint64_t m8  = nl_mask64(p8);
+            uint64_t m9  = nl_mask64(p9);
+            uint64_t m10 = nl_mask64(p10);
+            uint64_t m11 = nl_mask64(p11);
+
+            __m128i r0  = process_window_dp(p0,  b0,  m0);  p0  += 64;
+            __m128i r1  = process_window_dp(p1,  b1,  m1);  p1  += 64;
+            __m128i r2  = process_window_dp(p2,  b2,  m2);  p2  += 64;
+            __m128i r3  = process_window_dp(p3,  b3,  m3);  p3  += 64;
+            __m128i r4  = process_window_dp(p4,  b4,  m4);  p4  += 64;
+            __m128i r5  = process_window_dp(p5,  b5,  m5);  p5  += 64;
+            __m128i r6  = process_window_dp(p6,  b6,  m6);  p6  += 64;
+            __m128i r7  = process_window_dp(p7,  b7,  m7);  p7  += 64;
+            __m128i r8  = process_window_dp(p8,  b8,  m8);  p8  += 64;
+            __m128i r9  = process_window_dp(p9,  b9,  m9);  p9  += 64;
+            __m128i r10 = process_window_dp(p10, b10, m10); p10 += 64;
+            __m128i r11 = process_window_dp(p11, b11, m11); p11 += 64;
+
+            acc_u16_add(acc_u16, _mm_add_epi8(r0,  r1));
+            acc_u16_add(acc_u16, _mm_add_epi8(r2,  r3));
+            acc_u16_add(acc_u16, _mm_add_epi8(r4,  r5));
+            acc_u16_add(acc_u16, _mm_add_epi8(r6,  r7));
+            acc_u16_add(acc_u16, _mm_add_epi8(r8,  r9));
+            acc_u16_add(acc_u16, _mm_add_epi8(r10, r11));
+
+            if (__builtin_expect(++iter_count >= 100, 0)) {
+                widen_u16(acc_u16, wide_acc);
+                iter_count = 0;
             }
-            widen_u16(acc_u16, wide_acc);
         }
-        // Remainder (< 100 iterations, safe without widening mid-loop)
-        for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2048)
-        }
-        widen_u16(acc_u16, wide_acc);
-
-#undef ITER_BODY
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
             acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
             (pi) += 64; \
+            if (__builtin_expect(++iter_count >= 100, 0)) { \
+                widen_u16(acc_u16, wide_acc); iter_count = 0; } \
         } \
         widen_u16(acc_u16, wide_acc); \
+        iter_count = 0; \
         scalar_tail((bi), (ei), wide_acc);
 
-        STREAM_TAIL(p0, b0, adj_end[0])
-        STREAM_TAIL(p1, b1, adj_end[1])
-        STREAM_TAIL(p2, b2, adj_end[2])
-        STREAM_TAIL(p3, b3, adj_end[3])
-        STREAM_TAIL(p4, b4, adj_end[4])
-        STREAM_TAIL(p5, b5, adj_end[5])
-        STREAM_TAIL(p6, b6, adj_end[6])
-        STREAM_TAIL(p7, b7, adj_end[7])
+        STREAM_TAIL(p0,  b0,  adj_end[0])
+        STREAM_TAIL(p1,  b1,  adj_end[1])
+        STREAM_TAIL(p2,  b2,  adj_end[2])
+        STREAM_TAIL(p3,  b3,  adj_end[3])
+        STREAM_TAIL(p4,  b4,  adj_end[4])
+        STREAM_TAIL(p5,  b5,  adj_end[5])
+        STREAM_TAIL(p6,  b6,  adj_end[6])
+        STREAM_TAIL(p7,  b7,  adj_end[7])
+        STREAM_TAIL(p8,  b8,  adj_end[8])
+        STREAM_TAIL(p9,  b9,  adj_end[9])
+        STREAM_TAIL(p10, b10, adj_end[10])
+        STREAM_TAIL(p11, b11, adj_end[11])
 #undef STREAM_TAIL
     }
 
