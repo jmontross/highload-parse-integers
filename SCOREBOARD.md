@@ -963,6 +963,19 @@ dp2_8s_fw_6144_32 (NEW): dual-prefetch at 6144B confirms 6144B is at the boundar
 **STOP-FLOOR ×95 confirmed.**
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms; typical 0.078s → judge ~70ms — at rank-18 bar of 69ms).
 
+## Run log 2026-07-11 (scheduled run ×100)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_2048_32 | STOP-FLOOR | 0.090 | 0.095 | — | Baseline. Floor=0.574s min / 0.720s median (slow VM). Champion holds. |
+| dp2_8s_fixed_2048 | HOLD | 0.091 | 0.091 | −1.1% | Best variant this run; within noise. Double-loop + single T1@2048B. Δbest=-0.001s, need ≤−0.00135s. |
+| all dp2 variants (25+) | HOLD/STOP-FLOOR | 0.091–0.096 | 0.091–0.107 | −1 to −7% | All dp2_8s_* variants cluster within noise of champion. Prefetch distances {512..8192}B, offsets {+0,+32,+64}, single/double loop, 8/12 streams — all tested and within noise. |
+
+VM state: slow (floor=0.574s min / 0.720s median). Champion (dp2_8s_fw_2048_32) best 0.090s = 1.80 ns/line.
+Compiler sweep (floor=0.574s): g++ -O3 → 0.096s; g++ -Ofast -funroll-loops → 0.094s; g++-13 -Ofast -funroll-loops → 0.097s; clang++ -O3 → 0.102s.
+STOP-FLOOR ×100 confirmed. All algorithmic and prefetch dimensions exhausted — champion is at memory-bandwidth ceiling.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.075s fast-VM; 0.090s slow-VM). Expected judge time: ~55-75ms (rank-18 bar = 69ms).
+
 ## Run log 2026-07-11 (scheduled run ×98-99)
 
 | Variant | Result | Best(s) | Med(s) | vs champ best | Note |
