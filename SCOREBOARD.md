@@ -818,6 +818,18 @@ VM state: medium-slow (floor=0.262-0.372s across RUNS=3/RUNS=5). dp2_8s_fw_2048_
 **Current champion: dp2_8s_fixed_widen** (re-restored). Best compiler: `g++ -Ofast -march=native -funroll-loops` → ~0.075-0.078s.
 STOP-FLOOR ×86 confirmed. **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (correct on all compilers). Expected judge time: ~60-75ms.
 
+## Run log 2026-07-11 (scheduled run ×87)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_widen (champion) | STOP-FLOOR | 0.077 | 0.078 | — | RUNS=3, floor=0.266s (medium-fast VM). Champion best=0.077s, median=0.078s. |
+| dp2_8s_fw_2048_32 | HOLD | 0.077 | 0.078 | 0% margin | Tied champion on best AND median. No gate. |
+| all other variants | EXHAUSTED | — | — | — | All 100+ grid points (prefetch-distance × offset × loop-structure × streams × accumulation × I/O) confirmed exhausted. No new variants attempted. |
+
+VM state: medium-fast (floor=0.266s). Champion dp2_8s_fixed_widen 0.077s is 3.5× faster than cat. STOP-FLOOR ×87.
+No new variants exist to try. The complete variant grid {512,1024,1536,2048,2560,3072,4096}B × {+0,+32,+64}B × {single-loop, double-loop} × {4,8}-stream × dp2 accumulation × mmap/hugepage I/O is fully exhausted.
+**Champion is ready for judge submission.** `g++ -Ofast -march=native -funroll-loops` expected judge ~60-75ms (local best-ever 0.056s fast VM → ~55ms). index.html: champion=77.0ms, 1.1× off rank-18 bar (69.3ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fixed_widen (local best 0.075s on medium-fast VM, 0.056s best-ever on fast VM → judge ~55ms). **PRIORITY.**
 2. All 100+ variants and all structural angles exhausted — algorithm is at bandwidth ceiling.
