@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_3072_32 (PROMOTED 2026-07-12, current)** — `double-loop structure + dual T1 prefetch per stream at p+3072 AND p+3072+32`
+- **dp2_8s_fw_2048_32 (RE-PROMOTED 2026-07-12, current)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
+  — VM-oscillation gate ×102 (RUNS=5, floor=0.560s): fw_2048_32 best=0.090s vs fw_3072_32 champion 0.092s → 2.2% margin (≥1.5%), median 0.092s < 0.094s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.529s): new champion (fw_2048_32) best=0.091s, same-code variant 0.090s → STOP-FLOOR ×102. New variants this run: dp2_8s_fw_wide400 (110 inner iters: 0.091s, HOLD), dp2_8s_fw_t2_t1 (T2@8192B+T1@3072B: 0.094s, HOLD/slightly slower). Compiler sweep: **g++ -O3 -march=native → 0.090s** best. VM oscillation: fw_2048_32 was previously promoted 2026-07-11, superseded by fw_3072_32, now re-promoted as 2048B wins on this VM state.
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).
+- **dp2_8s_fw_3072_32 (PROMOTED 2026-07-12, superseded by dp2_8s_fw_2048_32)** — `double-loop structure + dual T1 prefetch per stream at p+3072 AND p+3072+32`
   — VM-oscillation gate ×101 (RUNS=3, floor=0.325s/0.509s median): dp2_8s_fw_3072_32 best=0.090s vs champion (fw_2048_32) 0.092s → 2.2% margin (≥1.5%), median 0.092s < 0.093s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.527s slow VM, run ×101 confirmation): new champion (fw_3072_32) best=0.092s, same-code variant 0.091s → STOP-FLOOR ×101. Compiler sweep (slow VM): **g++ -O3 -march=native → 0.091s** best; g++-13 → 0.094s; clang++ → 0.101s. VM oscillation: dp2_8s_fw_3072_32 previously superseded by fw_2048_32 at run ×98; now re-promoted as 3072B wins on this VM state.
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).

@@ -1,7 +1,10 @@
-// dp2_8s_fw_2048_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
-// dual T1 prefetch per stream at p+2048 AND p+2048+32.
-// Fills gap: champion (fw_3072_32) uses 3072B; pf2048 (single-loop) uses 2048B single.
-// This is the double-loop + dual-prefetch variant at 2048B distance, previously untested.
+// dp2_8s_fw_3072_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
+// dual T1 prefetch per stream at p+3072 AND p+3072+32 (from dp2_8s_pf3072_32).
+// Untested combination: fixed_3072 used single prefetch; pf3072_32 used single-loop.
+// nl_mask64 does two 32B AVX2 loads at p and p+32; when (p+3072)%64 >= 32,
+// those two loads hit different cache lines at the prefetch target; second
+// prefetch at +3072+32 covers the second sub-load. Double-loop eliminates
+// iter_count branch from inner loop; compiler can unroll with -funroll-loops.
 
 #include <cstdio>
 #include <cstdint>
@@ -337,13 +340,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(2048)
+                ITER_BODY(3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2048)
+            ITER_BODY(3072)
         }
         widen_u16(acc_u16, wide_acc);
 

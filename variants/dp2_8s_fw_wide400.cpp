@@ -1,7 +1,10 @@
-// dp2_8s_fw_2048_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
-// dual T1 prefetch per stream at p+2048 AND p+2048+32.
-// Fills gap: champion (fw_3072_32) uses 3072B; pf2048 (single-loop) uses 2048B single.
-// This is the double-loop + dual-prefetch variant at 2048B distance, previously untested.
+// dp2_8s_fw_wide400.cpp — same as champion (dp2_8s_fw_3072_32) but uses
+// 110 inner iterations per widen group instead of 100.
+// Safety: max u16 lane contribution per iter = 4 pairs × max_pair_u8(~144) = 576.
+// Over 110 iters: 576×110 = 63,360 < 65,535 ✓.
+// Over 113 iters: 576×113 = 65,088 < 65,535 ✓ (tight).
+// Over 114 iters: 576×114 = 65,664 > 65,535 ✗ OVERFLOW.
+// So 110 is a safe 10% increase. Reduces widen calls by ~9% → saves ~0.5% overhead.
 
 #include <cstdio>
 #include <cstdint>
@@ -327,23 +330,21 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         __m256i acc_u16 = _mm256_setzero_si256();
 
-        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
-        // Key: no iter_count variable or conditional in the inner loop.
-        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
-        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
-        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
-        size_t groups = safe_iters / 100;
-        size_t remain = safe_iters % 100;
+        // Double-loop: outer iterates widen groups, inner is exactly 110 iters.
+        // Safety: 576×110 = 63,360 < 65,535 per lane (max safe is 113 iters).
+        // 10% fewer widen_u16 calls vs champion's 100-iter groups.
+        size_t groups = safe_iters / 110;
+        size_t remain = safe_iters % 110;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
-            for (int k = 100; --k >= 0;) {
-                ITER_BODY(2048)
+            for (int k = 110; --k >= 0;) {
+                ITER_BODY(3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
-        // Remainder (< 100 iterations, safe without widening mid-loop)
+        // Remainder (< 110 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2048)
+            ITER_BODY(3072)
         }
         widen_u16(acc_u16, wide_acc);
 
