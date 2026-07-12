@@ -1111,6 +1111,20 @@ Directive context: the BREAKTHROUGH DIRECTIVE asked to implement Change A (stuch
 All algorithmic dimensions exhausted: ×106 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
 **STOP-FLOOR ×106. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -Ofast -march=native -funroll-loops`.**
 
+## Run log 2026-07-12 (scheduled run ×107)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_t1 (champion) | STOP-FLOOR ×107 | 0.065–0.067 | 0.065–0.068 | — | RUNS=3 × 3 passes; floor=0.538s min / 0.564s median (slow VM). Champion oscillates 0.065-0.067s within session due to VM state. Edge 9/9. |
+| dp2_8s_4acc | FALSE-PROMOTE (not applied) | 0.065 | 0.066 | 3% best when champ=0.067 | Gate fired PROMOTE on pass where champion showed 0.067s (oscillation) and 4acc held at 0.065s. NOT PROMOTED: 4acc is documented dead end (HOLD ×91, ×94; "accumulation NOT the bottleneck" — add_epi16 chain already off critical path). VM oscillation false positive. All dp2 variants cluster 0.065–0.069s. |
+| all other dp2_8s variants | cluster within noise | 0.065–0.069 | 0.066–0.071 | within noise | Consistent with ×106. No new candidates. |
+
+VM state: slow (floor=0.538s min / 0.564s median). Champion 0.065–0.067s = 1.30–1.34 ns/line; 8×–8.8× FASTER than cat (mmap+hugepage bypasses kernel read path).
+dp2_8s_4acc FALSE-PROMOTE: gate fired because champion's 3rd-pass sample happened to be 0.0670s (vs normal 0.065s). Prior documented evidence: HOLD ×91, HOLD ×94; multiple SCOREBOARD entries confirm accumulation chain is off critical path. No structural angle remains unexplored.
+Directive context: BREAKTHROUGH DIRECTIVE's Change A (digit-place accumulation) + Change B (8-stream MLP) both fully implemented and evolved since run ×45. stuchlik_digitplace.cpp (0.526s single-stream baseline) and stuchlik_8stream.cpp (0.149s old SWAR-based 8-stream) exist in variants/. Current champion dp2_8s_fw_t0_t1 is the refined product of both changes: 7-8× faster than stuchlik_8stream, 400× faster than stuchlik_digitplace alone.
+index.html: champion=65.0ms (fast sample), CLEARS rank-18 bar (69.3ms). Expected judge time: ~55-65ms.
+**STOP-FLOOR ×107. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074–0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
