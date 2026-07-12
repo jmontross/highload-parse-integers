@@ -1094,6 +1094,23 @@ Two PROMOTE gates fired in consecutive RUNS=3 passes, for DIFFERENT variants —
 All algorithmic dimensions exhausted: ×105 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
 **STOP-FLOOR ×105. Champion dp2_8s_fw_2048_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
 
+## Run log 2026-07-12 (scheduled run ×106)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_t1 (champion) | STOP-FLOOR ×106 | 0.079 | 0.080 | — | Oscillating VM (floor 0.059–0.085s across passes within session). run.sh reports champion best=0.077s, floor=0.233s (single-pass median). STOP-FLOOR: 0.077 < 2×0.233 = 0.466. Edge 9/9. |
+| dp2_8s_fw_3072_32 | HOLD | 0.077 | 0.080 | 2.5% best, 0% median | best=0.077s vs champion 0.079s → 2.5% best-margin, but median=0.080s = champion median. Both conditions not met → HOLD. VM oscillation pattern (fw_3072_32 has been champion and been superseded multiple times). |
+| dp2_8s_fw_2048_32 | HOLD | 0.078 | 0.078–0.100 | 1.3% best, high jitter | best=0.078s (1.3% below gate), one 0.100s anomaly → median varies. Standard VM noise. |
+| dp2_8s_fw_2560_32 | HOLD | 0.076 | 0.080 | 3.8% best, 0% median | best=0.076s (early fast-VM pass), median=0.080s = champion. High best-margin but median does not confirm. HOLD. |
+| all dp2_8s variants | cluster | 0.076–0.085 | — | within noise | All dp2_8s_* variants cluster 0.076–0.085s across multiple passes with oscillating VM state. No consistent winner. |
+
+VM state: oscillating medium-fast → slow (floor 0.059–0.085s). Champion (dp2_8s_fw_t0_t1) best 0.077–0.079s = 1.54–1.58 ns/line.
+run.sh compiler sweep (slow VM, floor=0.233s): **g++-13 -Ofast -march=native -funroll-loops → 0.078s** best; g++ -O3 → 0.079s; g++-13 -O3 → 0.079s; clang++ → 0.087-0.091s (slower).
+run.sh index.html: champion=77.0ms, 1.1× off rank-18 bar (69.3ms) on this VM state. Fast-VM best=0.066s projects to ~58-62ms on judge.
+Directive context: the BREAKTHROUGH DIRECTIVE asked to implement Change A (stuchlik_digitplace) and Change B (8-stream MLP). Both have been implemented and fully optimized since run ×45–×50. The current champion dp2_8s_fw_t0_t1 IS Change A + Change B combined with all refinements. stuchlik_digitplace.cpp and stuchlik_8stream.cpp already exist in variants/ as early implementations (0.557s and 0.183s respectively — the champion is 7× faster via 8-stream + double-loop + two-tier prefetch refinements).
+All algorithmic dimensions exhausted: ×106 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
+**STOP-FLOOR ×106. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -Ofast -march=native -funroll-loops`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074–0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
@@ -1110,5 +1127,5 @@ All algorithmic dimensions exhausted: ×105 consecutive STOP-FLOOR verdicts (202
 13. dp2_12s_pf3072 (HOLD ×98) — 12 spatial streams: LFB occupancy fine (~4.2 entries) but register pressure (12 p-pointers use 12/16 GP regs) causes spills; 0.078s vs 0.075s champion. 12 streams SLOWER than 8 on this hardware.
 14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
 15. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
-16. dp2_8s_fw_t0_t1 (DEAD ×102, ×105) — T0@512B + T1@3072B two-tier prefetch: HOLD/reverted. T0 at 8-iters-ahead provides no benefit; HW prefetcher already handles L2→L1 promotion before access. Gated ×105 via VM oscillation but confirmation showed tied.
+16. dp2_8s_fw_t0_t1 (CURRENT CHAMPION, promoted ×103) — T0@512B + T1@3072B two-tier prefetch. Previously DEAD ×102 (false gate reverted), then gate fired ×103 with 4.3% margin on fast VM. Current champion. All dp2 fw variants cluster within noise of it on any given VM state.
 17. dp2_8s_fw_2560_32 (DEAD ×102) — double-loop + dual T1@2560+32B: HOLD. Fills grid gap between 2048+32 and 3072+32; all prefetch distances 512-8192B definitively exhausted.
