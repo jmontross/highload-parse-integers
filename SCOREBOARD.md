@@ -1028,6 +1028,21 @@ VM oscillation: fw_3072_32 wins on today's VM state; fw_2048_32 wins on other VM
 STOP-FLOOR ×101 confirmed. All variants and prefetch dimensions exhausted.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.090-0.092s). Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms).
 
+## Run log 2026-07-12 (scheduled run ×102)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_6144_32 | FALSE-PROMOTE (run ×102 initial) | 0.091 | 0.093 | 4.2% apparent margin | RUNS=3 gate: champion had anomalous 0.095s best / 0.124s median (VM stall); variant showed 0.091s / 0.093s. Confirmation RUNS=3 (only dp2 fw variants): champion 0.092s, variant 0.092s — all TIED. VM oscillation artifact only. NOT promoted. |
+| dp2_8s_fw_t0_t1 | FALSE-PROMOTE (run ×102 second gate) | 0.090 | 0.091 | 3.2% apparent margin | NEW 2026-07-12. Two-tier prefetch: T0@512B (L1, 8 iters) + T1@3072B (L2, 48 iters) per stream vs champion's dual T1@3072+32B. RUNS=3 gate: champion 0.093s/0.093s (stable), variant 0.090s/0.091s → 3.2% margin, edge 9/9 → promoted. Confirmation RUNS=5 (floor=0.470s): NEW champion (dp2_8s_fw_t0_t1) best=0.091s, dp2_8s_fw_3072_32 best=0.090s — old champion FASTER on best. REVERTED to dp2_8s_fw_3072_32. T0+T1 two-tier is within noise of dual-T1. Dead end. |
+| dp2_8s_fw_2560_32 | HOLD | 0.091 | 0.093–0.094 | tied | NEW 2026-07-12. Double-loop + dual T1@2560B AND 2560+32B per stream. Grid gap between fw_2048_32 and fw_3072_32. All three runs: 0.091-0.092s = tied champion. Confirms grid exhausted between 2048B and 3072B. |
+| all dp2 variants | STOP-FLOOR ×102 | 0.090–0.095 | — | within noise | All dp2_8s_* variants cluster 0.090-0.095s across 3 separate RUNS=3/5 benchmark passes. Floor=0.470-0.572s this session. |
+
+VM state: medium-slow (floor=0.470-0.572s). RUNS=10 definitive run: champion (fw_3072_32) best=0.090s, dp2_8s_fw_t0_t1 best=0.089s (1.1% better — BELOW 1.5% gate threshold → HOLD). All dp2 variants within noise.
+Two-tier prefetch (T0@512+T1@3072): Shows 0.089s vs champion 0.090s (1.1% margin) with RUNS=10 — borderline but below gate. May be marginally better on judge bare metal but unconfirmed. Not promotable locally.
+2560B grid point: DEAD. All prefetch distances 512-8192B confirmed exhausted.
+VM oscillation during this session: 3 false PROMOTE events (fw_6144_32, fw_t0_t1, pf3072_32) — all reverted after confirmation showed HOLD/STOP-FLOOR.
+**STOP-FLOOR ×102. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
@@ -1044,3 +1059,5 @@ STOP-FLOOR ×101 confirmed. All variants and prefetch dimensions exhausted.
 13. dp2_12s_pf3072 (HOLD ×98) — 12 spatial streams: LFB occupancy fine (~4.2 entries) but register pressure (12 p-pointers use 12/16 GP regs) causes spills; 0.078s vs 0.075s champion. 12 streams SLOWER than 8 on this hardware.
 14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
 15. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
+16. dp2_8s_fw_t0_t1 (DEAD ×102) — T0@512B + T1@3072B two-tier prefetch: HOLD/reverted. T0 at 8-iters-ahead provides no benefit; HW prefetcher already handles L2→L1 promotion before access.
+17. dp2_8s_fw_2560_32 (DEAD ×102) — double-loop + dual T1@2560+32B: HOLD. Fills grid gap between 2048+32 and 3072+32; all prefetch distances 512-8192B definitively exhausted.
