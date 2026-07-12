@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_2048_32 (RE-PROMOTED 2026-07-12, current)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
+- **dp2_8s_fw_t0_t1 (PROMOTED 2026-07-12, current)** — `double-loop + two-tier prefetch: T0@512B (near, L1) + T1@3072B (far, L2) per stream`
+  — VM-oscillation gate ×103 (RUNS=3, floor=0.266s fast VM): t0_t1 best=0.066s vs fw_2048_32 champion 0.069s → 4.3% margin (≥1.5%), median 0.069s < 0.070s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.542s slow VM): new champion (t0_t1) best=0.066s, all dp2 fw variants cluster 0.066-0.070s → STOP-FLOOR ×103. Theory: T0@512B (8 iters ahead) fills L1 immediately before use; T1@3072B (48 iters ahead) hides DRAM→L2 latency. Two-tier hierarchy vs champion's dual same-distance T1 approach. New variants this run: dp2_8s_fw_t0_2048 (T0@512+T1@2048: 0.067s, HOLD), dp2_8s_fw_t0_3072_32 (T0@512+T1@3072+T1@3072+32: 0.067s, HOLD — extra µops not worth it). Compiler sweep: **g++ -O3 -march=native → 0.067s** best; g++-13 tied; clang++ 0.074-0.075s (slower).
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-70ms (fast-VM best 0.066s → ~55-65ms). index.html: 66.0ms, CLEARS rank 18 bar (≤69.3ms).
+- **dp2_8s_fw_2048_32 (RE-PROMOTED 2026-07-12, superseded by dp2_8s_fw_t0_t1)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
   — VM-oscillation gate ×102 (RUNS=5, floor=0.560s): fw_2048_32 best=0.090s vs fw_3072_32 champion 0.092s → 2.2% margin (≥1.5%), median 0.092s < 0.094s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.529s): new champion (fw_2048_32) best=0.091s, same-code variant 0.090s → STOP-FLOOR ×102. New variants this run: dp2_8s_fw_wide400 (110 inner iters: 0.091s, HOLD), dp2_8s_fw_t2_t1 (T2@8192B+T1@3072B: 0.094s, HOLD/slightly slower). Compiler sweep: **g++ -O3 -march=native → 0.090s** best. VM oscillation: fw_2048_32 was previously promoted 2026-07-11, superseded by fw_3072_32, now re-promoted as 2048B wins on this VM state.
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).

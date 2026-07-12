@@ -1,9 +1,9 @@
-// dp2_8s_fw_t0_t1.cpp — double-loop + two-tier prefetch per stream:
-// T0@512B (8 iters ahead, fills L1) + T1@3072B (48 iters ahead, fills L2).
-// Champion uses dual T1@3072 and T1@3072+32 (both L2, same distance).
-// Theory: T0 at 512B ensures data is L1-warm immediately before processing;
+// dp2_8s_fw_t0_2048.cpp — double-loop + two-tier prefetch: T0@512B (near, L1) + T1@2048B (far, L2).
+// Same structure as t0_t1 but far prefetch at 2048B (32 iters) vs t0_t1's 3072B (48 iters).
+// Tests if shorter L2 fill distance wins on this VM (less queue pressure).
+// Theory: DRAM latency ~100-150 cycles; at ~3 cy/iter, 32 iters = 96 cycles — just enough.
 // T1 at 3072B hides the DRAM→LLC→L2 transfer latency. Two-tier coverage
-// vs champion's same-tier dual-offset approach. Same 16 prefetch µops/iter.
+
 
 #include <cstdio>
 #include <cstdint>
@@ -339,13 +339,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(3072)
+                ITER_BODY(2048)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(3072)
+            ITER_BODY(2048)
         }
         widen_u16(acc_u16, wide_acc);
 
