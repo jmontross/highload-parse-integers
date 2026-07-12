@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_2048_32 (PROMOTED 2026-07-11, current)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
+- **dp2_8s_fw_3072_32 (PROMOTED 2026-07-12, current)** — `double-loop structure + dual T1 prefetch per stream at p+3072 AND p+3072+32`
+  — VM-oscillation gate ×101 (RUNS=3, floor=0.325s/0.509s median): dp2_8s_fw_3072_32 best=0.090s vs champion (fw_2048_32) 0.092s → 2.2% margin (≥1.5%), median 0.092s < 0.093s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.527s slow VM, run ×101 confirmation): new champion (fw_3072_32) best=0.092s, same-code variant 0.091s → STOP-FLOOR ×101. Compiler sweep (slow VM): **g++ -O3 -march=native → 0.091s** best; g++-13 → 0.094s; clang++ → 0.101s. VM oscillation: dp2_8s_fw_3072_32 previously superseded by fw_2048_32 at run ×98; now re-promoted as 3072B wins on this VM state.
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).
+- **dp2_8s_fw_2048_32 (PROMOTED 2026-07-11, superseded by dp2_8s_fw_3072_32)** — `double-loop structure + dual T1 prefetch per stream at p+2048 AND p+2048+32`
   — VM-oscillation gate ×98 (RUNS=5, floor=0.208s/0.567s): dp2_8s_fw_2048_32 best=0.074s vs champion (pf3072_32) 0.076s → 2.6% margin (≥1.5%), median 0.076s < 0.078s → PROMOTE. Edge 9/9. Promoted. Confirmation RUNS=5 (floor=0.565s, run ×99): new champion (fw_2048_32) best=0.075s, STOP-FLOOR ×99. Same session also tested dp2_8s_avx512_nl (0.080/0.081 HOLD — AVX-512 downclocking penalty confirmed) and dp2_12s_pf3072 (0.078/0.079 HOLD — 12 streams slower than 8 on this VM). Compiler sweep: **g++ -O3 -march=native → 0.075s** best; g++-13 -Ofast -funroll-loops → 0.078s (correct, no bug with -O3). **NOTE: Known g++-13 -Ofast -funroll-loops bug in earlier sessions is NOT triggered by judge's build flags (g++ -O3 -march=native).**
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-75ms (fast-VM best 0.056s → ~55ms).
@@ -1007,8 +1011,25 @@ Compiler sweep (confirmation, floor=0.566s): **g++ -O3 -march=native → 0.092s*
 STOP-FLOOR ×97 confirmed. All dp2 variants cluster 0.090-0.103s within noise.
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.090s). Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms).
 
+## Run log 2026-07-12 (scheduled run ×101)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| prior champion dp2_8s_fw_2048_32 | SUPERSEDED | 0.092 | 0.093 | — | Run ×101 initial RUNS=3 baseline. Floor=0.325s min / 0.509s median (medium-slow VM). |
+| dp2_8s_fw_3072_32 | PROMOTE (run ×101) | 0.090 | 0.092 | 2.2% margin | Gate fired: best=0.090s vs champion 0.092s → 2.2% margin (≥1.5%), median 0.092s < 0.093s. Edge 9/9. Double-loop + dual T1@3072+32B per stream. VM-oscillation re-promotion: previously champion at ×72-75, superseded by fw_2048_32 at ×98. |
+| dp2_8s_fw_3072_32 (now champion) | STOP-FLOOR (×101 confirmation) | 0.092 | 0.094 | — | Confirmation RUNS=5 (floor=0.527s slow VM): champion best=0.092s, same-code variant 0.091s → STOP-FLOOR ×101. All dp2 variants cluster 0.091-0.098s within noise. |
+| dp2_8s_pf4096_32 | HOLD | 0.091 | 0.092 | 1.1% (below gate) | Ties or just under gate on confirmation run. Within noise. |
+| all other dp2_8s variants | cluster | 0.092–0.106 | — | within noise | All dp2_8s_* variants cluster within noise. Prefetch distances {512..8192}B, offsets {+0,+32,+64}, single/double loop — all tested and within noise. |
+
+VM state: medium-slow → slow (floor=0.325s initial / 0.527s confirmation). Champion (dp2_8s_fw_3072_32) best 0.090-0.092s = 1.80-1.84 ns/line.
+Compiler sweep (confirmation, floor=0.527s): **g++ -O3 -march=native → 0.091s** best; g++ -Ofast -funroll-loops → 0.093s; g++-13 → 0.094s; clang++ → 0.101s.
+dp2_8s_fw_3072_32: double-loop (outer=widen-groups, inner=100 fixed iters) + dual T1 at p+3072 AND p+3072+32 per stream.
+VM oscillation: fw_3072_32 wins on today's VM state; fw_2048_32 wins on other VM states. Both are within noise — the "winning" variant alternates with VM microstate.
+STOP-FLOOR ×101 confirmed. All variants and prefetch dimensions exhausted.
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best 0.090-0.092s). Expected judge time: ~60-75ms (fast-VM best 0.056s → judge ~55ms).
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
+1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
