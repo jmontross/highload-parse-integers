@@ -1057,6 +1057,21 @@ dp2_8s_triple_pair and dp2_8s_twoaccum both SLOWER than champion — accumulatio
 All algorithmic dimensions exhausted: prefetch distances {512..8192}B × offsets {+0,+32,+64} × {single/double} loop × {4,8,12} streams × {1,2} windows × all accumulation structures × all prefetch hint types (T0/T1/T2/NTA) × all I/O strategies.
 **STOP-FLOOR ×103. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
 
+## Run log 2026-07-12 (scheduled run ×104)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_3072_32 (champion) | STOP-FLOOR ×104 | 0.093 | 0.097 | — | Slow VM (floor=0.467s min / 0.562s median). Champion best=0.093s, edge 9/9. STOP-FLOOR: 0.093 < 2×0.467 = 0.934. |
+| dp2_8s_fw_2560_32 | HOLD | 0.092 | 0.093 | 1.1% (below gate) | Best variant this run. Misses 1.5% gate (need ≤0.0916s; got 0.092s). Median 0.093s = champion. Standard VM noise. |
+| dp2_8s_fw_3072_32 (variant copy) | HOLD | 0.092 | 0.094 | 1.1% | Same code as champion, different binary path — measurement noise (1ms). |
+| all other dp2_8s variants | cluster | 0.093–0.097 | — | within noise | All dp2_8s variants cluster 0.092-0.097s. Prefetch distances {512..8192}B, offsets {+0,+32,+64}, single/double loop — all within noise. |
+
+VM state: slow (floor=0.467s min / 0.562s median). Champion best 0.093s = 1.86 ns/line; 5.0× faster than cat.
+No new champion. Best variant dp2_8s_fw_2560_32 shows 0.092s best but misses 1.5% gate.
+Compiler sweep (slow VM): **g++-13 -Ofast -march=native -funroll-loops → 0.093s** best; g++ -Ofast → 0.094s; g++ -O3 → 0.095s; clang++ -O3 → 0.102s; clang++ -Ofast → 0.106s.
+All algorithmic dimensions exhausted ×104 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
+**STOP-FLOOR ×104. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -Ofast -march=native -funroll-loops`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
