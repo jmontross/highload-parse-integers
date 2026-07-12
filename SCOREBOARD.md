@@ -1043,6 +1043,20 @@ Two-tier prefetch (T0@512+T1@3072): Shows 0.089s vs champion 0.090s (1.1% margin
 VM oscillation during this session: 3 false PROMOTE events (fw_6144_32, fw_t0_t1, pf3072_32) — all reverted after confirmation showed HOLD/STOP-FLOOR.
 **STOP-FLOOR ×102. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
 
+## Run log 2026-07-12 (scheduled run ×103)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_3072_32 (champion) | STOP-FLOOR ×103 | 0.078 | 0.078 | — | Medium-fast VM (floor=0.250s min / 0.401s median). Champion best=0.078s, edge 9/9. STOP-FLOOR confirmed: 0.078 < 2×0.250 = 0.500. |
+| dp2_8s_triple_pair | HOLD | 0.085 | 0.086 | −9% (SLOWER) | NEW 2026-07-12 (first timing). Groups 3+3+2 windows before widening to u16 — saves 1 VPMOVZXBW + 1 VPADDW per iter. 0.085s vs champion 0.078s = 9% slower. Confirms: accumulation pipeline is NOT the bottleneck; widening overhead is negligible vs DRAM. |
+| dp2_8s_twoaccum | HOLD | 0.087 | 0.089 | −12% (SLOWER) | NEW 2026-07-12 (first timing). Two independent u16 accumulators (accA/accB) merged at widen — intended to break acc_u16 dependency chain. 0.087s vs champion 0.078s = 12% slower. Confirms: u16 accumulator is NOT a dependency bottleneck; overhead of merging outweighs any throughput gain. |
+| all dp2 variants | cluster | 0.077–0.091 | — | within noise | Cluster unchanged; fast-VM best 0.077s (dp2_8s_fixed_2048). |
+
+VM state: medium-fast (floor=0.250s min / 0.401s median). Champion (dp2_8s_fw_3072_32) best 0.078s = 1.56 ns/line.
+dp2_8s_triple_pair and dp2_8s_twoaccum both SLOWER than champion — accumulation pipeline structure is not the bottleneck, confirming the critical path is DRAM fetch latency not compute.
+All algorithmic dimensions exhausted: prefetch distances {512..8192}B × offsets {+0,+32,+64} × {single/double} loop × {4,8,12} streams × {1,2} windows × all accumulation structures × all prefetch hint types (T0/T1/T2/NTA) × all I/O strategies.
+**STOP-FLOOR ×103. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
