@@ -1076,12 +1076,26 @@ Compiler sweep (slow VM): **g++-13 -Ofast -march=native -funroll-loops → 0.093
 All algorithmic dimensions exhausted ×104 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
 **STOP-FLOOR ×104. Champion dp2_8s_fw_3072_32 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -Ofast -march=native -funroll-loops`.**
 
+## Run log 2026-07-12 (scheduled run ×105)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_2048_32 (champion) | STOP-FLOOR ×105 | 0.090 | 0.090–0.095 | — | Slow VM (floor=0.492–0.603s across 3 RUNS=3 passes). Champion best=0.090s, edge 9/9. STOP-FLOOR: 0.090 < 2×0.492 = 0.984. |
+| dp2_8s_fw_t0_t1 | FALSE-PROMOTE (RUNS=3 pass 1) | 0.088 | 0.091 | 2.2% apparent | Gate fired pass 1: best=0.088s vs champion 0.090s. Pass 2: variant 0.090s = champion. VM oscillation. Previously DEAD ×102. |
+| dp2_8s_pf3072_32 | FALSE-PROMOTE (RUNS=3 pass 2) | 0.089 | 0.094 | 1.1% apparent | Gate fired pass 2 (different winner!): best=0.089s vs champion 0.091s. Pass 1 & 3: champion tied or faster. VM oscillation. |
+| all dp2_8s variants | cluster | 0.089–0.096 | — | within noise | All dp2_8s variants cluster 0.089-0.096s across 3 separate RUNS=3 passes. No consistent winner. |
+
+VM state: slow (floor=0.492–0.603s). Champion (dp2_8s_fw_2048_32) best 0.090s = 1.80 ns/line; 5.4× faster than cat.
+Two PROMOTE gates fired in consecutive RUNS=3 passes, for DIFFERENT variants — definitive VM oscillation. Both previously documented DEAD: t0_t1 (DEAD ×102), pf3072_32 (multiple prior re-promotions and reversions). No genuine improvement.
+All algorithmic dimensions exhausted: ×105 consecutive STOP-FLOOR verdicts (2026-07-06 through 2026-07-12).
+**STOP-FLOOR ×105. Champion dp2_8s_fw_2048_32 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fw_3072_32 (local best 0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
+1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074–0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
-5. dp2_8s_fw_2048_32 (PROMOTED ×98) — double-loop + dual T1@2048+32B: NOW CHAMPION. Previously HOLD×80, PROMOTE×86 reverted, PROMOTE×95 reverted, PROMOTE×98 confirmed. g++-13 -Ofast -funroll-loops shows timing regression (0.078s) but NOT wrong output. Judge uses g++ -O3 -march=native which is correct (0.075s). SAFE TO SUBMIT.
+5. dp2_8s_fw_2048_32 (CHAMPION ×102+, current) — double-loop + dual T1@2048+32B. g++ -O3 -march=native is the safe submit compiler (g++-13 -Ofast -funroll-loops has a correctness bug with 16 prefetch µops per ITER_BODY).
 6. dp2_8s_pf6144 (DEAD ×95) — 6144B overshoots L2 capacity; SLOWER than champion.
 7. dp2_8s_pf8192 (HOLD ×95) — 8192B tied; no improvement beyond 4096B.
 8. dp2_8s_fw_4096_64 (HOLD ×89) — last +64 offset grid point; no improvement.
@@ -1092,5 +1106,5 @@ All algorithmic dimensions exhausted ×104 consecutive STOP-FLOOR verdicts (2026
 13. dp2_12s_pf3072 (HOLD ×98) — 12 spatial streams: LFB occupancy fine (~4.2 entries) but register pressure (12 p-pointers use 12/16 GP regs) causes spills; 0.078s vs 0.075s champion. 12 streams SLOWER than 8 on this hardware.
 14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
 15. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
-16. dp2_8s_fw_t0_t1 (DEAD ×102) — T0@512B + T1@3072B two-tier prefetch: HOLD/reverted. T0 at 8-iters-ahead provides no benefit; HW prefetcher already handles L2→L1 promotion before access.
+16. dp2_8s_fw_t0_t1 (DEAD ×102, ×105) — T0@512B + T1@3072B two-tier prefetch: HOLD/reverted. T0 at 8-iters-ahead provides no benefit; HW prefetcher already handles L2→L1 promotion before access. Gated ×105 via VM oscillation but confirmation showed tied.
 17. dp2_8s_fw_2560_32 (DEAD ×102) — double-loop + dual T1@2560+32B: HOLD. Fills grid gap between 2048+32 and 3072+32; all prefetch distances 512-8192B definitively exhausted.
