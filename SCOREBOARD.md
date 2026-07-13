@@ -13,7 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_4acc_t0t1 (PROMOTED 2026-07-13, current — restored ×115)** — `4 independent per-pair u16 accumulators + T0@512B (near, L1) + T1@3072B (far, L2) per stream`
+- **dp2_8s_fw_t0_7168 (PROMOTED 2026-07-13, current — ×118)** — `double-loop + T0@512B (8 iters, L2→L1) + T1@7168B (112 iters, DRAM→L2) per stream; single u16 accumulator`
+  — Gate ×118 (RUNS=5, floor=0.271s medium VM): t0_7168 best=0.076s vs champion (4acc_t0t1) 0.080s → 5.0% margin (≥1.5%), median 0.079s < 0.081s → PROMOTE. Edge 9/9. Promoted. Confirmation ×119 (RUNS=5, floor=0.445s): new champion best=0.078s, median=0.080s. 4acc_t0t1 (variant) best=0.080s/med=0.081s → t0_7168 consistently 2-5% faster across both runs. STOP-FLOOR ×119. Very aggressive far-tier T1@7168B (112 iters ahead) vs champion's T1@3072B (48 iters): longer DRAM→L2 lookahead wins at this VM's memory latency. Compiler sweep: **g++ -O3 -march=native → 0.078s** best (g++ -Ofast slightly slower 0.080s; clang++ 0.088s). All 139 cpp variants benchmarked (138 correct, 1 WRONG). STOP-FLOOR ×119.
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-70ms (fast-VM best ~0.065-0.075s → ~60-65ms). index.html: 78.0ms (medium VM confirmation).
+- **dp2_8s_fw_4acc_t0t1 (PROMOTED 2026-07-13, superseded by dp2_8s_fw_t0_7168 at ×118)** — `4 independent per-pair u16 accumulators + T0@512B (near, L1) + T1@3072B (far, L2) per stream`
   — Gate ×112 (RUNS=5, floor=0.561s very slow VM): 4acc_t0t1 best=0.091s vs champion (t0_2048) 0.093s → 2.15% margin (≥1.5%), median 0.096s < 0.100s → PROMOTE. Edge 9/9. Promoted. ×114 VM oscillation promoted dp2_8s_fw_4096_64 (old HOLD ×89 variant); ×115 didn't confirm (STOP-FLOOR + different variant winning); reverted to this champion. Key innovation: 4 independent u16 accumulators (acc0=pairs 0-1, acc1=pairs 2-3, acc2=pairs 4-5, acc3=pairs 6-7) break the 4-deep serial dependency chain on acc_u16 in prior champion (~4 cy/add × 4 = 16 cy serial latency → now 4× parallel). Also uses T1@3072B (48 iters ahead, matches former t0_t1 champion) vs t0_2048's T1@2048B. Both STOP-FLOOR (floor 0.561s, champion 0.093s is 6× faster) and PROMOTE fired; variant is genuinely different code. STOP-FLOOR ×112. All 137 cpp variants (136 correct, 1 WRONG: dp2_8s_u8tree). Compiler sweep: **g++-13 -O3 -march=native → 0.090s** best.
   **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
   Expected judge time: ~60-70ms (fast-VM best ~0.065-0.075s → ~60-65ms). index.html: 93.0ms (very slow VM).
@@ -1258,4 +1262,39 @@ index.html: champion=91.0ms (slow VM), 1.3× off rank-18 bar (69.3ms). Fast-VM b
 25. dp2_8s_fw_4acc_t0_512_4096 (DEAD ×117) — 4acc + T0@512B + T1@4096B: 0.093s = 2.2% slower. 64 iters ahead too far for VM DRAM latency; also single-acc T1@4096 was HOLD ×108. Full 4acc T1 grid exhausted.
 Algorithm definitively converged — 117 consecutive STOP-FLOOR runs.
 **STOP-FLOOR ×117. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
+26. dp2_8s_fw_4acc_t0_256_3072 (HOLD ×118) — 4acc + T0@256B + T1@3072B: 0.080s/0.081s = ties champion. Fills gap between 4acc_t0_64_3072 and 4acc_t0t1 (T0@512+T1@3072) in T0-distance grid. No improvement.
+27. dp2_8s_fw_4acc_200it (HOLD ×118) — 4acc + 200 inner iterations (vs champion's 100): 0.079s/0.083s. Overflow-safe (200 × 108 = 21,600 < 65,535). Halving widen_4acc frequency saves minimal overhead; within noise.
+28. dp2_8s_fw_t0_7168 (PROMOTED ×118) — single-acc T0@512B + T1@7168B: 0.076s/0.079s (run ×118), 0.078s/0.080s (confirmation ×119). Consistently 2-5% faster than 4acc_t0t1 (0.080/0.081, 0.080/0.081). Very aggressive DRAM→L2 lookahead at 112 iterations wins at this VM's memory latency. Confirmed as new champion.
+
+## Run log 2026-07-13 (scheduled run ×118) — PROMOTE dp2_8s_fw_t0_7168
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0t1) | — | 0.080 | 0.081 | — | Medium VM (floor=0.271s). STOP-FLOOR: 0.080 < 2×0.271=0.542. |
+| dp2_8s_fw_t0_7168 | PROMOTE ×118 | 0.076 | 0.079 | 5.0% best, 2.5% med | Existing variant (HOLD ×109 vs old t0_t1 champion). Gate fires: 5.0% > 1.5% margin AND lower median. Edge 9/9. PROMOTED. |
+| dp2_8s_fw_4acc_t0_256_3072 | HOLD ×118 | 0.080 | 0.081 | 0% best | NEW: 4acc + T0@256B + T1@3072B. Ties champion. Fills T0@256 gap in 4acc T0-distance grid. |
+| dp2_8s_fw_4acc_200it | HOLD ×118 | 0.079 | 0.083 | 1.25% best, −2.5% med | NEW: 4acc + 200 inner iters. Slightly faster best but median WORSE than champion. Gate fails (median condition not met). |
+| all other dp2 fw | cluster within noise | 0.076–0.082 | — | — | All cluster within ±4ms. 139 total programs (138 correct, 1 WRONG: dp2_8s_u8tree). |
+
+VM state: medium (floor=0.271s min / 0.530s median). Champion (4acc_t0t1) best 0.080s; t0_7168 0.076s = 1.52 ns/line.
+New variants: dp2_8s_fw_4acc_t0_256_3072 (HOLD, fills T0@256 gap); dp2_8s_fw_4acc_200it (HOLD, higher inner-iter count). Both correctly pass correctness gate.
+PROMOTE applied: dp2_8s_fw_t0_7168 copied to champion/main.cpp.
+index.html: champion=80.0ms (prior), 1.2× off rank-18 bar (69.3ms).
+
+## Run log 2026-07-13 (scheduled run ×119) — STOP-FLOOR (confirmation of ×118 PROMOTE)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_7168) | STOP-FLOOR ×119 | 0.078 | 0.080 | — | Medium-slow VM (floor=0.445s). STOP-FLOOR: 0.078 < 2×0.445=0.890. Edge 9/9. |
+| dp2_8s_fw_t0_128_3072 | HOLD | 0.077 | 0.079 | 1.28% best | 1.28% faster on best, lower median — but Δbest < 1.5% gate threshold. HOLD. |
+| dp2_8s_fw_4acc_t0t1 (old champion) | HOLD | 0.080 | 0.081 | −2.6% | Old champion now slower in both runs. t0_7168 promotion confirmed valid. |
+| all other dp2 fw | cluster within noise | 0.077–0.082 | — | — | All cluster within noise of champion. STOP-FLOOR ×119. |
+
+VM state: medium-slow (floor=0.445s min / 0.554s median). New champion (dp2_8s_fw_t0_7168) best 0.078s = 1.56 ns/line; 5.7× faster than cat → mmap hugepage bypass.
+PROMOTE confirmed: t0_7168 consistently 2-5% faster than 4acc_t0t1 across both ×118 and ×119 runs.
+Compiler sweep: g++ -O3 -march=native → 0.078s best; g++-13 -O3 → 0.079s; clang++ → 0.089s.
+index.html: champion=78.0ms (medium-slow VM), 1.1× off rank-18 bar (69.3ms).
+Algorithm definitively converged — STOP-FLOOR ×119. 
+**STOP-FLOOR ×119. Champion dp2_8s_fw_t0_7168 PROMOTED. SUBMIT with `g++ -O3 -march=native`.**
 
