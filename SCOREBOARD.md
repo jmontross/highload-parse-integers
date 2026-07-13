@@ -1241,3 +1241,21 @@ Champion dp2_8s_fw_4acc_t0t1 unchanged.
 Algorithm definitively converged — 116 consecutive STOP-FLOOR runs.
 **STOP-FLOOR ×116. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
 
+## Run log 2026-07-13 (scheduled run ×117)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0t1 (champion) | STOP-FLOOR ×117 | 0.091 | 0.092 | — | Medium-slow VM (floor=0.306s min / 0.566s median). Champion best=0.091s, edge 9/9. STOP-FLOOR: 0.091 < 2×0.306 = 0.612. |
+| dp2_8s_fw_4acc_t0_512_2048 | HOLD | 0.091 | 0.094 | 0% best | NEW 2026-07-13. 4acc + T0@512B + T1@2048B (32 iters ahead). Former single-acc T0@512+T1@2048 was CHAMPION ×110. This is 4acc version of that combo — unexplored grid gap. Locally ties champion best (0.091s = 0%). HOLD. |
+| dp2_8s_fw_4acc_t0_512_4096 | HOLD | 0.093 | 0.101 | −2.2% (SLOWER) | NEW 2026-07-13. 4acc + T0@512B + T1@4096B (64 iters ahead). Single-acc fw_t0_4096 was HOLD ×108 (1.3%); 4acc version adds no benefit. 0.093s vs champion 0.091s = 2.2% SLOWER on this VM. High jitter. DEAD. |
+| dp2_8s_fw_t0_5120 | HOLD | 0.090 | 0.092 | 1.1% best, 0% median | EXISTING (HOLD ×109). Today's fastest single sample at 0.090s. Need <0.0896s (1.5% gate) — 0.0010s short. HOLD. |
+| all other dp2_8s variants | cluster within noise | 0.090–0.097 | — | within noise | All dp2 variants cluster 0.090–0.097s. 146 total programs benchmarked (145 correct, 1 WRONG: dp2_8s_u8tree). |
+
+VM state: medium-slow (floor=0.306s min / 0.566s median). Champion (dp2_8s_fw_4acc_t0t1) best 0.091s = 1.82 ns/line; 3.4× faster than cat.
+New variants: dp2_8s_fw_4acc_t0_512_2048 (4acc+T0@512+T1@2048: ties champion, HOLD); dp2_8s_fw_4acc_t0_512_4096 (4acc+T0@512+T1@4096: 2.2% slower, DEAD). Both fill grid gaps for 4acc T1 distance sweep — T1@2048 and T1@4096 now tested with 4acc. Full 4acc T0@512 + T1@{512,1024,1536,2048,3072,4096} grid now complete (champion=T1@3072; T1@2048 ties; T1@1024 from 4acc_t0_128_1024 ties; T1@4096 slightly slower).
+index.html: champion=91.0ms (slow VM), 1.3× off rank-18 bar (69.3ms). Fast-VM best ~0.065–0.075s → expected judge ~60-70ms.
+24. dp2_8s_fw_4acc_t0_512_2048 (HOLD ×117) — 4acc + T0@512B + T1@2048B: ties champion at 0.091s. Fills T1@2048 gap in 4acc grid. Consistent with single-acc T1@2048 behavior (was champion before T1@3072 promoted).
+25. dp2_8s_fw_4acc_t0_512_4096 (DEAD ×117) — 4acc + T0@512B + T1@4096B: 0.093s = 2.2% slower. 64 iters ahead too far for VM DRAM latency; also single-acc T1@4096 was HOLD ×108. Full 4acc T1 grid exhausted.
+Algorithm definitively converged — 117 consecutive STOP-FLOOR runs.
+**STOP-FLOOR ×117. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
