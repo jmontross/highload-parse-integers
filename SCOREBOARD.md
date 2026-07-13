@@ -13,8 +13,8 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_4acc_t0t1 (PROMOTED 2026-07-13, current)** — `4 independent per-pair u16 accumulators + T0@512B (near, L1) + T1@3072B (far, L2) per stream`
-  — Gate ×112 (RUNS=5, floor=0.561s very slow VM): 4acc_t0t1 best=0.091s vs champion (t0_2048) 0.093s → 2.15% margin (≥1.5%), median 0.096s < 0.100s → PROMOTE. Edge 9/9. Promoted. Key innovation: 4 independent u16 accumulators (acc0=pairs 0-1, acc1=pairs 2-3, acc2=pairs 4-5, acc3=pairs 6-7) break the 4-deep serial dependency chain on acc_u16 in prior champion (~4 cy/add × 4 = 16 cy serial latency → now 4× parallel). Also uses T1@3072B (48 iters ahead, matches former t0_t1 champion) vs t0_2048's T1@2048B. Both STOP-FLOOR (floor 0.561s, champion 0.093s is 6× faster) and PROMOTE fired; variant is genuinely different code. STOP-FLOOR ×112. All 137 cpp variants (136 correct, 1 WRONG: dp2_8s_u8tree). Compiler sweep: **g++-13 -O3 -march=native → 0.090s** best.
+- **dp2_8s_fw_4acc_t0t1 (PROMOTED 2026-07-13, current — restored ×115)** — `4 independent per-pair u16 accumulators + T0@512B (near, L1) + T1@3072B (far, L2) per stream`
+  — Gate ×112 (RUNS=5, floor=0.561s very slow VM): 4acc_t0t1 best=0.091s vs champion (t0_2048) 0.093s → 2.15% margin (≥1.5%), median 0.096s < 0.100s → PROMOTE. Edge 9/9. Promoted. ×114 VM oscillation promoted dp2_8s_fw_4096_64 (old HOLD ×89 variant); ×115 didn't confirm (STOP-FLOOR + different variant winning); reverted to this champion. Key innovation: 4 independent u16 accumulators (acc0=pairs 0-1, acc1=pairs 2-3, acc2=pairs 4-5, acc3=pairs 6-7) break the 4-deep serial dependency chain on acc_u16 in prior champion (~4 cy/add × 4 = 16 cy serial latency → now 4× parallel). Also uses T1@3072B (48 iters ahead, matches former t0_t1 champion) vs t0_2048's T1@2048B. Both STOP-FLOOR (floor 0.561s, champion 0.093s is 6× faster) and PROMOTE fired; variant is genuinely different code. STOP-FLOOR ×112. All 137 cpp variants (136 correct, 1 WRONG: dp2_8s_u8tree). Compiler sweep: **g++-13 -O3 -march=native → 0.090s** best.
   **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
   Expected judge time: ~60-70ms (fast-VM best ~0.065-0.075s → ~60-65ms). index.html: 93.0ms (very slow VM).
 - **dp2_8s_fw_t0_2048 (PROMOTED 2026-07-13, superseded by dp2_8s_fw_4acc_t0t1)** — `double-loop + two-tier prefetch: T0@512B (near, L1) + T1@2048B (far, L2) per stream`
@@ -1165,6 +1165,35 @@ Compiler sweep: g++ -O3 -march=native → 0.091s best; g++-13 -O3 -march=native 
 index.html: champion=93.0ms (slow VM), 1.3× off rank-18 bar (69.3ms). Fast-VM best ~0.065–0.075s → expected judge ~60-70ms.
 All prefetch strategies (T0+T1, T1-only, dual-T1), all accumulator structures (single, 4acc), all distances exhausted. Algorithm definitively converged.
 **STOP-FLOOR ×113. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-07-13 (scheduled run ×114) — VM oscillation false PROMOTE, reverted
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0t1 (champion) | FALSE-PROMOTE-TRIGGERED | 0.082 | 0.084 | — | Medium VM (floor=0.220s). Champion best=0.082s, median=0.084s. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_128_1024 | HOLD | 0.082 | 0.084 | 0% | NEW 2026-07-13. 4acc + T0@128B (2 iters, L2→L1) + T1@1024B (16 iters, DRAM→L2, judge-tuned ~80ns DRAM). Locally ties champion. No improvement on this VM; may be better on judge. |
+| dp2_8s_fw_4acc_t0_64_512 | HOLD | 0.079 | 0.080 | 3.7% best, 4.8% median | NEW 2026-07-13. 4acc + T0@64B (1 iter) + T1@512B (8 iters). Best=0.079s, median=0.080 < 0.084 → HOLD (Δbest 0.003s, need 0.0807s for ≥1.5% threshold). Judge-optimized; shorter prefetch better for ~80ns DRAM. |
+| dp2_8s_fw_4acc_t0_256_2048 | HOLD | 0.081 | 0.082 | 1.2% best | NEW 2026-07-13. 4acc + T0@256B + T1@2048B. best=0.081s; median 0.082s < 0.084s → HOLD (best margin 1.2%, need ≥1.5%). Mid-range prefetch distance. |
+| dp2_8s_fw_4096_64 | FALSE-PROMOTE (applied, then reverted at ×115) | 0.077 | 0.082 | 6.1% best, 2.4% median | OLD variant (HOLD ×89). On this VM pass, best=0.077s vs champion 0.082s (6.1% margin), median 0.082 < 0.084 → gate fired PROMOTE. Copied to champion/main.cpp. Single-acc, dual T1@4096+4096+64 per stream. |
+
+VM state: medium (floor=0.220s). Champion (dp2_8s_fw_4acc_t0t1) best 0.082s = 1.64 ns/line.
+New variants (all correct): dp2_8s_fw_4acc_t0_128_1024, dp2_8s_fw_4acc_t0_64_512, dp2_8s_fw_4acc_t0_256_2048 — 4acc + judge-tuned shorter prefetch. All HOLD locally; shorter T0+T1 may be better on judge with ~80ns DRAM.
+Gate fired PROMOTE for dp2_8s_fw_4096_64 (old single-acc variant, HOLD ×89). Applied per protocol. Confirmation run ×115 did NOT confirm — showed different variant winning + STOP-FLOOR → ×114 PROMOTE was VM oscillation. **Reverted to dp2_8s_fw_4acc_t0t1.**
+**FALSE-PROMOTE ×114. Champion dp2_8s_fw_4acc_t0t1 restored. Algorithm converged.**
+
+## Run log 2026-07-13 (scheduled run ×115) — STOP-FLOOR + VM oscillation false PROMOTE
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4096_64 (temp champion from ×114) | STOP-FLOOR ×115 | 0.080 | 0.085 | — | Very slow VM (floor=0.522s). Champion best=0.080s, edge 9/9. STOP-FLOOR: 0.080 < 2×0.522 = 1.044. |
+| dp2_8s_fixed_2048 | FALSE-PROMOTE (not applied) | 0.078 | 0.081 | 2.5% best, 4.7% median | OLD variant (HOLD ×92). best=0.078s, median=0.081 < 0.085 → gate fired PROMOTE. NOT APPLIED: (1) STOP-FLOOR also fired → memory-bound, stop the loop; (2) old variant, HOLD ×92, structurally inferior to 4acc_t0t1; (3) 2ms margin within jitter on floor=0.522s VM. VM oscillation false positive. |
+
+VM state: very slow (floor=0.522s). All dp2 variants cluster 0.078–0.100s (noise-dominated).
+Both STOP-FLOOR and PROMOTE fired (same pattern as ×112 but: variant is old+inferior, not genuinely new code → STOP-FLOOR takes precedence). Champion reverted to dp2_8s_fw_4acc_t0t1.
+3 new 4acc judge-tuned variants from ×114 preserved: dp2_8s_fw_4acc_t0_64_512, dp2_8s_fw_4acc_t0_128_1024, dp2_8s_fw_4acc_t0_256_2048 (all HOLD locally, potentially better on judge with ~80ns DRAM).
+Compiler sweep (×115, slow VM): g++ -O3 -march=native best=0.0790s; g++-13 -O3 -march=native best=0.0800s.
+Algorithm definitively converged — 115 consecutive STOP-FLOOR runs (inclusive of VM oscillation false promotes). index.html: 80.0ms (slow VM), 1.2× off rank-18 bar (69.3ms).
+**STOP-FLOOR ×115. Champion dp2_8s_fw_4acc_t0t1 restored. SUBMIT with `g++-13 -O3 -march=native`.**
 
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_4acc_t0t1 (local best 0.091–0.093s slow VM; expected judge ~60-70ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.** Use `g++-13 -O3 -march=native`.
