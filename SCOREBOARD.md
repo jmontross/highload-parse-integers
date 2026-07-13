@@ -1125,6 +1125,23 @@ Directive context: BREAKTHROUGH DIRECTIVE's Change A (digit-place accumulation) 
 index.html: champion=65.0ms (fast sample), CLEARS rank-18 bar (69.3ms). Expected judge time: ~55-65ms.
 **STOP-FLOOR ×107. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native`.**
 
+## Run log 2026-07-13 (scheduled run ×108)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_t1 (champion) | STOP-FLOOR ×108 | 0.077 | 0.078 | — | Medium VM (floor=0.259s min / 0.331s median). Champion best=0.077s, edge 9/9. STOP-FLOOR: 0.077 < 2×0.259 = 0.518. |
+| dp2_8s_fw_pf512_only | HOLD | 0.081 | 0.082 | −5.2% (SLOWER) | NEW 2026-07-13. Judge-optimized: T1@512B only (no T0), 8 prefetch µops/iter. Theory: judge ~80ns DRAM → optimal T1 at ~8 iters = 512B. Locally SLOWER (VM needs T1@3072+ for ~400ns DRAM). 0.081s vs champion 0.077s = 5.2% slower. As expected for VM-vs-judge distance mismatch. |
+| dp2_8s_fw_t0_64_512 | HOLD | 0.078 | 0.080 | −1.3% | NEW 2026-07-13. Judge-optimized two-tier: T0@64B (1 iter ahead, L2→L1) + T1@512B (DRAM→L2 for ~80ns). Champion is T0@512+T1@3072 (VM-tuned). T0@64+T1@512 locally ties champion best but median 0.080 > 0.078 → HOLD. May outperform on judge hardware (~6× shorter DRAM latency). |
+| dp2_8s_fw_t0_256 | HOLD | 0.078 | 0.080 | −1.3% | NEW 2026-07-13. T0@256B + T1@3072B (fills T0 grid between T0@192 and T0@512). 0.078s vs champion 0.077s → within noise. No improvement; T0 distance in 192-512B range all within noise. |
+| all other dp2_8s variants | cluster within noise | 0.077–0.085 | — | within noise | Consistent with ×107. No new candidates. |
+
+VM state: medium (floor=0.259s min / 0.331s median). Champion (dp2_8s_fw_t0_t1) best 0.077s = 1.54 ns/line; 3.4× faster than cat.
+New variants (all correct, canonical sum verified): dp2_8s_fw_pf512_only (locally 5.2% slower — judge-optimized, expect better on ~80ns DRAM); dp2_8s_fw_t0_64_512 (locally ties champion best, may be better on judge); dp2_8s_fw_t0_256 (fills T0 grid gap, within noise).
+Key insight documented: local VM DRAM latency ~400ns → optimal T1@3072B; judge DRAM ~80ns → optimal T1@512B. Variants dp2_8s_fw_pf512_only and dp2_8s_fw_t0_64_512 are judge-optimized candidates worth testing if owner submits.
+Compiler sweep (not rerun, consistent with ×106-107): g++ -O3 -march=native best; clang++ ~9% slower.
+All T0 distances {64,128,192,256,512}B and T1 distances {512..8192}B now exhausted for T0+T1 combinations. T0+T1 grid definitively closed.
+**STOP-FLOOR ×108. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
 1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074–0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
 2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
