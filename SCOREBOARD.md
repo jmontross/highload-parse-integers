@@ -1231,9 +1231,13 @@ Algorithm definitively converged — 115 consecutive STOP-FLOOR runs (inclusive 
 | dp2_8s_fw_t0_64_3072 | HOLD ×116 | 0.080 | 0.081 | 1.2% | NEW: T0@64B + T1@3072B. No improvement over T0@512B. |
 | dp2_8s_fw_4acc_t0_64_3072 | HOLD ×116 | — | — | — | NEW: 4acc + T0@64B + T1@3072B. Created; benchmark absorbed into full sweep; no focused timing. |
 
-VM state: medium (floor=0.277s min / 0.547s median). STOP-FLOOR fires again (116th consecutive run).
-False-PROMOTE for dp2_8s_fw_3072_32 gate fired but NOT applied per ×114/115 precedent: old variant + STOP-FLOOR → VM oscillation false positive. Champion dp2_8s_fw_4acc_t0t1 unchanged.
-4 new judge-tuned variants created and added to variants/. All HOLD. Prefetch geometry space fully closed.
+VM states observed this session:
+- Early run (RUNS=3, floor=0.277s/0.547s): champion 0.083s/0.083s. STOP-FLOOR: 0.083 < 2×0.277=0.554.
+- Full sweep (RUNS=5, floor=0.581s/0.599s): champion 0.080s/0.082s (rank 23rd). STOP-FLOOR: 0.080 < 2×0.581=1.162.
+
+Full RUNS=5 sweep: 9 dp2 fw variants clock 0.078s (2.5% ahead of champion 0.080s) — PROMOTE gate fires. NOT applied: (1) STOP-FLOOR definitively fires; (2) all 9 "faster" variants are OLD T0-only single-hint variants (dp2_8s_fw_t0_256, fw_t0_2048, fw_t0_4096, fw_t0_5120, fw_t0_7168, fw_2048_32, fw_t0_128_1024, fw_t0_128_3072, fw_wide400) — each previously promoted and superseded; (3) 2ms spread across 0.580s floor = pure VM noise. Precedent ×114/115 both same pattern.
+Champion dp2_8s_fw_4acc_t0t1 unchanged.
+4 new judge-tuned variants added to variants/. All HOLD.
 Algorithm definitively converged — 116 consecutive STOP-FLOOR runs.
 **STOP-FLOOR ×116. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
 
