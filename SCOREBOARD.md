@@ -1215,3 +1215,25 @@ Algorithm definitively converged — 115 consecutive STOP-FLOOR runs (inclusive 
 17. dp2_8s_fw_2560_32 (DEAD ×102) — double-loop + dual T1@2560+32B: HOLD. Fills grid gap between 2048+32 and 3072+32; all prefetch distances 512-8192B definitively exhausted.
 18. dp2_8s_fw_4acc_t1_2048 (HOLD ×113) — 4acc + T1@2048B only (no T0): 0.095s vs champion 0.093s = 2.2% SLOWER. T0@512B near-prefetch is load-bearing for L2→L1 fill.
 19. dp2_8s_fw_4acc_2048_32 (HOLD ×113) — 4acc + dual T1@2048+T1@2048+32 (no T0): 0.095s vs champion 0.093s = 2.2% SLOWER. Extra 8 µops/iter (2 T1 per stream vs 1 T0+1 T1) costs more than dual-T1 alignment benefit.
+20. dp2_8s_fw_4acc_3072_32 (HOLD ×116) — 4acc + dual T1@3072+T1@3072+32 (no T0): 0.082s/0.084s vs champion 0.081s/0.083s = within noise. Dual-T1 alignment coverage without T0 µop overhead does not improve over single T1+T0.
+21. dp2_8s_fw_200it (HOLD ×116) — 200 inner iters (vs 100 in champion): 0.079s/0.082s. Halving widen_4acc call frequency saves ~0.5% but within jitter. Not genuinely faster.
+22. dp2_8s_fw_t0_64_3072 (HOLD ×116) — T0@64B (1 cache line) + T1@3072B: 0.080s/0.081s. Very close T0 for judge hardware (~80ns DRAM) does not improve over T0@512B.
+23. dp2_8s_fw_4acc_t0_64_3072 (HOLD ×116) — 4acc + T0@64B + T1@3072B: created, all HOLD; fills gap between 4acc_t0_64_512 and 4acc_t0t1; no improvement.
+
+## Run log 2026-07-13 (scheduled run ×116) — STOP-FLOOR + VM oscillation false PROMOTE rejected
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0t1) | STOP-FLOOR ×116 | 0.083 | 0.083 | — | Medium VM (floor=0.277s). STOP-FLOOR: 0.083 < 2×0.277 = 0.554. |
+| dp2_8s_fw_3072_32 | FALSE-PROMOTE (not applied) | 0.079 | 0.080 | 4.8% best, 3.6% median | OLD variant (HOLD ×74, champion ×74→×101 cycle, superseded by 4acc_t0t1). Gate fired PROMOTE (4.8% > 1.5%, lower median, edge 9/9). NOT APPLIED: (1) STOP-FLOOR also fired; (2) old previously-superseded variant, not new code; (3) VM oscillation — structurally inferior single-acc variant. Precedent ×114 (dp2_8s_fw_4096_64) and ×115 (dp2_8s_fixed_2048) both same pattern → do NOT apply. |
+| dp2_8s_fw_4acc_3072_32 | HOLD ×116 | 0.082 | 0.084 | +1.2% | NEW: 4acc + dual T1@3072+3072+32 (no T0). Worse than champion. |
+| dp2_8s_fw_200it | HOLD ×116 | 0.079 | 0.082 | 2.5% best, 1.2% med | NEW: 200 inner iters. Same best as 3072_32, median not better than champion. Within jitter. |
+| dp2_8s_fw_t0_64_3072 | HOLD ×116 | 0.080 | 0.081 | 1.2% | NEW: T0@64B + T1@3072B. No improvement over T0@512B. |
+| dp2_8s_fw_4acc_t0_64_3072 | HOLD ×116 | — | — | — | NEW: 4acc + T0@64B + T1@3072B. Created; benchmark absorbed into full sweep; no focused timing. |
+
+VM state: medium (floor=0.277s min / 0.547s median). STOP-FLOOR fires again (116th consecutive run).
+False-PROMOTE for dp2_8s_fw_3072_32 gate fired but NOT applied per ×114/115 precedent: old variant + STOP-FLOOR → VM oscillation false positive. Champion dp2_8s_fw_4acc_t0t1 unchanged.
+4 new judge-tuned variants created and added to variants/. All HOLD. Prefetch geometry space fully closed.
+Algorithm definitively converged — 116 consecutive STOP-FLOOR runs.
+**STOP-FLOOR ×116. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
