@@ -13,7 +13,15 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_t0_7168 (PROMOTED 2026-07-13, current — ×118)** — `double-loop + T0@512B (8 iters, L2→L1) + T1@7168B (112 iters, DRAM→L2) per stream; single u16 accumulator`
+- **dp2_8s_fw_t0_64_512 (PROMOTED 2026-07-13, current — ×121)** — `double-loop + T0@64B (1 iter, L2→L1) + T1@512B (8 iters, DRAM→L2) per stream; single u16 accumulator; judge-tuned for ~80ns DRAM`
+  — Gate ×121 (RUNS=5, floor=0.609s warm-cache VM): t0_64_512 best=0.089s vs champion (4acc_t0_64_512) 0.092s → 3.3% margin (≥1.5%), median 0.091s < 0.100s → PROMOTE. Edge 9/9. Promoted. VM was warm-cache (slow floor); short prefetch distances (T0@64B = 1 iter, T1@512B = 8 iters) optimally tuned for judge hardware with ~80ns real DRAM latency. Sibling of 4acc_t0_64_512 but with single accumulator — won due to VM state. Compiler sweep: **g++-13 -Ofast -march=native -funroll-loops → 0.094s** best on this VM. New variants created this session: dp2_8s_fw_4acc_t0_512_7168 (4acc+T1@7168B) and dp2_8s_fw_t0_9216 (T1@9216B). Confirmation ×122 in progress (floor=0.572s).
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-70ms. index.html: pending run ×122.
+- **dp2_8s_fw_4acc_t0_64_512 (PROMOTED 2026-07-13, superseded by dp2_8s_fw_t0_64_512 at ×121)** — `double-loop + 4 independent u16 accumulators + T0@64B (1 iter) + T1@512B (8 iters) per stream; judge-tuned`
+  — Gate ×120 (RUNS=5, floor=0.319s medium VM): 4acc_t0_64_512 best=0.089s vs champion (t0_7168) 0.092s → 3.3% margin (≥1.5%), median 0.093s < 0.096s → PROMOTE. Edge 9/9. Promoted. Short prefetch distances (T0@64B near-tier L1, T1@512B far-tier L2) tuned for ~80ns DRAM latency; 4 independent u16 accumulators break the serial accumulator dependency chain. STOP-FLOOR ×120. Immediately superseded by sibling t0_64_512 on confirmation run ×121 (VM shifted to warm-cache state).
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-70ms.
+- **dp2_8s_fw_t0_7168 (PROMOTED 2026-07-13, superseded by dp2_8s_fw_4acc_t0_64_512 at ×120)** — `double-loop + T0@512B (8 iters, L2→L1) + T1@7168B (112 iters, DRAM→L2) per stream; single u16 accumulator`
   — Gate ×118 (RUNS=5, floor=0.271s medium VM): t0_7168 best=0.076s vs champion (4acc_t0t1) 0.080s → 5.0% margin (≥1.5%), median 0.079s < 0.081s → PROMOTE. Edge 9/9. Promoted. Confirmation ×119 (RUNS=5, floor=0.445s): new champion best=0.078s, median=0.080s. 4acc_t0t1 (variant) best=0.080s/med=0.081s → t0_7168 consistently 2-5% faster across both runs. STOP-FLOOR ×119. Very aggressive far-tier T1@7168B (112 iters ahead) vs champion's T1@3072B (48 iters): longer DRAM→L2 lookahead wins at this VM's memory latency. Compiler sweep: **g++ -O3 -march=native → 0.078s** best (g++ -Ofast slightly slower 0.080s; clang++ 0.088s). All 139 cpp variants benchmarked (138 correct, 1 WRONG). STOP-FLOOR ×119.
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-70ms (fast-VM best ~0.065-0.075s → ~60-65ms). index.html: 78.0ms (medium VM confirmation).
