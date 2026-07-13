@@ -1150,21 +1150,39 @@ Compiler sweep (not rerun, consistent with ×106-107): g++ -O3 -march=native bes
 All T0 distances {64,128,192,256,512}B and T1 distances {512..8192}B now exhausted for T0+T1 combinations. T0+T1 grid definitively closed.
 **STOP-FLOOR ×108. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++ -O3 -march=native`.**
 
+## Run log 2026-07-13 (scheduled run ×113)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0t1 (champion) | STOP-FLOOR ×113 | 0.093 | 0.094 | — | Medium-slow VM (floor=0.352s min / 0.467s median). Champion best=0.093s, edge 9/9. STOP-FLOOR: 0.093 < 2×0.352 = 0.704. |
+| dp2_8s_fw_4acc_t1_2048 | HOLD | 0.095 | 0.097 | −2.2% (SLOWER) | NEW 2026-07-13. 4acc + T1@2048B only (no T0 hint), 8 T1 prefetch µops/iter. Theory: drop T0 near-hint to save µops. Locally SLOWER: T0@512B is load-bearing for L2→L1 fill before use. 0.095s vs champion 0.093s = 2.2% slower. DEAD. |
+| dp2_8s_fw_4acc_2048_32 | HOLD | 0.095 | 0.100 | −2.2% (SLOWER) | NEW 2026-07-13. 4acc + dual T1@2048+T1@2048+32 per stream (16 T1 µops/iter, no T0). Theory: dual-T1 covers both 32B sub-loads at target. Extra µop cost (8 extra prefetches/iter) exceeds alignment benefit; also missing T0 near-hint hurts. 0.095s vs champion 0.093s = 2.2% slower. DEAD. |
+| dp2_8s_fw_t0_128_1024 | HOLD | 0.091 | 0.094 | 2.2% best, 0% median | Best single-run variant at 0.091s; median 0.094s ties champion 0.094s → HOLD (need both conditions). Consistent with prior HOLD results. |
+
+VM state: medium-slow (floor=0.352s min / 0.467s median). Champion (dp2_8s_fw_4acc_t0t1) best 0.093s = 1.86 ns/line; 3.8× faster than cat.
+New variants (both correct, canonical sum 53687387166542798 verified): dp2_8s_fw_4acc_t1_2048 (4acc without T0: 2.2% SLOWER — T0 near-hint is load-bearing); dp2_8s_fw_4acc_2048_32 (4acc + dual-T1 no T0: 2.2% SLOWER — extra µops + missing T0 hurts).
+Compiler sweep: g++ -O3 -march=native → 0.091s best; g++-13 -O3 -march=native → 0.090s best; clang++ slower.
+index.html: champion=93.0ms (slow VM), 1.3× off rank-18 bar (69.3ms). Fast-VM best ~0.065–0.075s → expected judge ~60-70ms.
+All prefetch strategies (T0+T1, T1-only, dual-T1), all accumulator structures (single, 4acc), all distances exhausted. Algorithm definitively converged.
+**STOP-FLOOR ×113. Champion dp2_8s_fw_4acc_t0t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
 ## Next hypotheses (if STOP-FLOOR lifts or new hardware)
-1. **Submit champion to judge** — dp2_8s_fw_2048_32 (local best 0.074–0.090s; fast-VM best ~0.056s → judge ~55ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.**
-2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T1, T2, NTA) exhausted. Prefetch × stream space definitively closed.
+1. **Submit champion to judge** — dp2_8s_fw_4acc_t0t1 (local best 0.091–0.093s slow VM; expected judge ~60-70ms; rank-18 bar = 69ms). **PRIORITY — READY TO SUBMIT.** Use `g++-13 -O3 -march=native`.
+2. All variants, prefetch distances ({512..8192}B), offsets ({+0,+32,+64}B), loop structures (single/double), streams (4,8,12), windows (1,2), accumulation structures, and prefetch hints (T0/T1, T2, NTA) exhausted. Space definitively closed.
 3. dp2_8s_fw_nta (DEAD ×92) — NTA hint saturates L1 immediately; T1 (L2) is correct for 8-stream streaming.
 4. dp2_8s_fixed_2048 (HOLD ×92) — 2048B double-loop: tied champion; confirms grid exhausted for shorter distances.
-5. dp2_8s_fw_2048_32 (CHAMPION ×102+, current) — double-loop + dual T1@2048+32B. g++ -O3 -march=native is the safe submit compiler (g++-13 -Ofast -funroll-loops has a correctness bug with 16 prefetch µops per ITER_BODY).
+5. dp2_8s_fw_2048_32 (CHAMPION ×102, superseded) — double-loop + dual T1@2048+32B. g++ -O3 -march=native is the safe submit compiler (g++-13 -Ofast -funroll-loops has a correctness bug with 16 prefetch µops per ITER_BODY).
 6. dp2_8s_pf6144 (DEAD ×95) — 6144B overshoots L2 capacity; SLOWER than champion.
 7. dp2_8s_pf8192 (HOLD ×95) — 8192B tied; no improvement beyond 4096B.
 8. dp2_8s_fw_4096_64 (HOLD ×89) — last +64 offset grid point; no improvement.
 9. dp2_8s_u8tree (WRONG) — 4-way u8 tree overflows; 2-way pair is maximum safe depth.
-10. dp2_8s_4acc (HOLD ×91,×94) — 4 independent accumulators: accumulation NOT the bottleneck.
+10. dp2_8s_4acc (HOLD ×91,×94) — standalone 4acc (without t0t1) held; accumulation chain not sole bottleneck. Combined dp2_8s_fw_4acc_t0t1 (4acc + T0@512+T1@3072) PROMOTED ×112 (2.15% margin) — parallel add chains eliminate 16cy serial latency on acc_u16.
 11. dp2_8s_2w_fixed (DEAD ×91) — 2 windows/stream: register pressure causes stack spills, 14% slower.
 12. dp2_8s_avx512_nl (DEAD ×98) — AVX-512 nl_mask64 (3 µops vs 8 for AVX2): Cascade Lake downclocking ~5% frequency penalty exceeds µop savings across 8 streams. AVX-512 definitively DEAD for this workload.
 13. dp2_12s_pf3072 (HOLD ×98) — 12 spatial streams: LFB occupancy fine (~4.2 entries) but register pressure (12 p-pointers use 12/16 GP regs) causes spills; 0.078s vs 0.075s champion. 12 streams SLOWER than 8 on this hardware.
-14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++ -O3 -march=native for judge submission.
+14. Compiler: clang++ shows 9% worse than g++ on slow-VM days. Use g++-13 -O3 -march=native for judge submission.
 15. CPU match: VM is Cascade Lake (family 6, model 85, stepping 7) = same as judge. -march=native already optimal.
-16. dp2_8s_fw_t0_t1 (CURRENT CHAMPION, promoted ×103) — T0@512B + T1@3072B two-tier prefetch. Previously DEAD ×102 (false gate reverted), then gate fired ×103 with 4.3% margin on fast VM. Current champion. All dp2 fw variants cluster within noise of it on any given VM state.
+16. dp2_8s_fw_4acc_t0t1 (CURRENT CHAMPION, promoted ×112) — 4 independent per-pair u16 accumulators + T0@512B + T1@3072B two-tier prefetch. Breaks 4-deep serial add chain (16cy → 4cy parallel). 2.15% gate margin on slow VM (floor=0.561s). All dp2 fw variants cluster within noise of it on any given VM state.
 17. dp2_8s_fw_2560_32 (DEAD ×102) — double-loop + dual T1@2560+32B: HOLD. Fills grid gap between 2048+32 and 3072+32; all prefetch distances 512-8192B definitively exhausted.
+18. dp2_8s_fw_4acc_t1_2048 (HOLD ×113) — 4acc + T1@2048B only (no T0): 0.095s vs champion 0.093s = 2.2% SLOWER. T0@512B near-prefetch is load-bearing for L2→L1 fill.
+19. dp2_8s_fw_4acc_2048_32 (HOLD ×113) — 4acc + dual T1@2048+T1@2048+32 (no T0): 0.095s vs champion 0.093s = 2.2% SLOWER. Extra 8 µops/iter (2 T1 per stream vs 1 T0+1 T1) costs more than dual-T1 alignment benefit.
