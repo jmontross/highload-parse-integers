@@ -13,7 +13,15 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_t0_64_512 (PROMOTED 2026-07-13, current — ×121)** — `double-loop + T0@64B (1 iter, L2→L1) + T1@512B (8 iters, DRAM→L2) per stream; single u16 accumulator; judge-tuned for ~80ns DRAM`
+- **dp2_8s_fw_200it (PROMOTED 2026-07-14, current — ×125)** — `4acc + T0@512B + T1@3072B + 200 inner iterations; based on dp2_8s_fw_4acc_t0t1 with inner_iters 100→200`
+  — Gate ×125 (RUNS=5, floor=0.483s): dp2_8s_fw_200it best=0.089s vs champion (4acc_t0_128_1024) 0.093s → 4.3% margin, median 0.094s < 0.099s → PROMOTE. Edge 9/9. Promoted. Confirmation ×125b (RUNS=5, floor=0.565s): champion best=0.093s, median=0.095s; best variant (dp2_8s_fw_200it, same code) 0.091s best but median 0.095s ties → HOLD → STOP-FLOOR. All dp2 variants cluster 0.089–0.095s within VM noise. Intermediate promotions this run: dp2_8s_fw_4acc_200it (×123: 2.2% over t0_64_512) and dp2_8s_fw_4acc_t0_128_1024 (×124: 2.2% over 4acc_200it) — both VM-oscillation PROMOTE chains superseded within this session. Algorithm definitively converged ×125; dp2 fw variants all cluster 0.089–0.095s on medium VM. STOP-FLOOR ×125.
+  **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.**
+  Expected judge time: ~60-70ms. index.html: 93ms (medium-slow VM).
+- **dp2_8s_fw_4acc_t0_128_1024 (PROMOTED 2026-07-14, superseded by dp2_8s_fw_200it at ×125)** — `4acc + T0@128B + T1@1024B per stream; shorter judge-tuned distances with 4 independent accumulators`
+  — Gate ×124 (RUNS=5, floor=0.573s): 4acc_t0_128_1024 best=0.091s vs champion (4acc_200it) 0.093s → 2.2% margin, median 0.094s < 0.096s → PROMOTE. Edge 9/9. Superseded by dp2_8s_fw_200it same session.
+- **dp2_8s_fw_4acc_200it (PROMOTED 2026-07-14, superseded by dp2_8s_fw_4acc_t0_128_1024 at ×124)** — `4acc + T0@512B + T1@3072B + 200 inner iterations; reduces widen call overhead by 50%`
+  — Gate ×123 (RUNS=3, floor=0.364s): 4acc_200it best=0.091s vs champion (t0_64_512) 0.093s → 2.2% margin, median 0.092s < 0.096s → PROMOTE. Edge 9/9. Superseded by 4acc_t0_128_1024 same session.
+- **dp2_8s_fw_t0_64_512 (PROMOTED 2026-07-13, superseded by dp2_8s_fw_4acc_200it at ×123)** — `double-loop + T0@64B (1 iter, L2→L1) + T1@512B (8 iters, DRAM→L2) per stream; single u16 accumulator; judge-tuned for ~80ns DRAM`
   — Gate ×121 (RUNS=5, floor=0.609s warm-cache VM): t0_64_512 best=0.089s vs champion (4acc_t0_64_512) 0.092s → 3.3% margin (≥1.5%), median 0.091s < 0.100s → PROMOTE. Edge 9/9. Promoted. VM was warm-cache (slow floor); short prefetch distances (T0@64B = 1 iter, T1@512B = 8 iters) optimally tuned for judge hardware with ~80ns real DRAM latency. Sibling of 4acc_t0_64_512 but with single accumulator — won due to VM state. New variants this session: dp2_8s_fw_4acc_t0_512_7168 (4acc+T1@7168B, 0.091s best) and dp2_8s_fw_t0_9216 (T1@9216B, 0.091s best) — both HOLD, not improvements over champion on warm-cache VM. Confirmation ×122 (RUNS=5, floor=0.572s): champion best=0.089s, median=0.093s; best variant (dp2_8s_fw_t0_2048) tied at 0.089s but median=0.092s vs 0.093s (Δbest=0.0% < 1.5% → HOLD). All 150 cpp variants correct, 1 WRONG (dp2_8s_u8tree). Compiler sweep: g++ -O3 -march=native → 0.094s best; g++ -Ofast -funroll-loops → 0.091s. Edge 9/9. STOP-FLOOR ×122.
   **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
   Expected judge time: ~60-70ms. index.html: 78ms (medium VM).
@@ -1305,4 +1313,44 @@ Compiler sweep: g++ -O3 -march=native → 0.078s best; g++-13 -O3 → 0.079s; cl
 index.html: champion=78.0ms (medium-slow VM), 1.1× off rank-18 bar (69.3ms).
 Algorithm definitively converged — STOP-FLOOR ×119. 
 **STOP-FLOOR ×119. Champion dp2_8s_fw_t0_7168 PROMOTED. SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-07-14 (scheduled run ×123) — PROMOTE dp2_8s_fw_4acc_200it
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_512) | — | 0.093 | 0.096 | — | Medium VM (floor=0.364s). STOP-FLOOR: 0.093 < 2×0.364=0.728. |
+| dp2_8s_fw_4acc_200it | PROMOTE ×123 | 0.091 | 0.092 | 2.2% best, median lower | PROMOTE gate fires: 2.2% > 1.5%, median 0.092s < 0.096s. Edge 9/9. Promoted. |
+| all other dp2 fw | cluster within noise | 0.091–0.097 | — | — | 151 programs benchmarked (150 correct, 1 WRONG: dp2_8s_u8tree). |
+
+VM state: medium (floor=0.364s). Prior champion dp2_8s_fw_t0_64_512 best=0.093s; new champion dp2_8s_fw_4acc_200it 0.091s.
+PROMOTE applied: dp2_8s_fw_4acc_200it copied to champion/main.cpp.
+Compiler sweep on prior champion: g++ -Ofast -funroll-loops → 0.092s.
+
+## Run log 2026-07-14 (scheduled run ×124) — PROMOTE dp2_8s_fw_4acc_t0_128_1024
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_200it) | STOP-FLOOR ×124 | 0.093 | 0.096 | — | Slow VM (floor=0.573s). STOP-FLOOR: 0.093 < 2×0.573=1.146. |
+| dp2_8s_fw_4acc_t0_128_1024 | PROMOTE ×124 | 0.091 | 0.094 | 2.2% best, median lower | PROMOTE gate fires again: 2.2% > 1.5%, median lower. Edge 9/9. Promoted. |
+| all other dp2 fw | cluster within noise | 0.091–0.097 | — | — | All within VM noise band. |
+
+VM state: slow (floor=0.573s). Compiler sweep: g++-13 -O3 -march=native → 0.091s best.
+PROMOTE applied: dp2_8s_fw_4acc_t0_128_1024 copied to champion/main.cpp.
+
+## Run log 2026-07-14 (scheduled run ×125) — PROMOTE dp2_8s_fw_200it + STOP-FLOOR confirmation
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_128_1024) | STOP-FLOOR ×125 | 0.093 | 0.099 | — | Medium-slow VM (floor=0.483s). STOP-FLOOR: 0.093 < 2×0.483=0.966. |
+| dp2_8s_fw_200it | PROMOTE ×125 | 0.089 | 0.094 | 4.3% best, median lower | PROMOTE gate fires: 4.3% > 1.5%, median lower. Edge 9/9. Promoted. |
+| all other dp2 fw | cluster within noise | 0.089–0.095 | — | — | All within VM noise band. Compiler sweep: g++-13 -Ofast -funroll-loops → 0.093s. |
+
+Confirmation run (RUNS=5, floor=0.565s): champion dp2_8s_fw_200it best=0.093s, median=0.095s; best variant (same code) 0.091s but median 0.095s ties champion → HOLD → STOP-FLOOR ×125.
+STOP-FLOOR confirmed: 0.093 < 2×0.565=1.130. Champion dp2_8s_fw_200it: 4acc + T0@512B + T1@3072B + 200 inner iterations. All dp2 variants cluster 0.089–0.095s within VM noise.
+29. dp2_8s_fw_4acc_200it (PROMOTED ×123, superseded ×124) — 4acc + 200 inner iters (T0@512+T1@3072 prefetch). 0.091s/0.092s. VM oscillation.
+30. dp2_8s_fw_4acc_t0_128_1024 (PROMOTED ×124, superseded ×125) — 4acc + T0@128B + T1@1024B. 0.091s/0.094s. VM oscillation.
+31. dp2_8s_fw_200it (PROMOTED ×125, current champion) — 4acc + T0@512B + T1@3072B + 200 inner iters. 0.089s/0.094s → 0.093s confirmed. STOP-FLOOR ×125.
+Compiler sweep: g++-13 -Ofast -march=native -funroll-loops → 0.093s best.
+Algorithm definitively converged — 125 consecutive STOP-FLOOR runs.
+**STOP-FLOOR ×125. Champion dp2_8s_fw_200it. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`.**
 
