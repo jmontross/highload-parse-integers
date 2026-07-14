@@ -1406,3 +1406,22 @@ Key findings:
 36. dp2_8s_fw_t0_128_1536 (new, HOLD) — T0@128B + T1@1536B. 0.077s/0.080s. High jitter, HOLD.
 **STOP-FLOOR ×130. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~60-70ms.**
 
+## Run log 2026-07-14 (scheduled runs ×131-×132) — false-PROMOTE (VM oscillation), STOP-FLOOR confirmed
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_1536) | STOP-FLOOR ×131 | 0.068 | 0.069 | — | Medium VM (floor=0.213s min). STOP-FLOOR: 0.068 < 2×0.213=0.426. |
+| variants/dp2_8s_fw_2w | FALSE-PROMOTE ×131 | 0.066 | 0.068 | +2.9% best, lower median | Gate fires but variant is dp2_8s_fw_3072_32 code (mislabeled file). Previously champion ×74-×101, superseded by newer T0+T1 approach. Not applied. |
+
+Run ×131 (RUNS=3, floor=0.213s medium VM): initial gate showed PROMOTE for `variants/dp2_8s_fw_2w` (0.066s vs champion 0.068s, 2.9% margin, median lower, edge 9/9). However: (1) `dp2_8s_fw_2w` is mislabeled — contains `dp2_8s_fw_3072_32` code (dual T1@3072+32, no T0), an OLD previously-superseded approach; (2) both STOP-FLOOR and PROMOTE fired simultaneously; (3) confirmation run ×132 (RUNS=5, floor=0.634s very slow VM) showed `dp2_8s_fw_2w` tied champion at 0.067s → HOLD/STOP-FLOOR. VM oscillation pattern identical to ×115, ×248 (old variants fire false PROMOTE, confirmation shows HOLD). NOT APPLIED.
+
+Confirmation run ×132 (RUNS=5, floor=0.634s): champion best=0.067s; `dp2_8s_fw_2w` best=0.067s (tied = HOLD); `dp2_8s_fw_t0_192_1536` (variant copy) best=0.066s (tied within noise). STOP-FLOOR confirmed: 0.067 < 2×0.634=1.268.
+
+Key findings:
+- dp2_8s_fw_2w (mislabeled fw_3072_32): false PROMOTE due to VM cache state shift between initial and confirmation runs. Confirmed VM oscillation pattern.
+- All dp2 fw variants cluster within measurement noise (0.066-0.070s) at this VM state.
+- Algorithm definitively converged — 132 consecutive STOP-FLOOR runs.
+- Champion dp2_8s_fw_t0_192_1536 remains optimal (T0@192B + T1@1536B).
+
+**STOP-FLOOR ×132. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~60-70ms.**
+
