@@ -13,10 +13,10 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_200it (PROMOTED 2026-07-14, current — ×125)** — `4acc + T0@512B + T1@3072B + 200 inner iterations; based on dp2_8s_fw_4acc_t0t1 with inner_iters 100→200`
-  — Gate ×125 (RUNS=5, floor=0.483s): dp2_8s_fw_200it best=0.089s vs champion (4acc_t0_128_1024) 0.093s → 4.3% margin, median 0.094s < 0.099s → PROMOTE. Edge 9/9. Promoted. Confirmation ×125b (RUNS=5, floor=0.565s): champion best=0.093s, median=0.095s; best variant (dp2_8s_fw_200it, same code) 0.091s best but median 0.095s ties → HOLD → STOP-FLOOR. All dp2 variants cluster 0.089–0.095s within VM noise. Intermediate promotions this run: dp2_8s_fw_4acc_200it (×123: 2.2% over t0_64_512) and dp2_8s_fw_4acc_t0_128_1024 (×124: 2.2% over 4acc_200it) — both VM-oscillation PROMOTE chains superseded within this session. Algorithm definitively converged ×125; dp2 fw variants all cluster 0.089–0.095s on medium VM. STOP-FLOOR ×125.
-  **SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`.**
-  Expected judge time: ~60-70ms. index.html: 93ms (medium-slow VM).
+- **dp2_8s_fw_t0_192_1536 (PROMOTED 2026-07-14, current — ×126)** — `4acc + T0@192B + T1@1536B; judge-tuned shorter prefetch distances (T0=3 iters, T1=24 iters for ~80-100ns DRAM)`
+  — Gate ×126 (RUNS=5, floor=0.484s): t0_192_1536 best=0.089s vs champion (dp2_8s_fw_200it) 0.092s → 3.3% margin, median 0.095s < 0.097s → PROMOTE. Edge 9/9. VM oscillation — all dp2 fw variants cluster 0.089–0.097s within noise. STOP-FLOOR: 0.092 < 2×0.484=0.968. Compiler sweep: g++-13 -O3 → 0.091s best.
+  **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+  Expected judge time: ~60-70ms. index.html: 92ms (slow VM).
 - **dp2_8s_fw_4acc_t0_128_1024 (PROMOTED 2026-07-14, superseded by dp2_8s_fw_200it at ×125)** — `4acc + T0@128B + T1@1024B per stream; shorter judge-tuned distances with 4 independent accumulators`
   — Gate ×124 (RUNS=5, floor=0.573s): 4acc_t0_128_1024 best=0.091s vs champion (4acc_200it) 0.093s → 2.2% margin, median 0.094s < 0.096s → PROMOTE. Edge 9/9. Superseded by dp2_8s_fw_200it same session.
 - **dp2_8s_fw_4acc_200it (PROMOTED 2026-07-14, superseded by dp2_8s_fw_4acc_t0_128_1024 at ×124)** — `4acc + T0@512B + T1@3072B + 200 inner iterations; reduces widen call overhead by 50%`
@@ -1336,6 +1336,16 @@ Compiler sweep on prior champion: g++ -Ofast -funroll-loops → 0.092s.
 
 VM state: slow (floor=0.573s). Compiler sweep: g++-13 -O3 -march=native → 0.091s best.
 PROMOTE applied: dp2_8s_fw_4acc_t0_128_1024 copied to champion/main.cpp.
+
+## Run log 2026-07-14 (scheduled run ×126) — PROMOTE dp2_8s_fw_t0_192_1536 (VM oscillation)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+| --- | --- | --- | --- | --- | --- |
+| champion (dp2_8s_fw_200it) | STOP-FLOOR ×126 | 0.092 | 0.097 | — | Slow VM (floor=0.484s). STOP-FLOOR: 0.092 < 2×0.484=0.968. |
+| dp2_8s_fw_t0_192_1536 | PROMOTE ×126 | 0.089 | 0.095 | 3.3% best, median lower | PROMOTE gate fires: 3.3% > 1.5%, median lower. Edge 9/9. Promoted. |
+| all other dp2 fw | cluster within noise | 0.089–0.097 | — | — | All within VM noise band. Compiler sweep: g++-13 -O3 → 0.091s. |
+
+Note: 400-iter variant dp2_8s_fw_4acc_400it attempted and deleted this session. Bug: widen_4acc combines all 4 u16 accumulators before widening to u64; 400 iters gives combined sum ~95,040 > 65,535 (u16 overflow). 200 iters stays at ~47,520, safely below limit.
 
 ## Run log 2026-07-14 (scheduled run ×125) — PROMOTE dp2_8s_fw_200it + STOP-FLOOR confirmation
 
