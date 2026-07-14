@@ -1,8 +1,7 @@
-// dp2_8s_fw_t0_128_3072.cpp — double-loop + two-tier prefetch per stream:
-// T0@128B (2 iters ahead, L2→L1) + T1@3072B (48 iters ahead, DRAM→L2).
-// vs champion T0@512B: shorter T0 may work better when data is already in L2
-// courtesy of T1@3072B (L2→L1 latency ~4ns; 2 iters @72ns/iter = 144ns > 4ns OK).
-// 16 prefetch µops/iter (same as champion).
+// dp2_8s_fw_t0_64_2048.cpp — two-tier: T0@64B + T1@2048B.
+// Bridge variant: near T0@64B (judge-optimal, 1 iter ahead for L2→L1)
+// combined with far T1@2048B (VM-optimal champion distance).
+// Tests if near-tier L1 warming helps even when far-tier is 4× over-provisioned for judge.
 
 #include <cstdio>
 #include <cstdint>
@@ -244,24 +243,23 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@512B (near, L1) + T1@3072B (far, L2) per stream.
-// Replaces champion's dual T1@3072+3072+32 with two-tier near+far coverage.
+// T0@64B (L2→L1, 1 iter) + T1@2048B (DRAM→L2, 32 iters) per stream.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p0 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p1 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p2 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p3 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p4 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p5 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p6 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p7 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
@@ -338,13 +336,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(3072)
+                ITER_BODY(2048)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(3072)
+            ITER_BODY(2048)
         }
         widen_u16(acc_u16, wide_acc);
 
