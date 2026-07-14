@@ -1386,3 +1386,23 @@ Edge 9/9. Compiler sweep: g++ -O3 -march=native → 0.092s (compiled with sweep 
 34. dp2_8s_fw_t0_192_2048 (new, HOLD) — T0@192B + T1@2048B. 0.092s/0.100s.
 **STOP-FLOOR ×128. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native` (or `g++-13 -O3 -march=native`). Expected judge time: ~60-70ms.**
 
+## Run log 2026-07-14 (scheduled run ×129-×130) — STOP-FLOOR; new 4acc + t0_128 variants
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_1536) | STOP-FLOOR ×129 | 0.078 | 0.079 | — | Medium VM (floor=0.460s min, 0.509s median). STOP-FLOOR: 0.078 < 2×0.460=0.920. |
+| dp2_8s_fw_4acc_t0_192_1536 | HOLD | 0.079 | 0.080 | −1.3% (WORSE) | NEW: 4 independent u16 accumulators + T0@192B + T1@1536B (same distances as champion). Slightly worse — confirms bandwidth-bound not accumulator-latency-bound. |
+| dp2_8s_fw_t0_128_1536 | HOLD | 0.077 | 0.080 | +1.3% best, −1.3% median | NEW: T0@128B (2 iters, shorter T0) + T1@1536B. Good best but large jitter (±0.013s) and worse median → HOLD. Shorter T0 doesn't help consistently. |
+
+Run ×129 (RUNS=3, floor=0.460s): initial gate showed false PROMOTE for same-code `variants/dp2_8s_fw_t0_192_1536` (0.076s vs champion 0.083s — VM cache state shifted during run), not a real win. Confirmation run ×130 (RUNS=3, floor=0.460s): STOP-FLOOR confirmed. champion 0.078s/0.079s; new variants both HOLD.
+
+Key findings:
+- 4acc_t0_192_1536 (4 independent u16 accumulators): 0.079s/0.080s — WORSE than champion. Breaking the serial accumulator dependency chain adds register pressure without benefiting performance. Confirms algorithm is bandwidth-bound, not accumulator-latency-bound.
+- t0_128_1536 (shorter T0@128B vs champion T0@192B): 0.077s best but 0.080s median with ±0.013s jitter. High jitter suggests T0@128B (2 cache-line distances) is too short for consistent L2→L1 prefetch coverage. T0@192B (3 cache-line distances) is the sweet spot.
+- Compiler sweep: g++ -O3 -march=native → 0.078s best.
+- Edge 9/9.
+
+35. dp2_8s_fw_4acc_t0_192_1536 (new, HOLD) — 4acc + T0@192B + T1@1536B. 0.079s/0.080s. Slightly worse than champion.
+36. dp2_8s_fw_t0_128_1536 (new, HOLD) — T0@128B + T1@1536B. 0.077s/0.080s. High jitter, HOLD.
+**STOP-FLOOR ×130. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~60-70ms.**
+
