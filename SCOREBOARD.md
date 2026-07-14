@@ -1370,3 +1370,19 @@ Compiler sweep: g++-13 -Ofast -march=native -funroll-loops → 0.093s best.
 Algorithm definitively converged — 125 consecutive STOP-FLOOR runs.
 **STOP-FLOOR ×125. Champion dp2_8s_fw_200it. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`.**
 
+## Run log 2026-07-14 (scheduled run ×128) — STOP-FLOOR; prefetch distance exploration
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_1536) | STOP-FLOOR ×128 | 0.091 | 0.094 | — | Medium VM (floor=0.296s min, 0.480s median). STOP-FLOOR: 0.091 < 2×0.296=0.592. |
+| dp2_8s_fw_4acc_t0t1 | HOLD | 0.091 | 0.095 | 0.0% (Δbest=0, need ≥1.5%) | Tied champion best; median WORSE (0.095 vs 0.094) → HOLD. |
+| dp2_8s_fw_t0_192_1024 | HOLD | 0.092 | 0.096 | −1.1% (slower) | NEW: T0@192 + T1@1024B (shorter far-tier, 16 iters). Slightly slower than champion's T1@1536B on this VM. |
+| dp2_8s_fw_t0_192_2048 | HOLD | 0.092 | 0.100 | −1.1% (slower) | NEW: T0@192 + T1@2048B (longer far-tier, 32 iters). Slightly slower + more jitter. T1@1536B confirmed optimal. |
+
+STOP-FLOOR ×128 (floor=0.296s, champion 0.091s = 3.1× faster than cat — bandwidth-bound).
+New variants: T1@1024B and T1@2048B both 0.092s vs champion 0.091s. T1@1536B (24 iters) confirmed as optimal far-tier distance: shorter (16 iters=128ns) barely covers DRAM and is marginally worse; longer (32 iters=256ns) has excess margin but doesn't help.
+Edge 9/9. Compiler sweep: g++ -O3 -march=native → 0.092s (compiled with sweep binary); champion's own binary (CXX=c++) → 0.091s.
+33. dp2_8s_fw_t0_192_1024 (new, HOLD) — T0@192B + T1@1024B. 0.092s/0.096s.
+34. dp2_8s_fw_t0_192_2048 (new, HOLD) — T0@192B + T1@2048B. 0.092s/0.100s.
+**STOP-FLOOR ×128. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native` (or `g++-13 -O3 -march=native`). Expected judge time: ~60-70ms.**
+
