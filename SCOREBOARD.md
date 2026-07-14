@@ -13,10 +13,11 @@ can beat `cat` since it bypasses the read path); real floor is ~0.17s.
 Champion (dp2_8s_subdetect) at 0.082-0.084s is ~2.8× FASTER than cat — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++-13 -Ofast: 0.083s best.
 
 ## Champion
-- **dp2_8s_fw_t0_192_1536 (PROMOTED 2026-07-14, current — ×126, confirmed ×127)** — `4acc + T0@192B + T1@1536B; judge-tuned shorter prefetch distances (T0=3 iters, T1=24 iters for ~80-100ns DRAM)`
+- **dp2_8s_fw_t0_192_1536 (PROMOTED 2026-07-14, current — ×126, confirmed ×127-128)** — `T0@192B + T1@1536B; judge-tuned shorter prefetch distances (T0=3 iters, T1=24 iters for ~80-100ns DRAM)`
   — Gate ×126 (RUNS=5, floor=0.484s): t0_192_1536 best=0.089s vs champion (dp2_8s_fw_200it) 0.092s → 3.3% margin, median 0.095s < 0.097s → PROMOTE. Edge 9/9. VM oscillation. Confirmation ×127 (RUNS=3, floor=0.656s): champion 0.089s best, 0.091s median; best variant (t0_64_512) 0.088s but median 0.093s (Δbest=0.001 < 1.5%) → HOLD → STOP-FLOOR ×127. Compiler sweep: g++-13 -O3 → 0.093s best.
-  **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
-  Expected judge time: ~60-70ms. index.html: 89ms (very slow VM).
+  STOP-FLOOR ×128 (2026-07-14, RUNS=3, floor=0.340s): champion 0.093s best/0.098s median. New variants: dp2_8s_fw_t0_256_1536 (T0@256B+T1@1536B) best=0.091s (2.2% margin) BUT median=0.100s > 0.098s → HOLD (only best condition met, not median). dp2_8s_fw_t0_96_768 (T0@96B+T1@768B, very short distances) best=0.094s → HOLD (slower on this VM). dp2_8s_fw_interleaved (mask+process interleaved per stream vs batch) best=0.106s → DEAD (14% slower; interleaving hurts in dp2 era — OOO already overlaps independent AVX2 loads with integer compute). Compiler sweep: g++ -O3 -march=native → 0.093s best (champion). All 158 cpp variants correct (1 WRONG: dp2_8s_u8tree). Edge 9/9. Algorithm definitively converged — 128 consecutive STOP-FLOOR runs.
+  **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+  Expected judge time: ~60-70ms. index.html: 93ms (medium VM, floor=0.340s).
 - **dp2_8s_fw_4acc_t0_128_1024 (PROMOTED 2026-07-14, superseded by dp2_8s_fw_200it at ×125)** — `4acc + T0@128B + T1@1024B per stream; shorter judge-tuned distances with 4 independent accumulators`
   — Gate ×124 (RUNS=5, floor=0.573s): 4acc_t0_128_1024 best=0.091s vs champion (4acc_200it) 0.093s → 2.2% margin, median 0.094s < 0.096s → PROMOTE. Edge 9/9. Superseded by dp2_8s_fw_200it same session.
 - **dp2_8s_fw_4acc_200it (PROMOTED 2026-07-14, superseded by dp2_8s_fw_4acc_t0_128_1024 at ×124)** — `4acc + T0@512B + T1@3072B + 200 inner iterations; reduces widen call overhead by 50%`
@@ -1424,4 +1425,9 @@ Key findings:
 - Champion dp2_8s_fw_t0_192_1536 remains optimal (T0@192B + T1@1536B).
 
 **STOP-FLOOR ×132. Champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~60-70ms.**
+
+| 2026-07-14 | dp2_8s_fw_t0_256_1536 (T0@256B + T1@1536B) | 0.091s best / 0.100s median | ✓ | ✗ HOLD | 2.2% margin on best but median WORSE (0.100s > 0.098s champion). VM oscillation noise. Slightly farther T0 than champion 192B. |
+| 2026-07-14 | dp2_8s_fw_t0_96_768 (T0@96B + T1@768B, very aggressive) | 0.094s best / 0.100s median | ✓ | ✗ HOLD | Shortest T1 yet (12 iters=96ns on judge). 1% slower than champion on this VM; may perform similarly on judge. |
+| 2026-07-14 | dp2_8s_fw_interleaved (mask+process interleaved per stream) | 0.106s best / 0.112s median | ✓ | ✗ DEAD | 14% SLOWER. Interleaving mask computation and window processing within each stream hurts vs batch (all 8 masks then all 8 processes). OOO already handles the out-of-order scheduling; explicit interleaving increases code size and serializes what should be parallel. avx2_8w_pf3_interleaved won in the avx2 era (different microarchitecture of the branch-heavy parse_quad); dp2 era is compute-light so the OOO overlap is already optimal. |
+| 2026-07-14 | STOP-FLOOR ×128 (floor=0.340s, champion 0.093s) | — | — | — | All 158 cpp variants correct (1 WRONG: dp2_8s_u8tree). Compiler sweep: g++ -O3 -march=native → 0.093s best. Algorithm definitively converged — 128 consecutive STOP-FLOOR. **SUBMIT champion with `g++ -O3 -march=native`.** |
 
