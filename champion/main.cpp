@@ -1,9 +1,9 @@
-// dp2_8s_fw_4acc_t0_128_1024.cpp — 4 independent per-pair u16 accumulators + T0@128+T1@1024.
-// Combines the 4acc structure (promoted ×112, 2.15% margin) with judge-tuned prefetch.
-// At ×113, single-acc dp2_8s_fw_t0_128_1024 showed 0.091s best vs 4acc champion 0.093s
-//   (2.2% best margin) but tied median → HOLD. This variant adds 4acc to T0@128+T1@1024.
-// Judge hardware (~80ns DRAM, 3GHz): T0@128B = 2 iters ahead (L2→L1 fill), T1@1024B =
-//   16 iters ahead (DRAM→L2 fill). Vs VM (~400ns DRAM): T0@512+T1@3072 optimal.
+// dp2_8s_fw_4acc_t0_64_512.cpp — 4 independent per-pair u16 accumulators + T0@64+T1@512.
+// Aggressive judge tuning: T0@64B (1 iter ahead, L2→L1) + T1@512B (8 iters ahead, DRAM→L2).
+// At ×108, single-acc dp2_8s_fw_t0_64_512 showed 0.078s tied best, higher median → HOLD.
+// This adds 4acc structure. On judge (~80ns DRAM, 3GHz): T1@512B = 8 iters × 64B = exactly
+// matches DRAM latency (8 iters × ~21cy/iter = 168cy ≈ 56ns -- slightly under 80ns).
+// On this VM (~400ns DRAM): T1@512B too close → expect slightly slower locally.
 // Overflow: each accum gets 1 pair/iter × max 108/lane × 100 iters = 10,800 < 65,535.
 
 #include <cstdio>
@@ -233,26 +233,25 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// 4 independent per-pair accumulators + T0@128B (near, L1) + T1@1024B (far, L2).
+// 4 independent per-pair accumulators + T0@64B (near, L1) + T1@512B (far, L2).
 // acc0=streams(0,1), acc1=streams(2,3), acc2=streams(4,5), acc3=streams(6,7).
-// T0@128B = 2 iters ahead: timed for L2→L1 fill on judge (~80ns DRAM, 3GHz).
-// T1@1024B = 16 iters ahead: timed for DRAM→L2 fill on judge.
+// Aggressive judge-tuning: 1 iter T0 + 8 iters T1 for ~80ns DRAM.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p0 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p1 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p2 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p3 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p4 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p5 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p6 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p7 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
@@ -338,12 +337,12 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1024)
+                ITER_BODY(512)
             }
             widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
         }
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1024)
+            ITER_BODY(512)
         }
         widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
 
