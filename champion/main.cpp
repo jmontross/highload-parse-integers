@@ -1,9 +1,11 @@
-// dp2_8s_fw_t0_2048.cpp — double-loop + two-tier prefetch: T0@512B (near, L1) + T1@2048B (far, L2).
-// Same structure as t0_t1 but far prefetch at 2048B (32 iters) vs t0_t1's 3072B (48 iters).
-// Tests if shorter L2 fill distance wins on this VM (less queue pressure).
-// Theory: DRAM latency ~100-150 cycles; at ~3 cy/iter, 32 iters = 96 cycles — just enough.
-// T1 at 3072B hides the DRAM→LLC→L2 transfer latency. Two-tier coverage
-
+// dp2_8s_4acc.cpp — 4 independent u16 accumulators (one per stream pair) to break
+// the serial add_epi16 chain in the champion's hot loop. The champion uses ONE
+// acc_u16 with 4 serial add_epi16 updates per inner iteration, creating a 4-cycle
+// latency chain (each must wait for the prior result). With 4 INDEPENDENT accumulators,
+// all 4 updates can execute in parallel (~1 cycle effective latency on ports 0/1).
+// Merge the 4 at widen-time with a 2-level add tree (2 adds, not on the hot path).
+// Inner=100 remains safe: max per lane per accum = max144 × 100 = 14,400 << 65,535.
+// All other parameters identical to dp2_8s_fixed_widen (current champion).
 
 #include <cstdio>
 #include <cstdint>
@@ -73,17 +75,17 @@ static inline __m128i tree4(
     return _mm_add_epi8(_mm_add_epi8(s0, s1), _mm_add_epi8(s2, s3));
 }
 
-static __attribute__((always_inline)) void
-acc_u16_add(__m256i& acc_u16, __m128i contrib_u8) {
-    acc_u16 = _mm256_add_epi16(acc_u16, _mm256_cvtepu8_epi16(contrib_u8));
-}
-
+// Merge 4 independent u16 accumulators and widen to wide_acc.
+// max per lane per accum = 14,400 (inner=100 × max144) << 65,535.
+// 4-way merge uses 2 add_epi16 pairs + 1 combine — only at widen frequency.
 static __attribute__((noinline)) void
-widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
+widen_4acc(__m256i& a0, __m256i& a1, __m256i& a2, __m256i& a3, uint64_t* wide_acc) {
+    __m256i merged = _mm256_add_epi16(
+        _mm256_add_epi16(a0, a1), _mm256_add_epi16(a2, a3));
     alignas(32) uint16_t lanes[16];
-    _mm256_store_si256((__m256i*)lanes, acc_u16);
+    _mm256_store_si256((__m256i*)lanes, merged);
     for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
-    acc_u16 = _mm256_setzero_si256();
+    a0 = a1 = a2 = a3 = _mm256_setzero_si256();
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -245,24 +247,17 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@512B (near, L1) + T1@3072B (far, L2) per stream.
-// Replaces champion's dual T1@3072+3072+32 with two-tier near+far coverage.
+// 4 independent accumulators: acc0=streams(0,1), acc1=streams(2,3),
+//                              acc2=streams(4,5), acc3=streams(6,7).
+// Each updates independently — no serial chain across the 4 adds.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
@@ -281,10 +276,10 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64; \
     __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64; \
     __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64; \
-    acc_u16_add(acc_u16, _mm_add_epi8(r0, r1)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r2, r3)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r4, r5)); \
-    acc_u16_add(acc_u16, _mm_add_epi8(r6, r7)); \
+    acc0 = _mm256_add_epi16(acc0, _mm256_cvtepu8_epi16(_mm_add_epi8(r0, r1))); \
+    acc1 = _mm256_add_epi16(acc1, _mm256_cvtepu8_epi16(_mm_add_epi8(r2, r3))); \
+    acc2 = _mm256_add_epi16(acc2, _mm256_cvtepu8_epi16(_mm_add_epi8(r4, r5))); \
+    acc3 = _mm256_add_epi16(acc3, _mm256_cvtepu8_epi16(_mm_add_epi8(r6, r7))); \
     }
 
 static uint64_t solve(const unsigned char* data, size_t size) {
@@ -327,36 +322,37 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *p6=adj_start[6], *b6=adj_start[6];
         const unsigned char *p7=adj_start[7], *b7=adj_start[7];
 
-        __m256i acc_u16 = _mm256_setzero_si256();
+        __m256i acc0 = _mm256_setzero_si256();
+        __m256i acc1 = _mm256_setzero_si256();
+        __m256i acc2 = _mm256_setzero_si256();
+        __m256i acc3 = _mm256_setzero_si256();
 
-        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
-        // Key: no iter_count variable or conditional in the inner loop.
-        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
-        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
-        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
+        // Double-loop: outer over widen-groups, inner exactly 100 iters.
+        // Each accum receives at most max144 × 100 = 14,400 per lane < 65,535.
+        // The 4 acc updates are INDEPENDENT (no shared register) → OOO can parallel.
         size_t groups = safe_iters / 100;
         size_t remain = safe_iters % 100;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(2048)
+                ITER_BODY(4096)
             }
-            widen_u16(acc_u16, wide_acc);
+            widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
         }
-        // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2048)
+            ITER_BODY(4096)
         }
-        widen_u16(acc_u16, wide_acc);
+        widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
 
 #undef ITER_BODY
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
-            acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
+            __m128i r = process_window_dp((pi), (bi), nl_mask64(pi)); \
+            acc0 = _mm256_add_epi16(acc0, _mm256_cvtepu8_epi16(r)); \
             (pi) += 64; \
         } \
-        widen_u16(acc_u16, wide_acc); \
+        widen_4acc(acc0, acc1, acc2, acc3, wide_acc); \
         scalar_tail((bi), (ei), wide_acc);
 
         STREAM_TAIL(p0, b0, adj_end[0])
