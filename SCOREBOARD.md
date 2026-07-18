@@ -1520,3 +1520,28 @@ VM oscillation note: dp2_8s_fw_2048_32 was previously champion at ×98, ×102. O
 **STOP-FLOOR ×144 (2026-07-15, RUNS=5, floor=0.303s moderate-slow VM): champion (dp2_8s_fw_t0_2048) best=0.092s, median=0.093s; best variant dp2_8s_fw_t0_5120 best=0.091s (need ≤0.0906s = 1.5% gate) → Δbest=0.001s = 1.1% < 1.5% → HOLD. All 164 variants benchmarked (163 cpp, 1 rs; 163 correct, 1 WRONG: dp2_8s_u8tree). Edge 9/9. Compiler sweep: g++-13 -O3 -march=native → 0.092s best (matches g++ -O3). index.html: 92ms (1.3× off rank-18 bar of 69.3ms on this slow VM). No new variants created — design space fully exhausted (144 consecutive STOP-FLOOR). Champion is 3.3× FASTER than cat on this VM (bandwidth-bound beyond the floor). SUBMIT `champion/main.cpp` with `g++-13 -Ofast -march=native -funroll-loops`. Expected judge time: ~55-65ms.**
 
 **STOP-FLOOR ×150 (2026-07-16, RUNS=3, floor=0.233s min / 0.547s median, moderate VM): champion (dp2_8s_fw_t0_64_512) best=0.079s, median=0.080s; best variant dp2_8s_fw_6144_32 best=0.077s but median=0.080s (tied) → HOLD → STOP-FLOOR ×150. All 165 cpp variants (1 WRONG: dp2_8s_u8tree) + 1 rs benchmarked. Edge 9/9. Compiler sweep: g++-13 -O3 -march=native → 0.079s best. index.html: 79ms (1.1× off rank-18 bar). No new variants created — all algorithmic angles exhausted (150 consecutive STOP-FLOOR). Champion is 2.95× FASTER than cat on this VM (fully bandwidth-bound). SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`. Expected judge time: ~55-65ms.**
+
+## Run log 2026-07-18 (scheduled run ×151) — STOP-FLOOR; new T0@64+T1@{640,1024,1536} variants; champion clears rank-18 bar
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_512) | STOP-FLOOR ×151 | 0.068 | 0.069 | — | Fast VM (floor=0.608s, ±0.002). STOP-FLOOR: 0.068 < 2×0.608=1.216. **index.html: 68ms — CLEARS rank-18 bar (69.3ms)!** |
+| dp2_8s_fw_t0_64_640 | HOLD | 0.068 | 0.071 | 0% best, worse median | NEW: T0@64B + T1@640B (10 iters, 1.4× judge DRAM). Same best as champion, median WORSE (0.071 > 0.069) → HOLD. |
+| dp2_8s_fw_t0_64_1024 | HOLD | 0.067 | 0.068 | +1.5% best, lower median | NEW: T0@64B + T1@1024B (16 iters, 2.2× judge DRAM). Best 0.001s lower, median 0.001s lower. At boundary of gate (need ≤0.067s AND median lower — borderline). STOP-FLOOR overrides. |
+| dp2_8s_fw_t0_64_1536 | HOLD | 0.066 | 0.069 | +2.9% best, tied median | NEW: T0@64B + T1@1536B (24 iters, 3.3× judge DRAM). Best lower but median tied (0.069 = 0.069) → HOLD. |
+
+STOP-FLOOR ×151 (RUNS=3, floor=0.608s, champion 0.068s = 8.9× faster than cat). **Champion 68ms ≤ rank-18 bar 69.3ms — CLEARS rank-18 on this VM!**
+
+New variants: T1@640B (0.068/0.071s) slightly worse median; T1@1024B (0.067/0.068s) at the boundary — slightly better best AND median vs champion, but STOP-FLOOR verdict overrides; T1@1536B (0.066/0.069s) better best but tied median → HOLD.
+
+Key findings:
+- T0@64B+T1@1024B (16 iters = ~175ns ≈ 2.2× judge DRAM coverage): best=0.067s/med=0.068s — consistently best by both metrics, but STOP-FLOOR prevents promotion. On judge (80ns DRAM), T1@1024B provides more margin than champion's T1@512B (88ns = barely 1 DRAM latency).
+- T0@64B+T1@1536B at 0.066s best but median tied: noise-floor result. T1@2048B remains best-local (also 0.066s best).
+- All dp2 variants cluster 0.066–0.072s. Design space fully exhausted.
+- Compiler sweep: g++ -O3 -march=native = 0.067s (best, narrowly over g++-13).
+
+37. dp2_8s_fw_t0_64_640 (new, HOLD) — T0@64B + T1@640B. 0.068s/0.071s. Same best, worse median than champion.
+38. dp2_8s_fw_t0_64_1024 (new, HOLD) — T0@64B + T1@1024B. 0.067s/0.068s. Borderline improvement, STOP-FLOOR overrides.
+39. dp2_8s_fw_t0_64_1536 (new, HOLD) — T0@64B + T1@1536B. 0.066s/0.069s. Better best, tied median.
+
+**STOP-FLOOR ×151. Champion dp2_8s_fw_t0_64_512. SUBMIT with `g++ -O3 -march=native`. Local 68ms CLEARS rank-18 bar (69.3ms). Expected judge time: ~50-65ms.**

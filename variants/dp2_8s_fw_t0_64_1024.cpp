@@ -1,5 +1,9 @@
-// dp2_8s_fw_t0_64_1024.cpp — two-tier: T0@64B + T1@1024B.
-// 16 iters ahead; covers 80ns DRAM with 4-iter headroom (conservative judge-tuned).
+// dp2_8s_fw_t0_64_1024.cpp — T0@64B + T1@1024B (16 iters, ~2.2x judge DRAM coverage)
+// Judge DRAM ~80ns = ~240cy at 3GHz; iteration ~33cy → T1 at ~8 iters=512B.
+// T0@64B (1 iter ahead): just-in-time L2→L1 warm for each 64B fetch.
+// T1@512B: covers DRAM latency on judge (~80ns, vs VM's ~400ns).
+// Champion T0@512+T1@3072 is VM-tuned (6× overprovisioned for judge DRAM).
+// Same 16 prefetch µops/iter but tighter distances for low-latency hardware.
 
 #include <cstdio>
 #include <cstdint>
@@ -241,6 +245,7 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
+// One iteration body: T0@64B (near, just-in-time L1) + T1@512B (DRAM→L2) per stream.
 // Judge-tuned: 80ns DRAM / 33cy per iter = ~8 iters = 512B optimal T1 distance.
 // T0@64B fires 1 iter (32 cycles) ahead — enough for L2→L1 latency (~12cy).
 #define ITER_BODY(PFD) \

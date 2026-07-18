@@ -1,4 +1,4 @@
-// dp2_8s_fw_t0_64_1536.cpp — T0@64B + T1@1536B (24 iters, ~3.3x judge DRAM coverage)
+// dp2_8s_fw_t0_64_640.cpp — T0@64B + T1@640B (10 iters, ~1.4x judge DRAM coverage)
 // Judge DRAM ~80ns = ~240cy at 3GHz; iteration ~33cy → T1 at ~8 iters=512B.
 // T0@64B (1 iter ahead): just-in-time L2→L1 warm for each 64B fetch.
 // T1@512B: covers DRAM latency on judge (~80ns, vs VM's ~400ns).
@@ -340,13 +340,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1536)
+                ITER_BODY(640)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1536)
+            ITER_BODY(640)
         }
         widen_u16(acc_u16, wide_acc);
 

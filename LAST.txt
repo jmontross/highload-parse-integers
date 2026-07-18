@@ -1,346 +1,371 @@
 == build generator & input ==
+generating 50000000 lines...
 == reference sum (exact) ==
 expected = 53687387166542798
 == bandwidth floor (f(n)=n target) ==
-floor (cat > /dev/null) = 0.5460s min / 0.6570s median  <- champion should approach this
+floor (cat > /dev/null) = 0.6080s min / 0.7090s median  <- champion should approach this
 == build variants ==
 == timing (interleaved, RUNS=3) ==
 == test + benchmark ==
 NAME                     RESULT             BEST(s)   MED(s)    JITTER    STATUS
-champion                 53687387166542798  0.0920    0.0940    ±0.0030  OK
-variants/avx2_12w_pf3    53687387166542798  0.2310    0.2320    ±0.0050  OK
-variants/avx2_12window   53687387166542798  0.2460    0.2480    ±0.0120  OK
-variants/avx2_16w_pf3    53687387166542798  0.2240    0.2330    ±0.0150  OK
-variants/avx2_16window   53687387166542798  0.2500    0.2530    ±0.0080  OK
-variants/avx2_4stream    53687387166542798  0.2280    0.2290    ±0.0120  OK
-variants/avx2_4stream_x  53687387166542798  0.2260    0.2330    ±0.0320  OK
-variants/avx2_5window    53687387166542798  0.2300    0.2460    ±0.0170  OK
-variants/avx2_64b        53687387166542798  0.3400    0.3420    ±0.0760  OK
-variants/avx2_6window    53687387166542798  0.2270    0.2300    ±0.0030  OK
-variants/avx2_7window    53687387166542798  0.2350    0.2390    ±0.0450  OK
-variants/avx2_8w_i_nopf  53687387166542798  0.2320    0.2430    ±0.0240  OK
-variants/avx2_8w_nta     53687387166542798  0.2320    0.2360    ±0.0230  OK
-variants/avx2_8w_pf      53687387166542798  0.2240    0.2260    ±0.0040  OK
-variants/avx2_8w_pf1     53687387166542798  0.2290    0.2300    ±0.0070  OK
-variants/avx2_8w_pf12    53687387166542798  0.2260    0.2300    ±0.0040  OK
-variants/avx2_8w_pf1_i_cnt3 53687387166542798  0.2160    0.2170    ±0.0020  OK
-variants/avx2_8w_pf2_i   53687387166542798  0.2290    0.2320    ±0.0030  OK
-variants/avx2_8w_pf3     53687387166542798  0.2230    0.2280    ±0.0100  OK
-variants/avx2_8w_pf3_clzbase 53687387166542798  0.2260    0.2310    ±0.0050  OK
-variants/avx2_8w_pf3_i2  53687387166542798  0.2260    0.2270    ±0.0060  OK
-variants/avx2_8w_pf3_i_cnt3 53687387166542798  0.2110    0.2150    ±0.0240  OK
-variants/avx2_8w_pf3_interleaved 53687387166542798  0.2200    0.2210    ±0.0050  OK
-variants/avx2_8w_pf3_regbase 53687387166542798  0.2230    0.2280    ±0.0160  OK
-variants/avx2_8w_pf3_regbase_cnt12 53687387166542798  0.2180    0.2200    ±0.0570  OK
-variants/avx2_8w_pf3_regbase_cnt3 53687387166542798  0.2130    0.2200    ±0.0190  OK
-variants/avx2_8w_pf4     53687387166542798  0.2270    0.2320    ±0.0420  OK
-variants/avx2_8w_pf4_i   53687387166542798  0.2210    0.2230    ±0.0060  OK
-variants/avx2_8w_pf5     53687387166542798  0.2240    0.2260    ±0.0050  OK
-variants/avx2_8w_pf_dual 53687387166542798  0.2270    0.2300    ±0.0070  OK
-variants/avx2_8w_pf_half 53687387166542798  0.2290    0.2290    ±0.0070  OK
-variants/avx2_8w_pf_t0   53687387166542798  0.2220    0.2240    ±0.0040  OK
-variants/avx2_8window    53687387166542798  0.2410    0.2490    ±0.0190  OK
-variants/avx2_blockparse 53687387166542798  0.3630    0.3730    ±0.0260  OK
-variants/avx2_clzbase    53687387166542798  0.2310    0.2320    ±0.0070  OK
-variants/avx2_cmov       53687387166542798  0.4290    0.4310    ±0.0150  OK
-variants/avx2_cnt12      53687387166542798  0.2160    0.2180    ±0.0120  OK
-variants/avx2_cnt12_switch 53687387166542798  0.2340    0.2350    ±0.0100  OK
-variants/avx2_cnt6only   53687387166542798  0.2240    0.2260    ±0.0100  OK
-variants/avx2_cnt8910    53687387166542798  0.2260    0.2280    ±0.0130  OK
-variants/avx2_directload 53687387166542798  0.2340    0.2430    ±0.0510  OK
-variants/avx2_dual_cnt12 53687387166542798  0.2220    0.2290    ±0.0170  OK
-variants/avx2_dual_window 53687387166542798  0.2340    0.2380    ±0.0090  OK
-variants/avx2_fastload   53687387166542798  0.3020    0.3200    ±0.0260  OK
-variants/avx2_forceinline 53687387166542798  0.2350    0.2460    ±0.0120  OK
-variants/avx2_hugepage_collapse 53687387166542798  0.2140    0.2170    ±0.0070  OK
-variants/avx2_maddubs    53687387166542798  0.2590    0.2600    ±0.0040  OK
-variants/avx2_mmap_shared 53687387166542798  0.2100    0.2140    ±0.0070  OK
-variants/avx2_nohadd     53687387166542798  0.2600    0.2670    ±0.0080  OK
-variants/avx2_nohadd47   53687387166542798  0.2630    0.2720    ±0.0640  OK
-variants/avx2_parse3     53687387166542798  0.3260    0.3300    ±0.0190  OK
-variants/avx2_parse_quad 53687387166542798  0.2210    0.2270    ±0.0110  OK
-variants/avx2_pdep       53687387166542798  0.2160    0.2300    ±0.0140  OK
-variants/avx2_quad_window 53687387166542798  0.2270    0.2440    ±0.0210  OK
-variants/avx2_triple_window 53687387166542798  0.2400    0.2480    ±0.0400  OK
-variants/avx2_unroll     53687387166542798  0.3310    0.3320    ±0.0170  OK
-variants/avx2_vhigh      53687387166542798  0.2420    0.2460    ±0.0500  OK
-variants/avx2_w128       53687387166542798  0.2860    0.2950    ±0.0290  OK
-variants/avx512_8w_parse6 53687387166542798  0.2740    0.2750    ±0.0080  OK
-variants/avx512_blockparse 53687387166542798  0.3940    0.4050    ±0.0200  OK
-variants/avx512_cnt47    53687387166542798  0.2780    0.2910    ±0.0270  OK
-variants/avx512_maddubs  53687387166542798  0.2840    0.2990    ±0.0660  OK
-variants/avx512_nl_8w    53687387166542798  0.2490    0.2530    ±0.0660  OK
-variants/avx512_parse_oct 53687387166542798  0.2910    0.3060    ±0.0190  OK
-variants/dp2_12s_pf3072  53687387166542798  0.1010    0.1020    ±0.0050  OK
-variants/dp2_8s_2w       53687387166542798  0.1030    0.1050    ±0.0030  OK
-variants/dp2_8s_2w_fixed 53687387166542798  0.0990    0.1080    ±0.0110  OK
-variants/dp2_8s_4acc     53687387166542798  0.0950    0.0960    ±0.0100  OK
-variants/dp2_8s_avx512_nl 53687387166542798  0.1070    0.1080    ±0.0010  OK
-variants/dp2_8s_fixed_2048 53687387166542798  0.0940    0.0960    ±0.0030  OK
-variants/dp2_8s_fixed_3072 53687387166542798  0.0950    0.0960    ±0.0050  OK
-variants/dp2_8s_fixed_widen 53687387166542798  0.0940    0.0980    ±0.0070  OK
-variants/dp2_8s_fw_200it 53687387166542798  0.0920    0.1000    ±0.0480  OK
-variants/dp2_8s_fw_2048_32 53687387166542798  0.0960    0.0980    ±0.0080  OK
-variants/dp2_8s_fw_2560_32 53687387166542798  0.0910    0.0920    ±0.0150  OK
-variants/dp2_8s_fw_2w    53687387166542798  0.0940    0.0940    ±0.0020  OK
-variants/dp2_8s_fw_3072_32 53687387166542798  0.0930    0.0940    ±0.0050  OK
-variants/dp2_8s_fw_3072_64 53687387166542798  0.0940    0.1020    ±0.0120  OK
-variants/dp2_8s_fw_3tier 53687387166542798  0.0970    0.0980    ±0.0050  OK
-variants/dp2_8s_fw_4096_32 53687387166542798  0.0940    0.0950    ±0.0020  OK
-variants/dp2_8s_fw_4096_64 53687387166542798  0.0930    0.0950    ±0.0050  OK
-variants/dp2_8s_fw_4acc_200it 53687387166542798  0.0930    0.0950    ±0.0080  OK
-variants/dp2_8s_fw_4acc_2048_32 53687387166542798  0.0950    0.0960    ±0.0020  OK
-variants/dp2_8s_fw_4acc_3072_32 53687387166542798  0.0940    0.0950    ±0.0150  OK
-variants/dp2_8s_fw_4acc_t0_128_1024 53687387166542798  0.0910    0.0950    ±0.0500  OK
-variants/dp2_8s_fw_4acc_t0_128_3072 53687387166542798  0.0940    0.0960    ±0.0580  OK
-variants/dp2_8s_fw_4acc_t0_192_1536 53687387166542798  0.0930    0.0940    ±0.0040  OK
-variants/dp2_8s_fw_4acc_t0_256_2048 53687387166542798  0.0940    0.0960    ±0.0030  OK
-variants/dp2_8s_fw_4acc_t0_256_3072 53687387166542798  0.0930    0.0930    ±0.0010  OK
-variants/dp2_8s_fw_4acc_t0_512_2048 53687387166542798  0.0930    0.0960    ±0.0100  OK
-variants/dp2_8s_fw_4acc_t0_512_4096 53687387166542798  0.0950    0.0960    ±0.0030  OK
-variants/dp2_8s_fw_4acc_t0_512_7168 53687387166542798  0.0940    0.0990    ±0.0430  OK
-variants/dp2_8s_fw_4acc_t0_64_3072 53687387166542798  0.0930    0.0960    ±0.0060  OK
-variants/dp2_8s_fw_4acc_t0_64_512 53687387166542798  0.0960    0.0990    ±0.0080  OK
-variants/dp2_8s_fw_4acc_t0_64_640 53687387166542798  0.0930    0.0940    ±0.0040  OK
-variants/dp2_8s_fw_4acc_t0_64_768 53687387166542798  0.0940    0.0950    ±0.0060  OK
-variants/dp2_8s_fw_4acc_t0_64_896 53687387166542798  0.0930    0.0970    ±0.0070  OK
-variants/dp2_8s_fw_4acc_t0t1 53687387166542798  0.0930    0.0970    ±0.0070  OK
-variants/dp2_8s_fw_4acc_t1_2048 53687387166542798  0.0910    0.0950    ±0.0040  OK
-variants/dp2_8s_fw_6144_32 53687387166542798  0.0920    0.0950    ±0.0030  OK
-variants/dp2_8s_fw_il    53687387166542798  0.0970    0.0980    ±0.0020  OK
-variants/dp2_8s_fw_interleaved 53687387166542798  0.1070    0.1080    ±0.0040  OK
-variants/dp2_8s_fw_nta   53687387166542798  0.1660    0.2260    ±0.0610  OK
-variants/dp2_8s_fw_pf512_only 53687387166542798  0.0950    0.0960    ±0.0010  OK
-variants/dp2_8s_fw_t0_128_1024 53687387166542798  0.0910    0.0920    ±0.0060  OK
-variants/dp2_8s_fw_t0_128_1536 53687387166542798  0.0910    0.0920    ±0.0350  OK
-variants/dp2_8s_fw_t0_128_3072 53687387166542798  0.0910    0.0910    ±0.0000  OK
-variants/dp2_8s_fw_t0_192_1024 53687387166542798  0.0930    0.0930    ±0.0000  OK
-variants/dp2_8s_fw_t0_192_1536 53687387166542798  0.0920    0.0940    ±0.0030  OK
-variants/dp2_8s_fw_t0_192_2048 53687387166542798  0.0930    0.0940    ±0.0010  OK
-variants/dp2_8s_fw_t0_2048 53687387166542798  0.0930    0.0930    ±0.0050  OK
-variants/dp2_8s_fw_t0_256 53687387166542798  0.0920    0.0920    ±0.0020  OK
-variants/dp2_8s_fw_t0_256_1536 53687387166542798  0.0910    0.0920    ±0.0020  OK
-variants/dp2_8s_fw_t0_3072_32 53687387166542798  0.0950    0.0950    ±0.0000  OK
-variants/dp2_8s_fw_t0_4096 53687387166542798  0.0930    0.0950    ±0.0040  OK
-variants/dp2_8s_fw_t0_5120 53687387166542798  0.0920    0.0950    ±0.0390  OK
-variants/dp2_8s_fw_t0_64_2048 53687387166542798  0.0900    0.0940    ±0.0070  OK
-variants/dp2_8s_fw_t0_64_3072 53687387166542798  0.0940    0.0940    ±0.0030  OK
-variants/dp2_8s_fw_t0_64_512 53687387166542798  0.0920    0.0930    ±0.0010  OK
-variants/dp2_8s_fw_t0_7168 53687387166542798  0.0910    0.0950    ±0.0080  OK
-variants/dp2_8s_fw_t0_9216 53687387166542798  0.0900    0.0930    ±0.0030  OK
-variants/dp2_8s_fw_t0_96_1536 53687387166542798  0.0940    0.0950    ±0.0040  OK
-variants/dp2_8s_fw_t0_96_768 53687387166542798  0.0920    0.0940    ±0.0020  OK
-variants/dp2_8s_fw_t0_t1 53687387166542798  0.0920    0.0950    ±0.0390  OK
-variants/dp2_8s_fw_t2_t1 53687387166542798  0.0970    0.0970    ±0.0020  OK
-variants/dp2_8s_fw_wide400 53687387166542798  0.0940    0.0950    ±0.0020  OK
-variants/dp2_8s_interleaved 53687387166542798  0.1220    0.1230    ±0.0080  OK
-variants/dp2_8s_itercount 53687387166542798  0.0940    0.0950    ±0.0020  OK
-variants/dp2_8s_nopf     53687387166542798  0.1110    0.1140    ±0.0070  OK
-variants/dp2_8s_pf1024   53687387166542798  0.0950    0.0990    ±0.0080  OK
-variants/dp2_8s_pf2048   53687387166542798  0.0940    0.0960    ±0.0050  OK
-variants/dp2_8s_pf2560   53687387166542798  0.0950    0.0950    ±0.0050  OK
-variants/dp2_8s_pf3072   53687387166542798  0.0950    0.0950    ±0.0010  OK
-variants/dp2_8s_pf3072_32 53687387166542798  0.0930    0.0950    ±0.0110  OK
-variants/dp2_8s_pf4096   53687387166542798  0.0940    0.0960    ±0.0030  OK
-variants/dp2_8s_pf4096_32 53687387166542798  0.0950    0.0950    ±0.0050  OK
-variants/dp2_8s_pf4096_double 53687387166542798  0.0930    0.0930    ±0.0030  OK
-variants/dp2_8s_pf512    53687387166542798  0.0950    0.0970    ±0.0020  OK
-variants/dp2_8s_pf6144   53687387166542798  0.0950    0.0960    ±0.0020  OK
-variants/dp2_8s_pf8192   53687387166542798  0.0940    0.0980    ±0.0040  OK
-variants/dp2_8s_pf_double 53687387166542798  0.0940    0.0940    ±0.0060  OK
-variants/dp2_8s_stop_pf3072 53687387166542798  0.0960    0.0960    ±0.0010  OK
-variants/dp2_8s_subdetect 53687387166542798  0.0920    0.0950    ±0.0050  OK
-variants/dp2_8s_t2_4096  53687387166542798  0.0930    0.0930    ±0.0040  OK
-variants/dp2_8s_triple_pair 53687387166542798  0.0950    0.0960    ±0.0020  OK
-variants/dp2_8s_twoaccum 53687387166542798  0.0950    0.0970    ±0.0020  OK
+champion                 53687387166542798  0.0680    0.0690    ±0.0020  OK
+variants/avx2_12w_pf3    53687387166542798  0.1440    0.1510    ±0.0090  OK
+variants/avx2_12window   53687387166542798  0.1470    0.1500    ±0.0190  OK
+variants/avx2_16w_pf3    53687387166542798  0.1500    0.1530    ±0.0060  OK
+variants/avx2_16window   53687387166542798  0.1510    0.1510    ±0.0040  OK
+variants/avx2_4stream    53687387166542798  0.1480    0.1530    ±0.0110  OK
+variants/avx2_4stream_x  53687387166542798  0.1490    0.1530    ±0.0200  OK
+variants/avx2_5window    53687387166542798  0.1560    0.1560    ±0.0030  OK
+variants/avx2_64b        53687387166542798  0.4300    0.4390    ±0.0090  OK
+variants/avx2_6window    53687387166542798  0.1530    0.1530    ±0.0020  OK
+variants/avx2_7window    53687387166542798  0.1540    0.1570    ±0.0040  OK
+variants/avx2_8w_i_nopf  53687387166542798  0.1570    0.1590    ±0.0070  OK
+variants/avx2_8w_nta     53687387166542798  0.1600    0.1620    ±0.0060  OK
+variants/avx2_8w_pf      53687387166542798  0.1550    0.1580    ±0.0070  OK
+variants/avx2_8w_pf1     53687387166542798  0.1600    0.1610    ±0.0060  OK
+variants/avx2_8w_pf12    53687387166542798  0.1460    0.1460    ±0.0060  OK
+variants/avx2_8w_pf1_i_cnt3 53687387166542798  0.1530    0.1530    ±0.0020  OK
+variants/avx2_8w_pf2_i   53687387166542798  0.1490    0.1500    ±0.0040  OK
+variants/avx2_8w_pf3     53687387166542798  0.1470    0.1490    ±0.0040  OK
+variants/avx2_8w_pf3_clzbase 53687387166542798  0.1520    0.1550    ±0.0030  OK
+variants/avx2_8w_pf3_i2  53687387166542798  0.1500    0.1510    ±0.0020  OK
+variants/avx2_8w_pf3_i_cnt3 53687387166542798  0.1450    0.1470    ±0.0070  OK
+variants/avx2_8w_pf3_interleaved 53687387166542798  0.1440    0.1520    ±0.0080  OK
+variants/avx2_8w_pf3_regbase 53687387166542798  0.1460    0.1650    ±0.0250  OK
+variants/avx2_8w_pf3_regbase_cnt12 53687387166542798  0.1460    0.1470    ±0.0070  OK
+variants/avx2_8w_pf3_regbase_cnt3 53687387166542798  0.1450    0.1470    ±0.0140  OK
+variants/avx2_8w_pf4     53687387166542798  0.1490    0.1500    ±0.0080  OK
+variants/avx2_8w_pf4_i   53687387166542798  0.1480    0.1480    ±0.0210  OK
+variants/avx2_8w_pf5     53687387166542798  0.1470    0.1490    ±0.0430  OK
+variants/avx2_8w_pf_dual 53687387166542798  0.1500    0.1510    ±0.0040  OK
+variants/avx2_8w_pf_half 53687387166542798  0.1500    0.1530    ±0.0040  OK
+variants/avx2_8w_pf_t0   53687387166542798  0.1480    0.1510    ±0.0060  OK
+variants/avx2_8window    53687387166542798  0.1480    0.1540    ±0.0060  OK
+variants/avx2_blockparse 53687387166542798  0.3720    0.3730    ±0.0060  OK
+variants/avx2_clzbase    53687387166542798  0.1590    0.1640    ±0.0070  OK
+variants/avx2_cmov       53687387166542798  0.3810    0.3810    ±0.0180  OK
+variants/avx2_cnt12      53687387166542798  0.3290    0.3440    ±0.0370  OK
+variants/avx2_cnt12_switch 53687387166542798  0.3330    0.3410    ±0.0780  OK
+variants/avx2_cnt6only   53687387166542798  0.3460    0.3910    ±0.0490  OK
+variants/avx2_cnt8910    53687387166542798  0.3210    0.3360    ±0.0390  OK
+variants/avx2_directload 53687387166542798  0.3180    0.3310    ±0.0280  OK
+variants/avx2_dual_cnt12 53687387166542798  0.1650    0.1930    ±0.0410  OK
+variants/avx2_dual_window 53687387166542798  0.1670    0.1720    ±0.0090  OK
+variants/avx2_fastload   53687387166542798  0.3910    0.4100    ±0.0220  OK
+variants/avx2_forceinline 53687387166542798  0.2950    0.3270    ±0.0590  OK
+variants/avx2_hugepage_collapse 53687387166542798  0.1460    0.1480    ±0.0090  OK
+variants/avx2_maddubs    53687387166542798  0.3830    0.3900    ±0.0080  OK
+variants/avx2_mmap_shared 53687387166542798  0.1450    0.1480    ±0.0150  OK
+variants/avx2_nohadd     53687387166542798  0.3570    0.3750    ±0.0320  OK
+variants/avx2_nohadd47   53687387166542798  0.3530    0.3630    ±0.0170  OK
+variants/avx2_parse3     53687387166542798  0.2710    0.2750    ±0.0130  OK
+variants/avx2_parse_quad 53687387166542798  0.3200    0.3420    ±0.0270  OK
+variants/avx2_pdep       53687387166542798  0.3070    0.3160    ±0.0700  OK
+variants/avx2_quad_window 53687387166542798  0.1560    0.1610    ±0.0070  OK
+variants/avx2_triple_window 53687387166542798  0.1590    0.1630    ±0.0050  OK
+variants/avx2_unroll     53687387166542798  0.2800    0.2900    ±0.0240  OK
+variants/avx2_vhigh      53687387166542798  0.3670    0.3720    ±0.0060  OK
+variants/avx2_w128       53687387166542798  0.1910    0.1910    ±0.0000  OK
+variants/avx512_8w_parse6 53687387166542798  0.1660    0.1660    ±0.0090  OK
+variants/avx512_blockparse 53687387166542798  0.3750    0.3870    ±0.0180  OK
+variants/avx512_cnt47    53687387166542798  0.3670    0.3830    ±0.0210  OK
+variants/avx512_maddubs  53687387166542798  0.3690    0.3890    ±0.0440  OK
+variants/avx512_nl_8w    53687387166542798  0.1460    0.1510    ±0.0110  OK
+variants/avx512_parse_oct 53687387166542798  0.1990    0.2000    ±0.0010  OK
+variants/dp2_12s_pf3072  53687387166542798  0.0710    0.0730    ±0.0030  OK
+variants/dp2_8s_2w       53687387166542798  0.0750    0.0770    ±0.0040  OK
+variants/dp2_8s_2w_fixed 53687387166542798  0.0780    0.0780    ±0.0000  OK
+variants/dp2_8s_4acc     53687387166542798  0.0710    0.0730    ±0.0020  OK
+variants/dp2_8s_avx512_nl 53687387166542798  0.0740    0.0740    ±0.0000  OK
+variants/dp2_8s_fixed_2048 53687387166542798  0.0680    0.0700    ±0.0150  OK
+variants/dp2_8s_fixed_3072 53687387166542798  0.0700    0.0700    ±0.0020  OK
+variants/dp2_8s_fixed_widen 53687387166542798  0.0720    0.0730    ±0.0040  OK
+variants/dp2_8s_fw_200it 53687387166542798  0.0680    0.0710    ±0.0270  OK
+variants/dp2_8s_fw_2048_32 53687387166542798  0.0680    0.0700    ±0.0030  OK
+variants/dp2_8s_fw_2560_32 53687387166542798  0.0670    0.0680    ±0.0270  OK
+variants/dp2_8s_fw_2w    53687387166542798  0.0690    0.0720    ±0.0040  OK
+variants/dp2_8s_fw_3072_32 53687387166542798  0.0690    0.0710    ±0.0040  OK
+variants/dp2_8s_fw_3072_64 53687387166542798  0.0690    0.0700    ±0.0020  OK
+variants/dp2_8s_fw_3tier 53687387166542798  0.0680    0.0700    ±0.0030  OK
+variants/dp2_8s_fw_4096_32 53687387166542798  0.0680    0.0700    ±0.0030  OK
+variants/dp2_8s_fw_4096_64 53687387166542798  0.0680    0.0700    ±0.0030  OK
+variants/dp2_8s_fw_4acc_200it 53687387166542798  0.0690    0.0700    ±0.0030  OK
+variants/dp2_8s_fw_4acc_2048_32 53687387166542798  0.0690    0.0700    ±0.0010  OK
+variants/dp2_8s_fw_4acc_3072_32 53687387166542798  0.0730    0.0750    ±0.0040  OK
+variants/dp2_8s_fw_4acc_t0_128_1024 53687387166542798  0.0670    0.0690    ±0.0040  OK
+variants/dp2_8s_fw_4acc_t0_128_3072 53687387166542798  0.0690    0.0710    ±0.0060  OK
+variants/dp2_8s_fw_4acc_t0_192_1536 53687387166542798  0.0690    0.0690    ±0.0030  OK
+variants/dp2_8s_fw_4acc_t0_256_2048 53687387166542798  0.0690    0.0700    ±0.0020  OK
+variants/dp2_8s_fw_4acc_t0_256_3072 53687387166542798  0.0670    0.0700    ±0.0300  OK
+variants/dp2_8s_fw_4acc_t0_512_2048 53687387166542798  0.0660    0.0690    ±0.0060  OK
+variants/dp2_8s_fw_4acc_t0_512_4096 53687387166542798  0.0690    0.0690    ±0.0030  OK
+variants/dp2_8s_fw_4acc_t0_512_7168 53687387166542798  0.0680    0.0690    ±0.0050  OK
+variants/dp2_8s_fw_4acc_t0_64_3072 53687387166542798  0.0690    0.0700    ±0.0020  OK
+variants/dp2_8s_fw_4acc_t0_64_512 53687387166542798  0.0670    0.0710    ±0.0170  OK
+variants/dp2_8s_fw_4acc_t0_64_640 53687387166542798  0.0660    0.0680    ±0.0060  OK
+variants/dp2_8s_fw_4acc_t0_64_768 53687387166542798  0.0670    0.0750    ±0.0100  OK
+variants/dp2_8s_fw_4acc_t0_64_896 53687387166542798  0.0670    0.0700    ±0.0050  OK
+variants/dp2_8s_fw_4acc_t0t1 53687387166542798  0.0680    0.0710    ±0.0220  OK
+variants/dp2_8s_fw_4acc_t1_2048 53687387166542798  0.0700    0.0720    ±0.0020  OK
+variants/dp2_8s_fw_6144_32 53687387166542798  0.0700    0.0730    ±0.0030  OK
+variants/dp2_8s_fw_il    53687387166542798  0.0720    0.0750    ±0.0060  OK
+variants/dp2_8s_fw_interleaved 53687387166542798  0.0840    0.0840    ±0.0020  OK
+variants/dp2_8s_fw_nopf  53687387166542798  0.0810    0.0830    ±0.0050  OK
+variants/dp2_8s_fw_nta   53687387166542798  0.1470    0.1490    ±0.0130  OK
+variants/dp2_8s_fw_pf512_only 53687387166542798  0.0680    0.0710    ±0.0060  OK
+variants/dp2_8s_fw_t0_128_1024 53687387166542798  0.0690    0.0710    ±0.0050  OK
+variants/dp2_8s_fw_t0_128_1536 53687387166542798  0.0670    0.0680    ±0.0070  OK
+variants/dp2_8s_fw_t0_128_3072 53687387166542798  0.0680    0.0700    ±0.0040  OK
+variants/dp2_8s_fw_t0_192_1024 53687387166542798  0.0660    0.0700    ±0.0060  OK
+variants/dp2_8s_fw_t0_192_1536 53687387166542798  0.0680    0.0700    ±0.0050  OK
+variants/dp2_8s_fw_t0_192_2048 53687387166542798  0.0670    0.0690    ±0.0050  OK
+variants/dp2_8s_fw_t0_2048 53687387166542798  0.0680    0.0700    ±0.0060  OK
+variants/dp2_8s_fw_t0_256 53687387166542798  0.0680    0.0740    ±0.0080  OK
+variants/dp2_8s_fw_t0_256_1536 53687387166542798  0.0680    0.0720    ±0.0060  OK
+variants/dp2_8s_fw_t0_3072_32 53687387166542798  0.0710    0.0720    ±0.0030  OK
+variants/dp2_8s_fw_t0_4096 53687387166542798  0.0670    0.0700    ±0.0050  OK
+variants/dp2_8s_fw_t0_5120 53687387166542798  0.0690    0.0700    ±0.0010  OK
+variants/dp2_8s_fw_t0_64_1024 53687387166542798  0.0670    0.0680    ±0.0030  OK
+variants/dp2_8s_fw_t0_64_128_512 53687387166542798  0.0680    0.0690    ±0.0020  OK
+variants/dp2_8s_fw_t0_64_1536 53687387166542798  0.0660    0.0690    ±0.0090  OK
+variants/dp2_8s_fw_t0_64_2048 53687387166542798  0.0660    0.0670    ±0.0090  OK
+variants/dp2_8s_fw_t0_64_256 53687387166542798  0.0720    0.0790    ±0.0080  OK
+variants/dp2_8s_fw_t0_64_3072 53687387166542798  0.0680    0.0690    ±0.0050  OK
+variants/dp2_8s_fw_t0_64_320 53687387166542798  0.0710    0.0760    ±0.0240  OK
+variants/dp2_8s_fw_t0_64_384 53687387166542798  0.0680    0.0690    ±0.0050  OK
+variants/dp2_8s_fw_t0_64_448 53687387166542798  0.0690    0.0700    ±0.0040  OK
+variants/dp2_8s_fw_t0_64_512 53687387166542798  0.0670    0.0710    ±0.0090  OK
+variants/dp2_8s_fw_t0_64_512_32 53687387166542798  0.0680    0.0690    ±0.0130  OK
+variants/dp2_8s_fw_t0_64_640 53687387166542798  0.0680    0.0710    ±0.0050  OK
+variants/dp2_8s_fw_t0_64_768 53687387166542798  0.0680    0.0710    ±0.0060  OK
+variants/dp2_8s_fw_t0_7168 53687387166542798  0.0670    0.0680    ±0.0050  OK
+variants/dp2_8s_fw_t0_9216 53687387166542798  0.0670    0.0700    ±0.0100  OK
+variants/dp2_8s_fw_t0_96_1536 53687387166542798  0.0690    0.0720    ±0.0040  OK
+variants/dp2_8s_fw_t0_96_768 53687387166542798  0.0670    0.0700    ±0.0060  OK
+variants/dp2_8s_fw_t0_t1 53687387166542798  0.0680    0.0690    ±0.0210  OK
+variants/dp2_8s_fw_t0only 53687387166542798  0.0820    0.0830    ±0.0050  OK
+variants/dp2_8s_fw_t2_t1 53687387166542798  0.0720    0.0730    ±0.0040  OK
+variants/dp2_8s_fw_wide400 53687387166542798  0.0690    0.0700    ±0.0020  OK
+variants/dp2_8s_interleaved 53687387166542798  0.0880    0.0900    ±0.0020  OK
+variants/dp2_8s_itercount 53687387166542798  0.0700    0.0700    ±0.0030  OK
+variants/dp2_8s_nopf     53687387166542798  0.0850    0.0850    ±0.0020  OK
+variants/dp2_8s_pf1024   53687387166542798  0.0690    0.0730    ±0.0050  OK
+variants/dp2_8s_pf2048   53687387166542798  0.0720    0.0730    ±0.0010  OK
+variants/dp2_8s_pf2560   53687387166542798  0.0700    0.0710    ±0.0020  OK
+variants/dp2_8s_pf3072   53687387166542798  0.0700    0.0710    ±0.0040  OK
+variants/dp2_8s_pf3072_32 53687387166542798  0.0710    0.0710    ±0.0010  OK
+variants/dp2_8s_pf4096   53687387166542798  0.0720    0.0740    ±0.0050  OK
+variants/dp2_8s_pf4096_32 53687387166542798  0.0700    0.0740    ±0.0090  OK
+variants/dp2_8s_pf4096_double 53687387166542798  0.0710    0.0750    ±0.0050  OK
+variants/dp2_8s_pf512    53687387166542798  0.0740    0.0780    ±0.0050  OK
+variants/dp2_8s_pf6144   53687387166542798  0.0700    0.0750    ±0.0050  OK
+variants/dp2_8s_pf8192   53687387166542798  0.0720    0.0740    ±0.0050  OK
+variants/dp2_8s_pf_double 53687387166542798  0.0710    0.0720    ±0.0080  OK
+variants/dp2_8s_stop_pf3072 53687387166542798  0.0700    0.0740    ±0.0100  OK
+variants/dp2_8s_subdetect 53687387166542798  0.0690    0.0700    ±0.0130  OK
+variants/dp2_8s_t2_4096  53687387166542798  0.0710    0.0730    ±0.0060  OK
+variants/dp2_8s_triple_pair 53687387166542798  0.0720    0.0750    ±0.0050  OK
+variants/dp2_8s_twoaccum 53687387166542798  0.0720    0.0740    ±0.0030  OK
 variants/dp2_8s_u8tree   -                  -         -         -         WRONG
-variants/dp2_8s_unify_stop 53687387166542798  0.0950    0.0960    ±0.0040  OK
-variants/dp2_8stream     53687387166542798  0.0950    0.0990    ±0.0080  OK
-variants/dp2_acc2        53687387166542798  0.1010    0.1010    ±0.0270  OK
-variants/dp2_pf4         53687387166542798  0.0930    0.1050    ±0.0230  OK
-variants/memchr          53687387166542798  0.9660    0.9660    ±0.0270  OK
-variants/mmap_locked     53687387166542798  0.2180    0.2240    ±0.0120  OK
-variants/read_loop       53687387166542798  0.5860    0.7530    ±0.1730  OK
-variants/read_thp        53687387166542798  0.5710    0.7190    ±0.1850  OK
-variants/stuchlik_8stream 53687387166542798  0.2310    0.2310    ±0.0300  OK
-variants/stuchlik_digitplace 53687387166542798  0.6080    0.6110    ±0.0110  OK
-variants/stuchlik_dp2    53687387166542798  0.1000    0.1050    ±0.0070  OK
-variants/swar_blockparse 53687387166542798  0.6800    0.6820    ±0.0060  OK
-variants/swar_branchless 53687387166542798  0.4460    0.4540    ±0.0280  OK
-variants/swar_nlfind     53687387166542798  0.5940    0.6130    ±0.0410  OK
-variants/swar_noreload   53687387166542798  0.5920    0.5970    ±0.0200  OK
-variants/swar_prefetch   53687387166542798  0.5510    0.5640    ±0.0470  OK
-variants/swar_unroll2    53687387166542798  0.4320    0.4340    ±0.0440  OK
-variants/rust_avx2       53687387166542798  0.2420    0.2880    ±0.0630  OK
+variants/dp2_8s_unify_stop 53687387166542798  0.0690    0.0710    ±0.0040  OK
+variants/dp2_8stream     53687387166542798  0.0720    0.0750    ±0.0050  OK
+variants/dp2_acc2        53687387166542798  0.0800    0.0870    ±0.0140  OK
+variants/dp2_pf4         53687387166542798  0.0850    0.0850    ±0.0040  OK
+variants/memchr          53687387166542798  0.6830    0.6920    ±0.0350  OK
+variants/mmap_locked     53687387166542798  0.1520    0.1630    ±0.0180  OK
+variants/read_loop       53687387166542798  0.4770    0.4950    ±0.0370  OK
+variants/read_thp        53687387166542798  0.4780    0.4930    ±0.0300  OK
+variants/stuchlik_8stream 53687387166542798  0.1480    0.1650    ±0.0210  OK
+variants/stuchlik_digitplace 53687387166542798  0.5360    0.5410    ±0.0310  OK
+variants/stuchlik_dp2    53687387166542798  0.0840    0.0850    ±0.0020  OK
+variants/swar_blockparse 53687387166542798  0.5730    0.5750    ±0.0070  OK
+variants/swar_branchless 53687387166542798  0.4520    0.4540    ±0.0060  OK
+variants/swar_nlfind     53687387166542798  0.5300    0.5350    ±0.0250  OK
+variants/swar_noreload   53687387166542798  0.5230    0.5260    ±0.0100  OK
+variants/swar_prefetch   53687387166542798  0.5410    0.5480    ±0.0120  OK
+variants/swar_unroll2    53687387166542798  0.5030    0.5320    ±0.0330  OK
+variants/rust_avx2       53687387166542798  0.3390    0.3480    ±0.0140  OK
 == ranking (correct only, by BEST time, fastest first) ==
-     1	0.0900 variants/dp2_8s_fw_t0_64_2048
-     2	0.0900 variants/dp2_8s_fw_t0_9216
-     3	0.0910 variants/dp2_8s_fw_2560_32
-     4	0.0910 variants/dp2_8s_fw_4acc_t0_128_1024
-     5	0.0910 variants/dp2_8s_fw_4acc_t1_2048
-     6	0.0910 variants/dp2_8s_fw_t0_128_1024
-     7	0.0910 variants/dp2_8s_fw_t0_128_1536
-     8	0.0910 variants/dp2_8s_fw_t0_128_3072
-     9	0.0910 variants/dp2_8s_fw_t0_256_1536
-    10	0.0910 variants/dp2_8s_fw_t0_7168
-    11	0.0920 champion
-    12	0.0920 variants/dp2_8s_fw_200it
-    13	0.0920 variants/dp2_8s_fw_6144_32
-    14	0.0920 variants/dp2_8s_fw_t0_192_1536
-    15	0.0920 variants/dp2_8s_fw_t0_256
-    16	0.0920 variants/dp2_8s_fw_t0_5120
-    17	0.0920 variants/dp2_8s_fw_t0_64_512
-    18	0.0920 variants/dp2_8s_fw_t0_96_768
-    19	0.0920 variants/dp2_8s_fw_t0_t1
-    20	0.0920 variants/dp2_8s_subdetect
-    21	0.0930 variants/dp2_8s_fw_3072_32
-    22	0.0930 variants/dp2_8s_fw_4096_64
-    23	0.0930 variants/dp2_8s_fw_4acc_200it
-    24	0.0930 variants/dp2_8s_fw_4acc_t0_192_1536
-    25	0.0930 variants/dp2_8s_fw_4acc_t0_256_3072
-    26	0.0930 variants/dp2_8s_fw_4acc_t0_512_2048
-    27	0.0930 variants/dp2_8s_fw_4acc_t0_64_3072
-    28	0.0930 variants/dp2_8s_fw_4acc_t0_64_640
-    29	0.0930 variants/dp2_8s_fw_4acc_t0_64_896
-    30	0.0930 variants/dp2_8s_fw_4acc_t0t1
-    31	0.0930 variants/dp2_8s_fw_t0_192_1024
-    32	0.0930 variants/dp2_8s_fw_t0_192_2048
-    33	0.0930 variants/dp2_8s_fw_t0_2048
-    34	0.0930 variants/dp2_8s_fw_t0_4096
-    35	0.0930 variants/dp2_8s_pf3072_32
-    36	0.0930 variants/dp2_8s_pf4096_double
-    37	0.0930 variants/dp2_8s_t2_4096
-    38	0.0930 variants/dp2_pf4
-    39	0.0940 variants/dp2_8s_fixed_2048
-    40	0.0940 variants/dp2_8s_fixed_widen
-    41	0.0940 variants/dp2_8s_fw_2w
-    42	0.0940 variants/dp2_8s_fw_3072_64
-    43	0.0940 variants/dp2_8s_fw_4096_32
-    44	0.0940 variants/dp2_8s_fw_4acc_3072_32
-    45	0.0940 variants/dp2_8s_fw_4acc_t0_128_3072
-    46	0.0940 variants/dp2_8s_fw_4acc_t0_256_2048
-    47	0.0940 variants/dp2_8s_fw_4acc_t0_512_7168
-    48	0.0940 variants/dp2_8s_fw_4acc_t0_64_768
-    49	0.0940 variants/dp2_8s_fw_t0_64_3072
-    50	0.0940 variants/dp2_8s_fw_t0_96_1536
-    51	0.0940 variants/dp2_8s_fw_wide400
-    52	0.0940 variants/dp2_8s_itercount
-    53	0.0940 variants/dp2_8s_pf2048
-    54	0.0940 variants/dp2_8s_pf4096
-    55	0.0940 variants/dp2_8s_pf8192
-    56	0.0940 variants/dp2_8s_pf_double
-    57	0.0950 variants/dp2_8s_4acc
-    58	0.0950 variants/dp2_8s_fixed_3072
-    59	0.0950 variants/dp2_8s_fw_4acc_2048_32
-    60	0.0950 variants/dp2_8s_fw_4acc_t0_512_4096
-    61	0.0950 variants/dp2_8s_fw_pf512_only
-    62	0.0950 variants/dp2_8s_fw_t0_3072_32
-    63	0.0950 variants/dp2_8s_pf1024
-    64	0.0950 variants/dp2_8s_pf2560
-    65	0.0950 variants/dp2_8s_pf3072
-    66	0.0950 variants/dp2_8s_pf4096_32
-    67	0.0950 variants/dp2_8s_pf512
-    68	0.0950 variants/dp2_8s_pf6144
-    69	0.0950 variants/dp2_8s_triple_pair
-    70	0.0950 variants/dp2_8s_twoaccum
-    71	0.0950 variants/dp2_8s_unify_stop
-    72	0.0950 variants/dp2_8stream
-    73	0.0960 variants/dp2_8s_fw_2048_32
-    74	0.0960 variants/dp2_8s_fw_4acc_t0_64_512
-    75	0.0960 variants/dp2_8s_stop_pf3072
-    76	0.0970 variants/dp2_8s_fw_3tier
-    77	0.0970 variants/dp2_8s_fw_il
-    78	0.0970 variants/dp2_8s_fw_t2_t1
-    79	0.0990 variants/dp2_8s_2w_fixed
-    80	0.1000 variants/stuchlik_dp2
-    81	0.1010 variants/dp2_12s_pf3072
-    82	0.1010 variants/dp2_acc2
-    83	0.1030 variants/dp2_8s_2w
-    84	0.1070 variants/dp2_8s_avx512_nl
-    85	0.1070 variants/dp2_8s_fw_interleaved
-    86	0.1110 variants/dp2_8s_nopf
-    87	0.1220 variants/dp2_8s_interleaved
-    88	0.1660 variants/dp2_8s_fw_nta
-    89	0.2100 variants/avx2_mmap_shared
-    90	0.2110 variants/avx2_8w_pf3_i_cnt3
-    91	0.2130 variants/avx2_8w_pf3_regbase_cnt3
-    92	0.2140 variants/avx2_hugepage_collapse
-    93	0.2160 variants/avx2_8w_pf1_i_cnt3
-    94	0.2160 variants/avx2_cnt12
-    95	0.2160 variants/avx2_pdep
-    96	0.2180 variants/avx2_8w_pf3_regbase_cnt12
-    97	0.2180 variants/mmap_locked
-    98	0.2200 variants/avx2_8w_pf3_interleaved
-    99	0.2210 variants/avx2_8w_pf4_i
-   100	0.2210 variants/avx2_parse_quad
-   101	0.2220 variants/avx2_8w_pf_t0
-   102	0.2220 variants/avx2_dual_cnt12
-   103	0.2230 variants/avx2_8w_pf3
-   104	0.2230 variants/avx2_8w_pf3_regbase
-   105	0.2240 variants/avx2_16w_pf3
-   106	0.2240 variants/avx2_8w_pf
-   107	0.2240 variants/avx2_8w_pf5
-   108	0.2240 variants/avx2_cnt6only
-   109	0.2260 variants/avx2_4stream_x
-   110	0.2260 variants/avx2_8w_pf12
-   111	0.2260 variants/avx2_8w_pf3_clzbase
-   112	0.2260 variants/avx2_8w_pf3_i2
-   113	0.2260 variants/avx2_cnt8910
-   114	0.2270 variants/avx2_6window
-   115	0.2270 variants/avx2_8w_pf4
-   116	0.2270 variants/avx2_8w_pf_dual
-   117	0.2270 variants/avx2_quad_window
-   118	0.2280 variants/avx2_4stream
-   119	0.2290 variants/avx2_8w_pf1
-   120	0.2290 variants/avx2_8w_pf2_i
-   121	0.2290 variants/avx2_8w_pf_half
-   122	0.2300 variants/avx2_5window
-   123	0.2310 variants/avx2_12w_pf3
-   124	0.2310 variants/avx2_clzbase
-   125	0.2310 variants/stuchlik_8stream
-   126	0.2320 variants/avx2_8w_i_nopf
-   127	0.2320 variants/avx2_8w_nta
-   128	0.2340 variants/avx2_cnt12_switch
-   129	0.2340 variants/avx2_directload
-   130	0.2340 variants/avx2_dual_window
-   131	0.2350 variants/avx2_7window
-   132	0.2350 variants/avx2_forceinline
-   133	0.2400 variants/avx2_triple_window
-   134	0.2410 variants/avx2_8window
-   135	0.2420 variants/avx2_vhigh
-   136	0.2420 variants/rust_avx2
-   137	0.2460 variants/avx2_12window
-   138	0.2490 variants/avx512_nl_8w
-   139	0.2500 variants/avx2_16window
-   140	0.2590 variants/avx2_maddubs
-   141	0.2600 variants/avx2_nohadd
-   142	0.2630 variants/avx2_nohadd47
-   143	0.2740 variants/avx512_8w_parse6
-   144	0.2780 variants/avx512_cnt47
-   145	0.2840 variants/avx512_maddubs
-   146	0.2860 variants/avx2_w128
-   147	0.2910 variants/avx512_parse_oct
-   148	0.3020 variants/avx2_fastload
-   149	0.3260 variants/avx2_parse3
-   150	0.3310 variants/avx2_unroll
-   151	0.3400 variants/avx2_64b
-   152	0.3630 variants/avx2_blockparse
-   153	0.3940 variants/avx512_blockparse
-   154	0.4290 variants/avx2_cmov
-   155	0.4320 variants/swar_unroll2
-   156	0.4460 variants/swar_branchless
-   157	0.5510 variants/swar_prefetch
-   158	0.5710 variants/read_thp
-   159	0.5860 variants/read_loop
-   160	0.5920 variants/swar_noreload
-   161	0.5940 variants/swar_nlfind
-   162	0.6080 variants/stuchlik_digitplace
-   163	0.6800 variants/swar_blockparse
-   164	0.9660 variants/memchr
+     1	0.0660 variants/dp2_8s_fw_4acc_t0_512_2048
+     2	0.0660 variants/dp2_8s_fw_4acc_t0_64_640
+     3	0.0660 variants/dp2_8s_fw_t0_192_1024
+     4	0.0660 variants/dp2_8s_fw_t0_64_1536
+     5	0.0660 variants/dp2_8s_fw_t0_64_2048
+     6	0.0670 variants/dp2_8s_fw_2560_32
+     7	0.0670 variants/dp2_8s_fw_4acc_t0_128_1024
+     8	0.0670 variants/dp2_8s_fw_4acc_t0_256_3072
+     9	0.0670 variants/dp2_8s_fw_4acc_t0_64_512
+    10	0.0670 variants/dp2_8s_fw_4acc_t0_64_768
+    11	0.0670 variants/dp2_8s_fw_4acc_t0_64_896
+    12	0.0670 variants/dp2_8s_fw_t0_128_1536
+    13	0.0670 variants/dp2_8s_fw_t0_192_2048
+    14	0.0670 variants/dp2_8s_fw_t0_4096
+    15	0.0670 variants/dp2_8s_fw_t0_64_1024
+    16	0.0670 variants/dp2_8s_fw_t0_64_512
+    17	0.0670 variants/dp2_8s_fw_t0_7168
+    18	0.0670 variants/dp2_8s_fw_t0_9216
+    19	0.0670 variants/dp2_8s_fw_t0_96_768
+    20	0.0680 champion
+    21	0.0680 variants/dp2_8s_fixed_2048
+    22	0.0680 variants/dp2_8s_fw_200it
+    23	0.0680 variants/dp2_8s_fw_2048_32
+    24	0.0680 variants/dp2_8s_fw_3tier
+    25	0.0680 variants/dp2_8s_fw_4096_32
+    26	0.0680 variants/dp2_8s_fw_4096_64
+    27	0.0680 variants/dp2_8s_fw_4acc_t0_512_7168
+    28	0.0680 variants/dp2_8s_fw_4acc_t0t1
+    29	0.0680 variants/dp2_8s_fw_pf512_only
+    30	0.0680 variants/dp2_8s_fw_t0_128_3072
+    31	0.0680 variants/dp2_8s_fw_t0_192_1536
+    32	0.0680 variants/dp2_8s_fw_t0_2048
+    33	0.0680 variants/dp2_8s_fw_t0_256
+    34	0.0680 variants/dp2_8s_fw_t0_256_1536
+    35	0.0680 variants/dp2_8s_fw_t0_64_128_512
+    36	0.0680 variants/dp2_8s_fw_t0_64_3072
+    37	0.0680 variants/dp2_8s_fw_t0_64_384
+    38	0.0680 variants/dp2_8s_fw_t0_64_512_32
+    39	0.0680 variants/dp2_8s_fw_t0_64_640
+    40	0.0680 variants/dp2_8s_fw_t0_64_768
+    41	0.0680 variants/dp2_8s_fw_t0_t1
+    42	0.0690 variants/dp2_8s_fw_2w
+    43	0.0690 variants/dp2_8s_fw_3072_32
+    44	0.0690 variants/dp2_8s_fw_3072_64
+    45	0.0690 variants/dp2_8s_fw_4acc_200it
+    46	0.0690 variants/dp2_8s_fw_4acc_2048_32
+    47	0.0690 variants/dp2_8s_fw_4acc_t0_128_3072
+    48	0.0690 variants/dp2_8s_fw_4acc_t0_192_1536
+    49	0.0690 variants/dp2_8s_fw_4acc_t0_256_2048
+    50	0.0690 variants/dp2_8s_fw_4acc_t0_512_4096
+    51	0.0690 variants/dp2_8s_fw_4acc_t0_64_3072
+    52	0.0690 variants/dp2_8s_fw_t0_128_1024
+    53	0.0690 variants/dp2_8s_fw_t0_5120
+    54	0.0690 variants/dp2_8s_fw_t0_64_448
+    55	0.0690 variants/dp2_8s_fw_t0_96_1536
+    56	0.0690 variants/dp2_8s_fw_wide400
+    57	0.0690 variants/dp2_8s_pf1024
+    58	0.0690 variants/dp2_8s_subdetect
+    59	0.0690 variants/dp2_8s_unify_stop
+    60	0.0700 variants/dp2_8s_fixed_3072
+    61	0.0700 variants/dp2_8s_fw_4acc_t1_2048
+    62	0.0700 variants/dp2_8s_fw_6144_32
+    63	0.0700 variants/dp2_8s_itercount
+    64	0.0700 variants/dp2_8s_pf2560
+    65	0.0700 variants/dp2_8s_pf3072
+    66	0.0700 variants/dp2_8s_pf4096_32
+    67	0.0700 variants/dp2_8s_pf6144
+    68	0.0700 variants/dp2_8s_stop_pf3072
+    69	0.0710 variants/dp2_12s_pf3072
+    70	0.0710 variants/dp2_8s_4acc
+    71	0.0710 variants/dp2_8s_fw_t0_3072_32
+    72	0.0710 variants/dp2_8s_fw_t0_64_320
+    73	0.0710 variants/dp2_8s_pf3072_32
+    74	0.0710 variants/dp2_8s_pf4096_double
+    75	0.0710 variants/dp2_8s_pf_double
+    76	0.0710 variants/dp2_8s_t2_4096
+    77	0.0720 variants/dp2_8s_fixed_widen
+    78	0.0720 variants/dp2_8s_fw_il
+    79	0.0720 variants/dp2_8s_fw_t0_64_256
+    80	0.0720 variants/dp2_8s_fw_t2_t1
+    81	0.0720 variants/dp2_8s_pf2048
+    82	0.0720 variants/dp2_8s_pf4096
+    83	0.0720 variants/dp2_8s_pf8192
+    84	0.0720 variants/dp2_8s_triple_pair
+    85	0.0720 variants/dp2_8s_twoaccum
+    86	0.0720 variants/dp2_8stream
+    87	0.0730 variants/dp2_8s_fw_4acc_3072_32
+    88	0.0740 variants/dp2_8s_avx512_nl
+    89	0.0740 variants/dp2_8s_pf512
+    90	0.0750 variants/dp2_8s_2w
+    91	0.0780 variants/dp2_8s_2w_fixed
+    92	0.0800 variants/dp2_acc2
+    93	0.0810 variants/dp2_8s_fw_nopf
+    94	0.0820 variants/dp2_8s_fw_t0only
+    95	0.0840 variants/dp2_8s_fw_interleaved
+    96	0.0840 variants/stuchlik_dp2
+    97	0.0850 variants/dp2_8s_nopf
+    98	0.0850 variants/dp2_pf4
+    99	0.0880 variants/dp2_8s_interleaved
+   100	0.1440 variants/avx2_12w_pf3
+   101	0.1440 variants/avx2_8w_pf3_interleaved
+   102	0.1450 variants/avx2_8w_pf3_i_cnt3
+   103	0.1450 variants/avx2_8w_pf3_regbase_cnt3
+   104	0.1450 variants/avx2_mmap_shared
+   105	0.1460 variants/avx2_8w_pf12
+   106	0.1460 variants/avx2_8w_pf3_regbase
+   107	0.1460 variants/avx2_8w_pf3_regbase_cnt12
+   108	0.1460 variants/avx2_hugepage_collapse
+   109	0.1460 variants/avx512_nl_8w
+   110	0.1470 variants/avx2_12window
+   111	0.1470 variants/avx2_8w_pf3
+   112	0.1470 variants/avx2_8w_pf5
+   113	0.1470 variants/dp2_8s_fw_nta
+   114	0.1480 variants/avx2_4stream
+   115	0.1480 variants/avx2_8w_pf4_i
+   116	0.1480 variants/avx2_8w_pf_t0
+   117	0.1480 variants/avx2_8window
+   118	0.1480 variants/stuchlik_8stream
+   119	0.1490 variants/avx2_4stream_x
+   120	0.1490 variants/avx2_8w_pf2_i
+   121	0.1490 variants/avx2_8w_pf4
+   122	0.1500 variants/avx2_16w_pf3
+   123	0.1500 variants/avx2_8w_pf3_i2
+   124	0.1500 variants/avx2_8w_pf_dual
+   125	0.1500 variants/avx2_8w_pf_half
+   126	0.1510 variants/avx2_16window
+   127	0.1520 variants/avx2_8w_pf3_clzbase
+   128	0.1520 variants/mmap_locked
+   129	0.1530 variants/avx2_6window
+   130	0.1530 variants/avx2_8w_pf1_i_cnt3
+   131	0.1540 variants/avx2_7window
+   132	0.1550 variants/avx2_8w_pf
+   133	0.1560 variants/avx2_5window
+   134	0.1560 variants/avx2_quad_window
+   135	0.1570 variants/avx2_8w_i_nopf
+   136	0.1590 variants/avx2_clzbase
+   137	0.1590 variants/avx2_triple_window
+   138	0.1600 variants/avx2_8w_nta
+   139	0.1600 variants/avx2_8w_pf1
+   140	0.1650 variants/avx2_dual_cnt12
+   141	0.1660 variants/avx512_8w_parse6
+   142	0.1670 variants/avx2_dual_window
+   143	0.1910 variants/avx2_w128
+   144	0.1990 variants/avx512_parse_oct
+   145	0.2710 variants/avx2_parse3
+   146	0.2800 variants/avx2_unroll
+   147	0.2950 variants/avx2_forceinline
+   148	0.3070 variants/avx2_pdep
+   149	0.3180 variants/avx2_directload
+   150	0.3200 variants/avx2_parse_quad
+   151	0.3210 variants/avx2_cnt8910
+   152	0.3290 variants/avx2_cnt12
+   153	0.3330 variants/avx2_cnt12_switch
+   154	0.3390 variants/rust_avx2
+   155	0.3460 variants/avx2_cnt6only
+   156	0.3530 variants/avx2_nohadd47
+   157	0.3570 variants/avx2_nohadd
+   158	0.3670 variants/avx2_vhigh
+   159	0.3670 variants/avx512_cnt47
+   160	0.3690 variants/avx512_maddubs
+   161	0.3720 variants/avx2_blockparse
+   162	0.3750 variants/avx512_blockparse
+   163	0.3810 variants/avx2_cmov
+   164	0.3830 variants/avx2_maddubs
+   165	0.3910 variants/avx2_fastload
+   166	0.4300 variants/avx2_64b
+   167	0.4520 variants/swar_branchless
+   168	0.4770 variants/read_loop
+   169	0.4780 variants/read_thp
+   170	0.5030 variants/swar_unroll2
+   171	0.5230 variants/swar_noreload
+   172	0.5300 variants/swar_nlfind
+   173	0.5360 variants/stuchlik_digitplace
+   174	0.5410 variants/swar_prefetch
+   175	0.5730 variants/swar_blockparse
+   176	0.6830 variants/memchr
 
 == promotion gate ==
-champion best 0.0920s is within 2× of floor 0.5460s — at the wall; stop chasing.
-best variant: variants/dp2_8s_fw_t0_64_2048  best=0.0900s (need <=0.0906s)  median=0.0940s vs champ 0.0940s  Δbest=0.0020s
+champion best 0.0680s is within 2× of floor 0.6080s — at the wall; stop chasing.
+best variant: variants/dp2_8s_fw_4acc_t0_512_2048  best=0.0660s (need <=0.0670s)  median=0.0690s vs champ 0.0690s  Δbest=0.0020s
   not both conditions met → HOLD champion (within noise, or only a lucky single sample).
 verdict: STOP-FLOOR   (written to /tmp/pi_verdict)
 
@@ -348,16 +373,16 @@ verdict: STOP-FLOOR   (written to /tmp/pi_verdict)
 edge: pass=9 fail=0
 
 == compiler sweep (champion) ==
-  g++        -O3 -march=native                  best=0.0930s
-  g++        -Ofast -march=native -funroll-loops best=0.0910s
-  g++-13     -O3 -march=native                  best=0.0900s
-  g++-13     -Ofast -march=native -funroll-loops best=0.0910s
-  clang++    -O3 -march=native                  best=0.0990s
-  clang++    -Ofast -march=native -funroll-loops best=0.1040s
-  → submit under: g++-13 -O3 -march=native   (champion best 0.0900s here)
+  g++        -O3 -march=native                  best=0.0670s
+  g++        -Ofast -march=native -funroll-loops best=0.0670s
+  g++-13     -O3 -march=native                  best=0.0680s
+  g++-13     -Ofast -march=native -funroll-loops best=0.0680s
+  clang++    -O3 -march=native                  best=0.0770s
+  clang++    -Ofast -march=native -funroll-loops best=0.0770s
+  → submit under: g++ -O3 -march=native   (champion best 0.0670s here)
 
 == index.html (leaderboard view) ==
-wrote index.html (champion=92.0 ms, 1.3× off the rank 18 bar — need 92.0 ms → 69.3 ms)
+wrote index.html (champion=68.0 ms, CLEARS rank 18 bar (68.0 ms ≤ 69.3 ms))
 
 expected=53687387166542798  |  verdict=STOP-FLOOR 
 loop: PROMOTE→copy candidate to champion/main.cpp & re-run; HOLD→make a bigger change; STOP-FLOOR→memory-bound, stop.
