@@ -69,7 +69,7 @@
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-07-18 22:12 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-07-19 00:05 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
 
   
@@ -113,17 +113,17 @@
 
   <div class="goal">
     <div class="card"><div class="k">Champion wall-time</div>
-      <div class="v">66.0 ms</div></div>
+      <div class="v">92.0 ms</div></div>
     <div class="card"><div class="k">Per line</div>
-      <div class="v">1.32 ns</div></div>
+      <div class="v">1.84 ns</div></div>
     <div class="card"><div class="k">Target (rank 18)</div>
       <div class="v">69.3 ms</div></div>
     <div class="card"><div class="k">Gap</div>
-      <div class="v good" style="font-size:14px">CLEARS rank 18 bar (66.0 ms ≤ 69.3 ms)</div></div>
+      <div class="v bad" style="font-size:14px">1.3× off the rank 18 bar — need 92.0 ms → 69.3 ms</div></div>
   </div>
   
   
-  <h2>🏁 Plan to an honest rank 18 — 3/7 done</h2>
+  <h2>🏁 Plan to an honest rank 18 — 2/7 done</h2>
   <div class="reality">
     <b>Reality check.</b> The rank-18 bar is ≈69 ms for a full 50M-line parse
     (~1.4 ns/line on x86). That is only physically reachable on the <b>x86 cloud box</b> —
@@ -134,9 +134,9 @@
   </div>
   
       <div class="barwrap">
-        <div class="barlabel">climb: 1.32 ns/line → 1.4 ns/line target
+        <div class="barlabel">climb: 1.84 ns/line → 1.4 ns/line target
           <span class="dim">(x86 proxy — the judge is ground truth)</span></div>
-        <div class="bar"><div class="fill" style="width:100%"></div></div>
+        <div class="bar"><div class="fill" style="width:96%"></div></div>
       </div>
   <div class="tasks">
       <div class="task done">
@@ -240,9 +240,9 @@
          <code>__AVX512F__/__AVX512BW__/__AVX512VNNI__</code> + scalar fallback.</li>
    </ul></div></details>
       </div>
-      <div class="task done">
+      <div class="task ">
         <div class="thead">
-          <span class="box">☑</span>
+          <span class="box">☐</span>
           <span class="tnum">Phase 5</span>
           <span class="ttitle">Champion beats ~1.4 ns/line on the cloud box</span>
           <span class="owner" style="color:#a970ff;border-color:#a970ff55;background:#a970ff18">🤖+👤</span>
@@ -320,14 +320,6 @@
         <td class="wall">65,550,791 ns<span class="sub">1.31 ns/line</span></td>
         <td class="mem">2,277,376 B</td>
       </tr>
-      <tr class="us">
-        <td class="rank">—</td>
-        <td class="user">★ our champion <span class="tier" style="background:#f0b42922;color:#f0b429;border:1px solid #f0b42955">us</span></td>
-        <td class="score">—</td>
-        <td class="cc">c++</td>
-        <td class="wall">66,000,000 ns<span class="sub">1.32 ns/line</span></td>
-        <td class="mem">—</td>
-      </tr>
       <tr class="">
         <td class="rank">#14</td>
         <td class="user">Jack Frigaard <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
@@ -351,6 +343,14 @@
         <td class="cc">g++13.3.0</td>
         <td class="wall">69,301,147 ns<span class="sub">1.39 ns/line</span></td>
         <td class="mem">2,301,952 B</td>
+      </tr>
+      <tr class="us">
+        <td class="rank">—</td>
+        <td class="user">★ our champion <span class="tier" style="background:#f0b42922;color:#f0b429;border:1px solid #f0b42955">us</span></td>
+        <td class="score">—</td>
+        <td class="cc">c++</td>
+        <td class="wall">92,000,000 ns<span class="sub">1.84 ns/line</span></td>
+        <td class="mem">—</td>
       </tr>
       <tr class="">
         <td class="rank">#17</td>
@@ -376,8 +376,8 @@
     
       <tr>
         <td class="user">champion ★</td>
-        <td>66.0 ms</td>
-        <td>1.32 ns/line</td>
+        <td>92.0 ms</td>
+        <td>1.84 ns/line</td>
         <td><span class="badge ok">OK</span></td>
       </tr>
   </table>
