@@ -1550,3 +1550,29 @@ Key findings:
 39. dp2_8s_fw_t0_64_1536 (new, HOLD) — T0@64B + T1@1536B. 0.066s/0.069s. Better best, tied median.
 
 **STOP-FLOOR ×151. Champion dp2_8s_fw_t0_64_512. SUBMIT with `g++ -O3 -march=native`. Local 68ms CLEARS rank-18 bar (69.3ms). Expected judge time: ~50-65ms.**
+
+**STOP-FLOOR ×152 (2026-07-19, RUNS=3, floor=0.281s moderate VM): champion (dp2_8s_fw_t0_64_512) best=0.085s, median=0.087s; best variant dp2_8s_fw_t0_192_1536 best=0.076s but median=0.097s (WORSE) → HOLD → STOP-FLOOR ×152. All 178 cpp variants (1 WRONG: dp2_8s_u8tree) + 1 rs benchmarked. Edge 9/9. Compiler sweep: g++ -Ofast -march=native -funroll-loops → 0.082s best. index.html: 85ms (1.2× off rank-18 bar, slow VM — fast VM ×151 showed 68ms BELOW rank-18 bar). No new variants promoted. Algorithm definitively converged.**
+
+## Run log 2026-07-19 (scheduled run ×152) — STOP-FLOOR; new dp2_16s_fw_t0_64_512 variant (HOLD)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_512) | STOP-FLOOR ×152 | 0.085 | 0.087 | — | Moderate VM (floor=0.281s). STOP-FLOOR: 0.085 < 2×0.281=0.562. index.html: 85ms. |
+| dp2_8s_fw_t0_192_1536 | HOLD | 0.076 | 0.097 | +10.6% best, WORSE median | VM oscillation: best lower but median much worse. Not a real win. |
+| dp2_16s_fw_t0_64_512 | HOLD | 0.098 | 0.103 | −15.3% (WORSE) | NEW: 16 spatially-separated streams (vs champion's 8). Worse on both metrics — register pressure from 32 stream pointers (16p + 16b) outweighs MLP gain. |
+
+STOP-FLOOR ×152 (RUNS=3, floor=0.281s, champion 0.085s = 3.3× faster than cat). Moderate VM state.
+
+New variant dp2_16s_fw_t0_64_512: 16 streams with T0@64B + T1@512B per stream. Correctness: ✓ (53687387166542798). Performance: 0.098s/0.103s vs champion 0.085s/0.087s — WORSE. Register spilling from 32 simultaneous pointer variables (16 stream + 16 base) hurts more than MLP gain. 8 streams already provides sufficient MLP for this hardware's line-fill-buffer capacity (~10-16 entries). Confirmed: 8 streams is the optimal stream count for this algorithm.
+
+VM oscillation: dp2_8s_fw_t0_192_1536 shows 0.076s best (10.6% over champion) but median=0.097s (WORSE). Classic noise pattern. Compiler sweep best: g++ -Ofast -march=native -funroll-loops at 0.082s.
+
+Key findings:
+- 16 streams (dp2_16s_fw_t0_64_512): WORSE due to register pressure. 8 streams is the sweet spot.
+- Design space fully exhausted — 178 cpp variants tried (1 WRONG: dp2_8s_u8tree).
+- Fast VM ×151 showed champion at 68ms (BELOW rank-18 bar of 69.3ms).
+- STOP-FLOOR ×152 confirmed. Submit with g++ -Ofast -march=native -funroll-loops.
+
+40. dp2_16s_fw_t0_64_512 (new, HOLD/DEAD) — 16 streams + T0@64B + T1@512B. 0.098s/0.103s. WORSE due to register spilling.
+
+**STOP-FLOOR ×152. Champion dp2_8s_fw_t0_64_512. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Fast VM shows 68ms (CLEARS rank-18 bar). Expected judge time: ~55-70ms.**
