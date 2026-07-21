@@ -1683,3 +1683,26 @@ Note: on fast VMs (run ×208) g++-13 -O3 was definitively best at 0.063s. index.
 Edge: 9/9. No new variants — all paths exhausted.
 
 **STOP-FLOOR ×210. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM best 63ms (CLEARS rank-18 bar ≤69.3ms). This VM moderate (97ms = 1.11× floor); no algorithmic regression.**
+
+## Run log 2026-07-21 (scheduled run ×211) — STOP-FLOOR; moderate VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_3072) | STOP-FLOOR ×211 | 0.0680 | 0.0700 | — | Moderate VM (floor=0.2220s min/0.4970s med). STOP-FLOOR: 0.068 < 2×0.222=0.444. Edge 9/9. |
+| dp2_8s_fw_t0_256 (existing) | HOLD | 0.0660 | 0.0720 | +2.9% best / −2.9% med | Best is 2% better but median WORSE → HOLD (noise). |
+
+STOP-FLOOR ×211. Moderate VM (noisy: floor med 0.497s vs min 0.222s). Champion best=0.068s = 3.26× floor. All 178 cpp + 1 rs variants fully exhausted. No new variants — design space genuinely saturated. index.html: 68.0ms (CLEARS rank-18 bar ≤69.3ms on this VM; fast-VM canonical best from run ×208 was 0.063s = 1.26 ns/line).
+
+Compiler sweep (champion):
+- g++ -O3 -march=native → 0.0670s best (**BEST on this VM**)
+- g++ -Ofast -march=native -funroll-loops → 0.0690s
+- g++-13 -O3 -march=native → 0.0690s
+- g++-13 -Ofast -march=native -funroll-loops → 0.0700s
+- clang++ -O3 -march=native → 0.0760s
+- clang++ -Ofast -march=native -funroll-loops → 0.0750s
+
+Note: on fast VMs (run ×208) g++-13 -O3 was definitively best at 0.063s. Compiler ordering varies within noise on moderate/slow VMs.
+
+Edge: 9/9. No new variants.
+
+**STOP-FLOOR ×211. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++ -O3 -march=native` (or `g++-13 -O3 -march=native` on fast VMs). Fast-VM best 63ms (CLEARS rank-18 bar ≤69.3ms). This VM moderate (68ms champion = 3.26× floor of 0.222s); no algorithmic regression.**
