@@ -1621,3 +1621,23 @@ Compiler sweep (3 samples each):
 Edge: 9/9. No new variants promoted.
 
 **STOP-FLOOR ×207. Champion dp2_8s_fw_4acc_t0_64_768. SUBMIT with `g++-13 -O3 -march=native`. Fast VM shows 64-69ms (AT/CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal. index.html: 80ms (moderate VM).**
+
+## Run log 2026-07-21 (scheduled run ×208) — PROMOTE dp2_8s_fw_4acc_t0_64_3072 → STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 (NEW) | HOLD | 0.0650 | 0.0710 | +0.5% | New grid point for 4acc T0@64 family. Correct (9/9). Not a gate winner. |
+| dp2_8s_fw_4acc_t0_64_3072 (existing) | **PROMOTE** | 0.0630 | 0.0670 | **+4.5%** | Gate fired (>noise band, lower median). VM oscillation: longer T1 (3072B) wins today. |
+| champion (dp2_8s_fw_4acc_t0_64_3072) | STOP-FLOOR ×208 | 0.0640 | 0.0680 | — | After promote + confirm run. floor=0.640s (slow VM I/O). STOP-FLOOR: champion well within 2× floor. |
+
+STOP-FLOOR ×208. Previous champion was dp2_8s_fw_4acc_t0_64_768 (best=0.080s on slow VM last run; today's faster VM reads 0.064s). Gate fired on dp2_8s_fw_4acc_t0_64_3072 with 4.5% margin on best and 5.6% on median. Confirmation run shows STOP-FLOOR sustained. index.html: 64.0ms — CLEARS rank-18 bar (≤69.3ms).
+
+Compiler sweep (champion post-promote):
+- g++-13 -O3 -march=native → 0.0630s best (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.0640s
+- g++ -O3 -march=native → 0.0660s
+- clang++ -O3 -march=native → 0.0730s
+
+Edge: 9/9. Champion promoted.
+
+**STOP-FLOOR ×208. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar 69.3ms). index.html: 64.0ms.**
