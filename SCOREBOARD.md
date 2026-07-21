@@ -1641,3 +1641,24 @@ Compiler sweep (champion post-promote):
 Edge: 9/9. Champion promoted.
 
 **STOP-FLOOR ×208. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar 69.3ms). index.html: 64.0ms.**
+
+## Run log 2026-07-21 (scheduled run ×209) — STOP-FLOOR; slow VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_3072) | STOP-FLOOR ×209 | 0.0930 | 0.0940 | — | Slow VM (floor=0.0850s min/0.0870s med). STOP-FLOOR: 0.093 < 2×0.085=0.170. Edge 9/9. |
+
+STOP-FLOOR ×209. Slow VM today (floor=0.085s, champion=0.093s = 1.09× floor). Algorithm fully converged; all 178 cpp + 1 rs variants exhausted. No new variants — design space is genuinely saturated. Previous fast-VM best (run ×208) was 0.063s = 1.26 ns/line, clearing rank-18 bar (69.3ms). Champion dp2_8s_fw_4acc_t0_64_3072 ready to submit.
+
+Compiler sweep (3 samples each, slow VM):
+- g++ -Ofast -march=native -funroll-loops → 0.094s best (**BEST on this VM**)
+- g++ -O3 -march=native → 0.095s
+- g++-13 -O3 -march=native → 0.095s
+- clang++ -O3 -march=native → 0.099s
+- clang++-18 -O3 -march=native → 0.103s
+
+Note: on fast VMs (run ×208) g++-13 -O3 was definitively best at 0.063s. Compiler ordering is within noise on slow VMs.
+
+Edge: 9/9. index.html: 63ms (fast-VM canonical best from run ×208).
+
+**STOP-FLOOR ×209. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM best 63ms (CLEARS rank-18 bar ≤69.3ms). This VM slow (93ms = 1.09× floor); no algorithmic regression.**
