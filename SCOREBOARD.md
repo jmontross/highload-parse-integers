@@ -1789,3 +1789,15 @@ Compiler sweep (7-sample champion, fast VM):
 Edge: 9/9. No new variants — all paths exhausted. index.html: 75ms (fast VM, CLEARS rank-18 bar ≤69.3ms).
 
 **STOP-FLOOR ×215. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. Compiler sweep best 73ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal.**
+
+## Run log 2026-07-21 (scheduled run ×216) — STOP-FLOOR; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×216 | 0.0660 | 0.0690 | — | Moderate VM (floor=0.207s min/0.469s med). 3.1× floor. Edge 9/9. |
+
+STOP-FLOOR ×216. Moderate VM today (floor=0.207s min/0.469s med; champion=0.066s best / 0.069s median). STOP-FLOOR: 0.066 < 2×0.207=0.414. Ratio=3.1× faster than cat. AT bandwidth ceiling. Best dp2 variant (dp2_8s_fw_4acc_t0_64_1024, same code as champion) at 0.065s best — pure noise within ±0.006s jitter band. No new variants. Correctness: 53687387166542798 ✓. RUNS=3.
+
+No compiler sweep (moderate VM, unrepresentative for sweep timing). Edge: 9/9. All 178 cpp + 1 rs variants exhausted — design space saturated.
+
+**STOP-FLOOR ×216. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~55-65ms on bare metal.**
