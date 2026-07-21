@@ -1745,3 +1745,27 @@ Compiler sweep (moderate VM, champion):
 Edge: 9/9. No new variants.
 
 **STOP-FLOOR ×213. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native`. This VM moderate (92ms = 1.33× floor of 0.069s); expected judge time ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms on good VMs.**
+
+## Run log 2026-07-21 (scheduled run ×214) — Double PROMOTE cascade → dp2_8s_fw_4acc_t0_64_1024; STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_200it (existing) | **PROMOTE ①** | 0.0650 | 0.0660 | **+3.0%** | Fast VM (floor=0.562s). Best+median both beat prior champion dp2_8s_fw_4acc_t0_512_2048 (0.067/0.067). Edge 9/9. T0@512+T1@3072, 200-iter inner loop. |
+| dp2_8s_fw_4acc_t0_64_1024 (existing) | **PROMOTE ②** | 0.0650 | 0.0670 | **+4.4%** | Confirmation run (floor=0.534s). Best+median both beat new champion dp2_8s_fw_200it (0.068/0.069). Edge 9/9. T0@64B+T1@1024B. |
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×214 | 0.0670 | 0.0670 | — | Final confirmation run (RUNS=5, floor=0.622s min/0.632s med). STOP-FLOOR: 0.067s < 2×0.622=1.244s. Best variant dp2_8s_fw_200it: 0.066s best/0.069s med → HOLD (median WORSE). |
+
+STOP-FLOOR ×214. Two cascading promotions on fast VM — all dp2 variants cluster within <5% and VM variability drives gate triggers. Final champion: **dp2_8s_fw_4acc_t0_64_1024** (T0@64B near + T1@1024B far, 4 accumulators, 8 streams). Confirmation (RUNS=5): champion 0.067s best / 0.067s median on floor=0.622s = 9.3× faster than cat. AT bandwidth ceiling.
+
+Compiler sweep (new champion, fast VM):
+- g++ -O3 -march=native → 0.064s best (**BEST — use for submit**)
+- g++ -Ofast -march=native -funroll-loops → 0.066s
+- g++-13 -O3 -march=native → 0.067s
+- g++-13 -Ofast -march=native -funroll-loops → 0.066s
+- clang++ -O3 -march=native → 0.074s
+- clang++ -Ofast -march=native -funroll-loops → 0.073s
+
+Edge: 9/9. index.html: 67ms (CLEARS rank-18 bar ≤69.3ms).
+
+41. dp2_8s_fw_4acc_t0_64_1024 (double-promote ×214) — T0@64B near + T1@1024B far. Final champion. 0.067s/0.067s (RUNS=5).
+
+**STOP-FLOOR ×214. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. Compiler sweep local best 64ms; confirmed 67ms CLEARS rank-18 bar (≤69.3ms). Expected judge time: ~55-65ms on bare metal.**
