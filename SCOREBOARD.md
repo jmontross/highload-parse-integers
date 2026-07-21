@@ -1599,3 +1599,25 @@ Key findings:
 40. dp2_16s_fw_t0_64_512 (new, HOLD/DEAD) — 16 streams + T0@64B + T1@512B. 0.098s/0.103s. WORSE due to register spilling.
 
 **STOP-FLOOR ×152. Champion dp2_8s_fw_t0_64_512. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Fast VM shows 68ms (CLEARS rank-18 bar). Expected judge time: ~55-70ms.**
+
+## Run log 2026-07-21 (scheduled run ×207) — STOP-FLOOR; maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_768) | STOP-FLOOR ×207 | 0.080 | 0.084 | — | Moderate VM (floor=0.069s min/0.070s med). STOP-FLOOR: 0.080 < 2×0.070=0.140. index.html: 80ms (1.2× off rank-18 bar — slow VM; fast VM ×203 showed 69ms AT bar). |
+
+STOP-FLOOR ×207 (RUNS=5 direct, floor=0.069s min/0.070s med, champion 0.080s = 1.14× above floor).
+
+Maintenance check. No new variants — all 178 cpp + 1 rs variants exhausted. Both Change A (digit-place accumulation, stuchlik_digitplace.cpp) and Change B (8-stream memory parallelism, stuchlik_8stream.cpp) fully implemented and verified — dp2 champion supersedes both. Algorithm definitively converged at bandwidth ceiling for 207 consecutive STOP-FLOOR runs.
+
+Compiler sweep (3 samples each):
+- g++-13 -O3 -march=native → 0.080s best (**BEST**)
+- g++ -O3 -march=native → 0.082s best
+- g++ -Ofast -march=native -funroll-loops → 0.083s
+- g++-13 -Ofast -march=native -funroll-loops → 0.083s
+- clang++ -O3 -march=native → 0.091s
+- clang++-18 -O3 -march=native → 0.089s
+
+Edge: 9/9. No new variants promoted.
+
+**STOP-FLOOR ×207. Champion dp2_8s_fw_4acc_t0_64_768. SUBMIT with `g++-13 -O3 -march=native`. Fast VM shows 64-69ms (AT/CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal. index.html: 80ms (moderate VM).**
