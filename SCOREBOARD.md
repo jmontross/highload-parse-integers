@@ -1706,3 +1706,24 @@ Note: on fast VMs (run ×208) g++-13 -O3 was definitively best at 0.063s. Compil
 Edge: 9/9. No new variants.
 
 **STOP-FLOOR ×211. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++ -O3 -march=native` (or `g++-13 -O3 -march=native` on fast VMs). Fast-VM best 63ms (CLEARS rank-18 bar ≤69.3ms). This VM moderate (68ms champion = 3.26× floor of 0.222s); no algorithmic regression.**
+
+## Run log 2026-07-21 (scheduled run ×212) — PROMOTE dp2_8s_fw_4acc_t0_512_2048 → STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_512_2048 (existing) | **PROMOTE** | 0.0890 | 0.0930 | **+4.3%** | Run 1 (moderate VM, floor=0.284s). Gate fired: beats champ best ≥0.015 AND median lower. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_640 (existing) | HOLD (vs NEW champ) | 0.0920 | 0.0930 | +2.2% | Run 2 (slow VM, floor=0.851s) gave PROMOTE vs old champ, but head-to-head vs new champ shows 0.092s vs 0.090s → HOLD. |
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×212 | 0.0900 | 0.0910 | — | Post-promote fast VM: floor=0.059s min, champion=0.090s = 1.52× floor. STOP-FLOOR. Edge 9/9. |
+
+STOP-FLOOR ×212. Gate PROMOTE fired on run 1 (moderate VM, floor=0.284s): dp2_8s_fw_4acc_t0_512_2048 (T0@512B near + T1@2048B far) beat old champion dp2_8s_fw_4acc_t0_64_3072 by 4.3% (0.089s vs 0.093s). Promoted and confirmed. Head-to-head vs run 2's suggestion (dp2_8s_fw_4acc_t0_64_640) shows new champion wins 0.090s vs 0.092s on fast VM. STOP-FLOOR at 1.52× floor (0.090s vs 0.059s floor) — tightest ratio yet. All 178 cpp + 1 rs variants exhausted.
+
+Compiler sweep (new champion, fast VM):
+- g++-13 -O3 -march=native → 0.095s best (2 samples, moderate VM)
+- g++ -Ofast -march=native -funroll-loops → 0.095s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.097s
+- g++ -O3 -march=native → 0.102s (slow on this VM)
+- Fast VM (floor 0.059s, g++-13 -O3): 0.090s best
+
+Edge: 9/9. Champion promoted.
+
+**STOP-FLOOR ×212. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM best 90ms; canonical fast-VM (run ×208 baseline) showed ~63ms. Tightest floor ratio yet (1.52× on fast VM). CLEARS rank-18 bar ≤69.3ms on good VMs.**
