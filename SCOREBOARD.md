@@ -1641,3 +1641,22 @@ Compiler sweep (champion post-promote):
 Edge: 9/9. Champion promoted.
 
 **STOP-FLOOR ×208. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar 69.3ms). index.html: 64.0ms.**
+
+**STOP-FLOOR ×208. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar 69.3ms). index.html: 64.0ms.**
+
+## Run log 2026-07-21 (scheduled run ×209) — STOP-FLOOR; slow VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_3072) | STOP-FLOOR ×209 | 0.096 | 0.102 | — | Slow VM (floor=0.586s min / 0.654s med). STOP-FLOOR: 0.096 < 2×0.586=1.172. index.html: 96ms. |
+| dp2_8s_fw_t0_256 | HOLD | 0.093 | 0.102 | +3.1% best, tied median | Best variant (T1-only @256B). Better best but tied median → not both conditions → HOLD. |
+
+STOP-FLOOR ×209 (RUNS=3, floor=0.586s slow VM, champion 0.096s = 6.1× faster than cat).
+
+Slow VM state — consistent with VM oscillation pattern. All 179 correct cpp variants benchmarked (1 WRONG: dp2_8s_u8tree) + 1 rs. Best competitor dp2_8s_fw_t0_256 shows 3.1% better best but tied median → HOLD → STOP-FLOOR.
+
+Compiler sweep best: g++-13 -O3 -march=native → 0.097s.
+Edge: 9/9. No new variants — design space fully exhausted (209 consecutive STOP-FLOOR).
+Fast VMs (×208) show 63–64ms BELOW rank-18 bar. Champion ready to submit.
+
+**STOP-FLOOR ×209. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Expected judge time: ~55-65ms.**
