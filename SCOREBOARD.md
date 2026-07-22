@@ -1801,3 +1801,15 @@ STOP-FLOOR ×216. Moderate VM today (floor=0.207s min/0.469s med; champion=0.066
 No compiler sweep (moderate VM, unrepresentative for sweep timing). Edge: 9/9. All 178 cpp + 1 rs variants exhausted — design space saturated.
 
 **STOP-FLOOR ×216. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~55-65ms on bare metal.**
+
+## Run log 2026-07-22 (scheduled run ×217) — STOP-FLOOR; moderate VM maintenance check
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×217 | 0.0920 | 0.1070 | — | Moderate VM (floor=0.061s min). 1.51× floor. Edge 9/9. |
+
+STOP-FLOOR ×217. Moderate VM today (floor=0.061s; champion=0.092s best / 0.107s median = 1.51× floor). STOP-FLOOR: 0.092 < 2×0.061=0.122. AT bandwidth ceiling. Compiler sweep: g++ -O3 -march=native → 0.099s best; g++ -Ofast -march=native -funroll-loops → 0.092s best; g++-13 -O3 -march=native → 0.093s best; g++-13 -Ofast -march=native -funroll-loops → 0.093s; clang++ -O3 -march=native → 0.102s; clang++-18 -O3 -march=native → 0.102s. No new variants — all 178 cpp + 1 rs angles exhausted. Both Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) fully implemented; dp2 champion supersedes both. Correctness: 53687387166542798 ✓. Edge 9/9.
+
+Best compiler this run: `g++ -Ofast -march=native -funroll-loops` → 0.092s. High VM jitter (samples 0.098–0.154s) — moderate VM state.
+
+**STOP-FLOOR ×217. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Expected judge time: ~55-65ms on bare metal.**
