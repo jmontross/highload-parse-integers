@@ -1960,3 +1960,13 @@ VM state: moderate (floor=0.063s). g++ champion best=0.077s (1.22× floor); clan
 All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion dp2_8s_fw_t0_128_1024 at bandwidth ceiling.
 
 **STOP-FLOOR ×226. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native`. VM best 0.077s (1.22× floor). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-22 (scheduled run ×227) — STOP-FLOOR; champion verified at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×227 | 0.075 | 0.076 | — | VM floor=0.063s (cat best). Champion at 1.19× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate-fast (floor=0.063s best, 0.064s median). Champion 5-run times: 0.075, 0.075, 0.076, 0.076, 0.080 (best=0.075, median=0.076). Ratio 1.19× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated. Breakthrough Directive Changes A (stuchlik_digitplace) and B (stuchlik_8stream) implemented in earlier runs; dp2 champion supersedes both. No new variants — nothing to try. Correctness ✓ (53687387166542798). Edge 9/9.
+
+**STOP-FLOOR ×227. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native`. VM best 0.075s (1.19× floor). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
