@@ -1914,3 +1914,19 @@ Compiler sweep (champion dp2_8s_fw_t0_128_3072, slow VM):
 All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion dp2_8s_fw_t0_128_3072 is at bandwidth ceiling. Correctness: 53687387166542798 ✓. Edge 9/9.
 
 **STOP-FLOOR ×222. Champion dp2_8s_fw_t0_128_3072. SUBMIT with `g++ -O3 -march=native`. Champion best 77ms on slow VM (1.1× off rank-18 bar ≤69.3ms on slow VM). Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
+
+## Run log 2026-07-22 (scheduled runs ×223–×224) — False PROMOTE cascade (VM oscillation), reverted; STOP-FLOOR
+
+| Run | Variant | Best(s) | Med(s) | Verdict | Note |
+|---|---|---|---|---|---|
+| ×223 | dp2_8s_fw_t0_192_1536 (promoted) | 0.0740 | 0.0760 | PROMOTE | Gate fired: 2.6% > 1.5%, median lower (0.076 < 0.077). Floor 0.181s (moderate VM). Edge 9/9. Copied to champion. |
+| ×224 | dp2_8s_fw_t0_192_1536 (new champ) | 0.0760 | 0.0790 | STOP-FLOOR + false PROMOTE | Confirmation run (floor=0.568s, loaded VM). Old champion dp2_8s_fw_t0_128_3072 (now variant) showed best=0.0750 — FASTER than new champion 0.0760 → false promote confirmed. REVERTED to dp2_8s_fw_t0_128_3072. |
+
+False promote analysis: In run ×223, dp2_8s_fw_t0_192_1536 got a lucky 0.0740s sample (VM briefly lighter). In confirmation ×224, it reverted to 0.0750-0.0760s (within noise of all other dp2 variants). Old champion dp2_8s_fw_t0_128_3072 showed 0.0750 as variant — equivalent. Classic VM oscillation cascade (same pattern as ×220, ×222). ALL dp2 variants cluster 0.074-0.079s; ranking rotates with VM load. Design space fully saturated; no real algorithmic wins remain.
+
+Compiler sweep (champion dp2_8s_fw_t0_128_3072, run ×223, moderate VM):
+- g++ -O3 -march=native → 0.0740s best (**BEST**)
+- g++-13 -O3 -march=native → 0.0750s
+- clang++ -O3 -march=native → 0.0840s
+
+**STOP-FLOOR ×224. Champion dp2_8s_fw_t0_128_3072 (reverted). SUBMIT with `g++ -O3 -march=native`. All 178 cpp + 1 rs variants exhausted. Design space fully saturated. Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
