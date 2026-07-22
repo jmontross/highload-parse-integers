@@ -1,8 +1,8 @@
-// dp2_8s_fw_t0_128_1536.cpp — double-loop + two-tier prefetch.
-// T0@128B (2 iters ahead, fills L1) + T1@1536B (24 iters ahead, fills L2).
-// Champion uses T0@192B + T1@1536B (3 iters T0). Shorter T0: 128B = 2 iters.
-// At 8ns/iter on judge, T0@128B = 16ns still covers L2→L1 latency (~5-10ns).
-// Hypothesis: fewer T0 uops (just as effective) with same far-tier coverage.
+// dp2_8s_fw_t0_128_3072.cpp — double-loop + two-tier prefetch per stream:
+// T0@128B (2 iters ahead, L2→L1) + T1@3072B (48 iters ahead, DRAM→L2).
+// vs champion T0@512B: shorter T0 may work better when data is already in L2
+// courtesy of T1@3072B (L2→L1 latency ~4ns; 2 iters @72ns/iter = 144ns > 4ns OK).
+// 16 prefetch µops/iter (same as champion).
 
 #include <cstdio>
 #include <cstdint>
@@ -244,8 +244,8 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@128B (near, L1) + T1@1536B (far, L2) per stream.
-// Shorter T0 than champion (192B→128B), same T1.
+// One iteration body: T0@512B (near, L1) + T1@3072B (far, L2) per stream.
+// Replaces champion's dual T1@3072+3072+32 with two-tier near+far coverage.
 #define ITER_BODY(PFD) \
     _mm_prefetch((const char*)(p0 + 128), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
@@ -338,13 +338,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1536)
+                ITER_BODY(3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1536)
+            ITER_BODY(3072)
         }
         widen_u16(acc_u16, wide_acc);
 

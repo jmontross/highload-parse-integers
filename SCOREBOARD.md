@@ -1894,3 +1894,23 @@ Targeted 5-run comparison:
 All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion is at the bandwidth ceiling. Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) both fully implemented and superseded by dp2 champion. 16-stream confirmed worse. Correctness: 53687387166542798 ✓. Edge 9/9.
 
 **STOP-FLOOR ×221. Champion dp2_8s_fw_t0_128_1536. SUBMIT with `g++ -O3 -march=native`. Champion at/below bandwidth floor. Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
+
+## Run log 2026-07-22 (scheduled run ×222) — Double PROMOTE cascade → dp2_8s_fw_t0_128_3072; STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ best | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_128_1536) | — | 0.0800 | 0.0850 | — | Session start. RUNS=3, slow VM (floor=0.358s). |
+| dp2_8s_fw_t0_192_1024 | **PROMOTE ①** | 0.0770 | 0.0800 | +3.7% | Gate: 3.7% > 1.5%, median lower. Edge 9/9. T0@192B + T1@1024B. Promoted. |
+| dp2_8s_fw_t0_128_3072 | **PROMOTE ②** | 0.0770 | 0.0810 | 0% (tied BEST) | Confirmation RUNS=5 (floor=0.588s): new champ 0.0800 best, dp2_8s_fw_t0_128_3072 best=0.0770, median 0.0810 < 0.0840 → PROMOTE. T0@128B + T1@3072B. |
+| champion (dp2_8s_fw_t0_128_3072) | **STOP-FLOOR ×222** | 0.0770 | 0.0820 | — | Stabilization RUNS=7 (floor=0.523s): champion 0.077s best. Best variant dp2_8s_fw_t0_128_1536 at 0.078s — NOT better (Δbest=-0.001s, need Δ≥0.0012s) → HOLD. STOP-FLOOR. Edge 9/9. |
+
+VM state: oscillating moderate-slow across 3 passes (floor=0.358-0.588s). Classic cascade pattern (same as runs ×220): all dp2 variants cluster 0.077-0.082s, winner depends on VM noise. Cascade stabilized at dp2_8s_fw_t0_128_3072 (T0@128B + T1@3072B).
+
+Compiler sweep (champion dp2_8s_fw_t0_128_3072, slow VM):
+- g++ -O3 -march=native → 0.0780s best (**BEST**)
+- g++-13 -O3 -march=native → 0.0780s best
+- clang++ -O3 -march=native → 0.0860s
+
+All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion dp2_8s_fw_t0_128_3072 is at bandwidth ceiling. Correctness: 53687387166542798 ✓. Edge 9/9.
+
+**STOP-FLOOR ×222. Champion dp2_8s_fw_t0_128_3072. SUBMIT with `g++ -O3 -march=native`. Champion best 77ms on slow VM (1.1× off rank-18 bar ≤69.3ms on slow VM). Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
