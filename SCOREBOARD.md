@@ -1876,3 +1876,21 @@ Compiler sweep (champion dp2_8s_fw_t0_128_1536, slow VM):
 All 178 cpp + 1 rs variants exhausted. Design space saturated. Both Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) fully implemented; dp2 champion supersedes both. Algorithm definitively converged.
 
 **STOP-FLOOR ×220. Champion dp2_8s_fw_t0_128_1536. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM canonical best ~63ms (CLEARS rank-18 bar ≤69.3ms). This VM moderate-slow (78ms = 1.9× floor of 0.421s).**
+
+## Run log 2026-07-22 (scheduled run ×221) — STOP-FLOOR; champion at/below floor
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1536) | STOP-FLOOR ×221 | 0.0810 | 0.0820 | — | Oscillating VM (full-run floor=0.398s; targeted floor_min=0.084s). Champion below targeted floor. Edge 9/9. |
+
+STOP-FLOOR ×221. VM state oscillating (floor varied 0.084s targeted → 0.398s full-run). Champion at 0.081s best in targeted 3-run test, floor_min=0.084s (champion is AT/BELOW floor → truly memory-bound). Full run.sh floor=0.398s (page-cache cold start skewed median). Full run.sh verdict: PROMOTE variants/dp2_8s_fw_t0_128_1536 → but that file is IDENTICAL to champion/main.cpp (diff shows no differences) — pure timing noise. No cascade warranted.
+
+Targeted 5-run comparison:
+- dp2_8s_fw_t0_128_1536 (champion): 0.081s best
+- dp2_8s_fw_3072_32: 0.080s best (within noise band)
+- dp2_16s_fw_t0_64_512 (16 streams): 0.087s — WORSE than 8 streams (confirms superqueue already saturated at 8)
+- floor_min (cat): 0.084s → champion 0.081s = 0.96× floor (BELOW measured floor)
+
+All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion is at the bandwidth ceiling. Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) both fully implemented and superseded by dp2 champion. 16-stream confirmed worse. Correctness: 53687387166542798 ✓. Edge 9/9.
+
+**STOP-FLOOR ×221. Champion dp2_8s_fw_t0_128_1536. SUBMIT with `g++ -O3 -march=native`. Champion at/below bandwidth floor. Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
