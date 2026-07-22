@@ -1,9 +1,10 @@
-// dp2_8s_fw_4acc_t0_64_1024.cpp — 4 independent per-pair u16 accumulators + T0@64+T1@1024.
-// Judge tuning: T0@64B (1 iter, L2→L1) + T1@1024B (16 iters ahead, DRAM→L2).
-// Judge (~80ns DRAM, 3GHz): 80ns × 3GHz = 240cy; 16 iters × 21cy = 336cy ≈ covers LFB queuing (240cy DRAM + queuing overhead).
-// 1024B = 1.33× above theoretical min for LFB headroom for judge: DRAM latency / cycles_per_iter × cache_line_size.
-// Gap between champion T1@512B and tried T1@2048B; 768B is the sweet-spot estimate.
-// Overflow: each accum gets 1 pair/iter × max 108/lane × 100 iters = 10,800 < 65,535.
+// dp2_8s_fw_3072_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
+// dual T1 prefetch per stream at p+3072 AND p+3072+32 (from dp2_8s_pf3072_32).
+// Untested combination: fixed_3072 used single prefetch; pf3072_32 used single-loop.
+// nl_mask64 does two 32B AVX2 loads at p and p+32; when (p+3072)%64 >= 32,
+// those two loads hit different cache lines at the prefetch target; second
+// prefetch at +3072+32 covers the second sub-load. Double-loop eliminates
+// iter_count branch from inner loop; compiler can unroll with -funroll-loops.
 
 #include <cstdio>
 #include <cstdint>
@@ -71,6 +72,19 @@ static inline __m128i tree4(
     __m128i s0, __m128i s1, __m128i s2, __m128i s3)
 {
     return _mm_add_epi8(_mm_add_epi8(s0, s1), _mm_add_epi8(s2, s3));
+}
+
+static __attribute__((always_inline)) void
+acc_u16_add(__m256i& acc_u16, __m128i contrib_u8) {
+    acc_u16 = _mm256_add_epi16(acc_u16, _mm256_cvtepu8_epi16(contrib_u8));
+}
+
+static __attribute__((noinline)) void
+widen_u16(__m256i& acc_u16, uint64_t* wide_acc) {
+    alignas(32) uint16_t lanes[16];
+    _mm256_store_si256((__m256i*)lanes, acc_u16);
+    for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
+    acc_u16 = _mm256_setzero_si256();
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -232,26 +246,25 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// 4 independent per-pair accumulators + T0@64B (near, L1) + T1@512B (far, L2).
-// acc0=streams(0,1), acc1=streams(2,3), acc2=streams(4,5), acc3=streams(6,7).
-// Aggressive judge-tuning: 1 iter T0 + 8 iters T1 for ~80ns DRAM.
+// One iteration body (prefetch + mask + process + accumulate).
+// Macro to avoid duplicating the inner body three times.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 64), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 64), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
     uint64_t m1 = nl_mask64(p1); \
@@ -269,20 +282,11 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     __m128i r5 = process_window_dp(p5, b5, m5); p5 += 64; \
     __m128i r6 = process_window_dp(p6, b6, m6); p6 += 64; \
     __m128i r7 = process_window_dp(p7, b7, m7); p7 += 64; \
-    acc0 = _mm256_add_epi16(acc0, _mm256_cvtepu8_epi16(_mm_add_epi8(r0, r1))); \
-    acc1 = _mm256_add_epi16(acc1, _mm256_cvtepu8_epi16(_mm_add_epi8(r2, r3))); \
-    acc2 = _mm256_add_epi16(acc2, _mm256_cvtepu8_epi16(_mm_add_epi8(r4, r5))); \
-    acc3 = _mm256_add_epi16(acc3, _mm256_cvtepu8_epi16(_mm_add_epi8(r6, r7))); \
+    acc_u16_add(acc_u16, _mm_add_epi8(r0, r1)); \
+    acc_u16_add(acc_u16, _mm_add_epi8(r2, r3)); \
+    acc_u16_add(acc_u16, _mm_add_epi8(r4, r5)); \
+    acc_u16_add(acc_u16, _mm_add_epi8(r6, r7)); \
     }
-
-static __attribute__((noinline)) void
-widen_4acc(__m256i& a0, __m256i& a1, __m256i& a2, __m256i& a3, uint64_t* wide_acc) {
-    __m256i sum = _mm256_add_epi16(_mm256_add_epi16(a0, a1), _mm256_add_epi16(a2, a3));
-    alignas(32) uint16_t lanes[16];
-    _mm256_store_si256((__m256i*)lanes, sum);
-    for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
-    a0 = a1 = a2 = a3 = _mm256_setzero_si256();
-}
 
 static uint64_t solve(const unsigned char* data, size_t size) {
     if (size == 0) return 0;
@@ -324,36 +328,36 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         const unsigned char *p6=adj_start[6], *b6=adj_start[6];
         const unsigned char *p7=adj_start[7], *b7=adj_start[7];
 
-        __m256i acc0 = _mm256_setzero_si256();
-        __m256i acc1 = _mm256_setzero_si256();
-        __m256i acc2 = _mm256_setzero_si256();
-        __m256i acc3 = _mm256_setzero_si256();
+        __m256i acc_u16 = _mm256_setzero_si256();
 
-        // Double-loop: outer iterates widen groups, inner exactly 100 iters.
-        // Per-acc overflow: 1 pair × max 108/lane × 100 iters = 10,800 < 65,535.
+        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
+        // Key: no iter_count variable or conditional in the inner loop.
+        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
+        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
+        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
         size_t groups = safe_iters / 100;
         size_t remain = safe_iters % 100;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1024)
+                ITER_BODY(3072)
             }
-            widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
+            widen_u16(acc_u16, wide_acc);
         }
+        // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1024)
+            ITER_BODY(3072)
         }
-        widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
+        widen_u16(acc_u16, wide_acc);
 
 #undef ITER_BODY
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
-            acc0 = _mm256_add_epi16(acc0, \
-                _mm256_cvtepu8_epi16(process_window_dp((pi), (bi), nl_mask64(pi)))); \
+            acc_u16_add(acc_u16, process_window_dp((pi), (bi), nl_mask64(pi))); \
             (pi) += 64; \
         } \
-        widen_4acc(acc0, acc1, acc2, acc3, wide_acc); \
+        widen_u16(acc_u16, wide_acc); \
         scalar_tail((bi), (ei), wide_acc);
 
         STREAM_TAIL(p0, b0, adj_end[0])

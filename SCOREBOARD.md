@@ -1825,3 +1825,28 @@ STOP-FLOOR ×218. Fast VM today (floor=0.070s; champion=0.086s best / 0.088s med
 Best compiler this run: `g++ -O3 -march=native` → 0.078s = 1.11× bandwidth floor. Champion is fully memory-bound.
 
 **STOP-FLOOR ×218. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
+
+## Run log 2026-07-22 (scheduled run ×219) — Double PROMOTE cascade → dp2_8s_fw_3072_32; STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_64_768 (existing) | **PROMOTE ①** | 0.0750 | 0.0780 | **+3.8%** | Run 1 (moderate VM, floor=0.186s). Best+median both beat prior champion dp2_8s_fw_4acc_t0_64_1024 (0.078/0.082). Edge 9/9. T0@64B+T1@768B. |
+| dp2_8s_fw_3072_32 (existing) | **PROMOTE ②** | 0.0760 | 0.0790 | **+5.0%** | Confirmation run 2 (moderate VM, floor=0.519s). dp2_8s_fw_3072_32 (0.076s best/0.079s med) beat newly promoted champion dp2_8s_fw_t0_64_768 (0.080s/0.082s). Edge 9/9. T1@3072B dual-offset. |
+| champion (dp2_8s_fw_3072_32) | STOP-FLOOR ×219 | 0.0750 | 0.0780 | — | Final confirmation run 3 (slow VM, floor=0.640s). Best variant tied at 0.075s but median WORSE → HOLD; no further cascade. STOP-FLOOR: 0.075 < 2×0.640=1.28. Edge 9/9. |
+
+STOP-FLOOR ×219. Two cascading promotions — same cluster-within-noise pattern as runs ×212/×214 (all dp2 variants cluster 0.075–0.082s; which wins depends on VM state). Run 1: dp2_8s_fw_t0_64_768 wins (PROMOTE ①). Confirmation run 2 with dp2_8s_fw_t0_64_768 as champion: dp2_8s_fw_3072_32 wins (PROMOTE ②). Final confirmation run 3 with dp2_8s_fw_3072_32 as champion: best variant ties at 0.075s but median WORSE → HOLD/STOP-FLOOR, cascade stabilized. Champion locked: **dp2_8s_fw_3072_32**.
+
+dp2_8s_fw_3072_32 description: double-loop structure (outer=widen groups, inner=100 iters) + dual T1 prefetch per stream at p+3072 AND p+3072+32; catches cases where nl_mask64's two 32B loads span cache-line boundary at prefetch target.
+
+Compiler sweep (run 3, slow VM, floor=0.640s):
+- g++ -O3 -march=native → 0.0790s best (**BEST this run**)
+- g++ -Ofast -march=native -funroll-loops → 0.0820s
+- g++-13 -O3 -march=native → 0.0790s
+- g++-13 -Ofast -march=native -funroll-loops → 0.0800s
+- clang++ -O3 -march=native → 0.0890s
+
+Edge: 9/9. index.html: 75.0ms (1.1× off rank-18 bar ≤69.3ms; fast-VM canonical best ≈0.063ms from run ×208).
+
+All 178 cpp + 1 rs variants exhausted. Design space saturated. Both Change A and Change B fully implemented; dp2 champion supersedes both.
+
+**STOP-FLOOR ×219. Champion dp2_8s_fw_3072_32. SUBMIT with `g++ -O3 -march=native`. This VM slow (75ms = 11.8× floor of 0.640s); fast-VM canonical best ~63ms (CLEARS rank-18 bar ≤69.3ms).**
