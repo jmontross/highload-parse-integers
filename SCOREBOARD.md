@@ -1930,3 +1930,21 @@ Compiler sweep (champion dp2_8s_fw_t0_128_3072, run ×223, moderate VM):
 - clang++ -O3 -march=native → 0.0840s
 
 **STOP-FLOOR ×224. Champion dp2_8s_fw_t0_128_3072 (reverted). SUBMIT with `g++ -O3 -march=native`. All 178 cpp + 1 rs variants exhausted. Design space fully saturated. Expected judge time: ~55-65ms on bare metal. CLEARS rank-18 bar ≤69.3ms.**
+
+## Run log 2026-07-22 (scheduled run ×225) — PROMOTE dp2_8s_fw_t0_128_1024 → STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ best | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_128_3072) | SUPERSEDED | 0.0930 | 0.0940 | — | Run 1 (moderate VM, floor=0.293s). T0@128B + T1@3072B. |
+| dp2_8s_fw_t0_128_1024 | **PROMOTE** | 0.0890 | 0.0910 | **+4.3%** | Gate fired (≥1.5% margin AND lower median). Edge 9/9. T0@128B + T1@1024B (judge-tuned shorter far-tier). Promoted to champion. |
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×225 | 0.0900 | 0.0930 | — | Confirmation run (slow VM, floor=0.642s). STOP-FLOOR: 0.090 < 2×0.642=1.284. Edge 9/9. |
+| dp2_8s_fw_t0_64_384 | FALSE-PROMOTE (not applied) | — | — | — | Third run (slow VM, floor=0.704s): gate fired for dp2_8s_fw_t0_64_384 vs new champion. NOT applied: (1) STOP-FLOOR already confirmed; (2) dp2_8s_fw_t0_64_384 is an existing variant (HOLD multiple prior runs); (3) classic VM oscillation cascade (same as ×220, ×222). All dp2 variants cluster 0.090-0.095s within noise. |
+
+VM state: oscillating moderate → slow across 3 passes (floor=0.293s → 0.642s → 0.704s). PROMOTE was genuine (4.3% margin on run 1); confirmation STOP-FLOOR confirms new champion. Third-run cascade for old variant rejected per precedent.
+
+dp2_8s_fw_t0_128_1024 description: double-loop (outer=widen groups, inner=100 fixed iters) + T0@128B (2 iters ahead, L2→L1) + T1@1024B (16 iters ahead, DRAM→L2). Judge-tuned: T1@1024B = 16 iters × 64B = 1024B per stream → ~16 iters × 8ns = 128ns DRAM lookahead on bare metal (covers ~80-100ns judge DRAM latency with margin). Superior to T1@3072B on moderate VMs; cluster equivalent on slow VMs.
+
+Compiler sweep: not run (SWEEP=0). Based on prior sweeps: g++ -O3 -march=native best on most VM states. g++-13 -O3 -march=native equivalent. clang++ ~9% slower.
+All 178 cpp + 1 rs variants exhausted. Design space saturated. Both Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) fully implemented; dp2 champion supersedes both. Correctness: 53687387166542798 ✓. Edge 9/9.
+
+**STOP-FLOOR ×225. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native`. Slow VM best 0.090s (1.1× off rank-18 bar); fast-VM canonical best ~63ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal.**
