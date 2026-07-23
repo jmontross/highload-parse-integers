@@ -2046,3 +2046,17 @@ VM state: run.sh on loaded VM (floor=0.202s — VM under build load for 178 vari
 Edge: 9/9. Correctness ✓ (53687387166542798). Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE long implemented; dp2 champion supersedes both.
 
 **STOP-FLOOR ×232. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.077s (1.20× floor 0.065s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×233) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×233 | 0.081 | 0.085 | — | Moderate VM (floor=0.060s min/0.063s med). Champion at 1.35× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor=0.060s min/0.063s median). Champion 5-run times: min=0.081s, med=0.085s. Ratio 1.35× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE long implemented; dp2 champion supersedes both.
+
+No new variants. All ideas checked: nta (dp2_8s_fw_nta), interleaved (dp2_8s_fw_interleaved, dp2_8s_interleaved), 4-stream (avx2_4stream), 12-stream (dp2_12s_pf3072), 16-stream (dp2_16s_fw_t0_64_512), AVX-512 NL (dp2_8s_avx512_nl), different prefetch tiers and distances. All inferior to champion on this hardware. Design space saturated.
+
+Correctness ✓ (53687387166542798). Edge 9/9.
+
+**STOP-FLOOR ×233. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.081s (1.35× floor 0.060s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
