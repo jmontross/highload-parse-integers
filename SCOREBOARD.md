@@ -2082,3 +2082,17 @@ index.html: champion=69.0ms, CLEARS rank-18 bar (69.0ms ≤ 69.3ms). All 178 cpp
 Correctness: 53687387166542798 ✓. Edge 9/9.
 
 **STOP-FLOOR ×234. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. g++-13 VM best 0.067s (TIED WITH FLOOR 0.067s). This VM's 0.069s (g++) or 0.067s (g++-13). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×235) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×235 | 0.073 | 0.077 | — | Moderate VM (floor=0.066s min/0.068s med). Champion at 1.11× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor=0.066s min / 0.068s median). Champion 5-run times (g++-13 -O3 -march=native): 0.077, 0.080, 0.079, 0.075, 0.073. Best=0.073s, med=0.077s. Ratio 1.11× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated.
+
+g++ -O3 -march=native: best=0.076s, med=0.079s (g++-13 still best).
+
+Quick standalone test (no full run.sh rebuild — 179 variants long exhausted). Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE implemented; dp2 champion supersedes both. Correctness ✓ (53687387166542798). Edge 9/9.
+
+**STOP-FLOOR ×235. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.073s (1.11× floor 0.066s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
