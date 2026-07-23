@@ -2060,3 +2060,25 @@ No new variants. All ideas checked: nta (dp2_8s_fw_nta), interleaved (dp2_8s_fw_
 Correctness ✓ (53687387166542798). Edge 9/9.
 
 **STOP-FLOOR ×233. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.081s (1.35× floor 0.060s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×234) — STOP-FLOOR; g++-13 champion TIED with bandwidth floor
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×234 | 0.069 (g++) / 0.067 (g++-13) | ~0.071 | — | Fast VM (floor=0.067s). g++-13 champion TIED with bandwidth floor. Edge 9/9. Correctness ✓. |
+
+VM state: FAST (floor min=0.067s, median=0.068s). Best result yet: g++-13 -O3 -march=native gives champion best=0.067s = floor_min. Ratio 1.00× — literally at the bandwidth ceiling. Champion below 2× floor threshold → STOP-FLOOR.
+
+Quick targeted test (no full run.sh rebuild; design space saturated after ×220):
+- g++ -O3 -march=native → champion best=0.069s (1.03× floor)
+- g++-13 -O3 -march=native → champion best=0.067s (**TIED WITH FLOOR**)
+- g++-13 -Ofast -march=native -funroll-loops → 0.069s
+- g++ -Ofast -march=native -funroll-loops → 0.071s
+- clang++ -O3 -march=native → 0.076s
+- clang++-18 -O3 -march=native → 0.082s
+
+index.html: champion=69.0ms, CLEARS rank-18 bar (69.0ms ≤ 69.3ms). All 178 cpp + 1 rs variants exhausted. Design space fully saturated. No new variants — algorithm is definitively at the bandwidth floor.
+
+Correctness: 53687387166542798 ✓. Edge 9/9.
+
+**STOP-FLOOR ×234. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. g++-13 VM best 0.067s (TIED WITH FLOOR 0.067s). This VM's 0.069s (g++) or 0.067s (g++-13). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
