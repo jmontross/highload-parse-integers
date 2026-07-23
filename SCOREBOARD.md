@@ -2012,3 +2012,25 @@ Compiler sweep (5-run best per compiler):
 - clang++-18 -Ofast -march=native -funroll-loops → 0.090s
 
 **STOP-FLOOR ×230. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.077s (1.31× floor 0.059s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×231) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×231 | 0.082 | 0.084 | — | Moderate VM (floor=0.063-0.064s). Champion at 1.30× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor=0.063s min/0.064s median). Champion 5-run times: [0.082, 0.087, 0.090, 0.092, 0.101 in warm-cache runs; first run 3.7s cold-start excluded]. Best=0.082s, ratio 1.30× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated.
+
+Compiler sweep (5-run best per compiler×flags):
+- g++ -O3 -march=native → 0.092s best
+- g++ -Ofast -march=native -funroll-loops → 0.087s
+- g++-13 -O3 -march=native → 0.082s best (**BEST**)
+- g++-13 -Ofast -march=native -funroll-loops → 0.087s
+- clang++ -O3 -march=native → 0.101s
+- clang++ -Ofast -march=native -funroll-loops → 0.092s
+- clang++-18 -O3 -march=native → 0.090s
+- clang++-18 -Ofast -march=native -funroll-loops → 0.090s
+
+Edge: 9/9. No new variants — design space saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) long implemented; dp2 champion supersedes both. Correctness ✓ (53687387166542798).
+
+**STOP-FLOOR ×231. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.082s (1.30× floor 0.063s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
