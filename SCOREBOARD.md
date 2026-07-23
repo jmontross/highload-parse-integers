@@ -2135,3 +2135,17 @@ Confirmation run (RUNS=5, floor=0.580s slow VM — OS cleared page cache between
 New champion dp2_8s_fw_4acc_t0_512_2048 profile: 4 independent per-pair u16 accumulators + T0@512B (8 iters ahead, L2→L1 warm-up) + T1@2048B (32 iters ahead, DRAM→L2 warm-up) per stream. T1@2048B fills the gap between T0@512+T1@3072 (prior champ dp2_8s_fw_4acc_t0t1) and T0@512+T1@512 (dp2_8s_fw_4acc_t0_512_4096). 4acc confirmed best accumulation structure. All 179 cpp + 1 rs variants exhausted — design space fully saturated.
 
 **PROMOTE ×237 → STOP-FLOOR ×237. New champion: dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++ -O3 -march=native`. VM best 0.060s (first run, fast state). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×238) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×238 | 0.067 (g++)/0.068 (g++-13) | 0.070/0.068 | — | Moderate VM (floor=0.066s min/0.074s med). Champion at 1.01× floor (g++) → AT BANDWIDTH CEILING. Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor min=0.066s, median=0.074s). Champion 5-run times — g++ -O3 -march=native: 0.070,0.070,0.067,0.070,0.067; best=0.067s, med=0.070s. g++-13: 0.068,0.068,0.068,0.079,0.068; best=0.068s, med=0.068s. Ratio 1.01× floor (g++) → STOP-FLOOR. All 179 cpp + 1 rs variants exhausted. Design space fully saturated after ×237 runs.
+
+No new variants. BREAKTHROUGH DIRECTIVE Change A (digit-place accumulation) and Change B (8-stream MLP) both implemented; dp2_8s_fw_4acc_t0_512_2048 champion is their mature form: 8 spatially-separated streams, 4 independent per-pair u16 accumulators, T0 prefetch@512B + T1 prefetch@2048B. Current best compiler: g++ -O3 -march=native (0.067s).
+
+Correctness ✓ (53687387166542798). Edge 9/9.
+
+**STOP-FLOOR ×238. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (1.01× floor 0.066s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
