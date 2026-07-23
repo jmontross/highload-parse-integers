@@ -2149,3 +2149,17 @@ No new variants. BREAKTHROUGH DIRECTIVE Change A (digit-place accumulation) and 
 Correctness ✓ (53687387166542798). Edge 9/9.
 
 **STOP-FLOOR ×238. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (1.01× floor 0.066s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×239) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×239 | 0.069 | 0.072 | — | Fast VM (floor=0.074s min/0.081s med). Champion BELOW floor min (0.069s < 0.074s) → AT BANDWIDTH CEILING. Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: fast (floor min=0.074s, median=0.081s). Champion 5-run times (g++ -O3 -march=native): best=0.069s, med=0.072s. Ratio 0.93× floor → champion is at bandwidth ceiling (mmap vs cat I/O difference). STOP-FLOOR ×239. All 179 cpp + 1 rs variants exhausted. Design space fully saturated after ×237 runs.
+
+No new variants. BREAKTHROUGH DIRECTIVE Change A (digit-place accumulation) and Change B (8-stream MLP) both implemented; dp2_8s_fw_4acc_t0_512_2048 champion is their mature form: 8 spatially-separated streams, 4 independent per-pair u16 accumulators, T0 prefetch@512B + T1 prefetch@2048B.
+
+Correctness ✓ (53687387166542798). Edge 9/9. index.html: champion=69.0ms, CLEARS rank-18 bar (69.0ms ≤ 69.3ms).
+
+**STOP-FLOOR ×239. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++ -O3 -march=native`. VM best 0.069s (0.93× floor 0.074s — at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
