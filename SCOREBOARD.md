@@ -2034,3 +2034,15 @@ Compiler sweep (5-run best per compiler×flags):
 Edge: 9/9. No new variants — design space saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) long implemented; dp2 champion supersedes both. Correctness ✓ (53687387166542798).
 
 **STOP-FLOOR ×231. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.082s (1.30× floor 0.063s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×232) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×232 | 0.077 | 0.080 | — | Loaded VM (floor=0.202s in run.sh; quick standalone test floor=0.065s, champ=0.078s → 1.20× floor). STOP-FLOOR both ways. Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: run.sh on loaded VM (floor=0.202s — VM under build load for 178 variants); quick standalone 5-run test shows floor=0.065s, champion best=0.078s (1.20× floor). Best variant this run: dp2_8s_fw_2560_32 at 0.077s (tied with champion → HOLD). All 178 cpp + 1 rs variants exhausted. Design space fully saturated. No new variants; STOP-FLOOR confirmed consecutive runs.
+
+Edge: 9/9. Correctness ✓ (53687387166542798). Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE long implemented; dp2 champion supersedes both.
+
+**STOP-FLOOR ×232. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.077s (1.20× floor 0.065s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
