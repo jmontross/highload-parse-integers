@@ -2096,3 +2096,23 @@ g++ -O3 -march=native: best=0.076s, med=0.079s (g++-13 still best).
 Quick standalone test (no full run.sh rebuild — 179 variants long exhausted). Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE implemented; dp2 champion supersedes both. Correctness ✓ (53687387166542798). Edge 9/9.
 
 **STOP-FLOOR ×235. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.073s (1.11× floor 0.066s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×236) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×236 | 0.077 | 0.080 | — | Fast VM (floor=0.060s min/0.062s med). Champion at 1.28× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: fast (floor=0.060s min/0.062s median). Champion 5-run times (g++-13 -O3 -march=native): 0.116 (cold), 0.085, 0.081, 0.080, 0.079. Best warm=0.079s. Ratio 1.28× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated.
+
+Compiler sweep (5-run best per compiler×flags):
+- g++ -O3 -march=native → 0.077s best (**BEST**)
+- g++-13 -O3 -march=native → 0.078s
+- g++ -Ofast -march=native -funroll-loops → 0.080s
+- g++-13 -Ofast -march=native -funroll-loops → 0.080s
+- clang++-18 -O3 -march=native → 0.089s
+- clang++-18 -Ofast -march=native -funroll-loops → 0.089s
+
+Edge: 9/9. No new variants — design space saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE long implemented; dp2 champion supersedes both. Correctness ✓ (53687387166542798).
+
+**STOP-FLOOR ×236. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native` (0.077s today) or `g++-13 -O3 -march=native` (0.078s). VM best 0.077s (1.28× floor 0.060s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
