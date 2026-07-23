@@ -1971,3 +1971,24 @@ All 178 cpp + 1 rs variants exhausted. Design space saturated. Champion dp2_8s_f
 VM state: moderate-fast (floor=0.063s best, 0.064s median). Champion 5-run times: 0.075, 0.075, 0.076, 0.076, 0.080 (best=0.075, median=0.076). Ratio 1.19× floor → STOP-FLOOR. All 178 cpp + 1 rs variants exhausted. Design space fully saturated. Breakthrough Directive Changes A (stuchlik_digitplace) and B (stuchlik_8stream) implemented in earlier runs; dp2 champion supersedes both. No new variants — nothing to try. Correctness ✓ (53687387166542798). Edge 9/9.
 
 **STOP-FLOOR ×227. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native`. VM best 0.075s (1.19× floor). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-23 (scheduled run ×229) — STOP-FLOOR; champion verified, best compiler refined
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1024) | STOP-FLOOR ×229 | 0.080 | — | — | Moderate VM (floor=0.074s min/0.085s med). Champion at 1.08× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor=0.074s min/0.085s median). Better VM than ×228 (which had floor=0.080s, champ=0.093s). This run's champion 0.080s = 1.08× floor — closest to bandwidth ceiling measured in recent runs. All 177 cpp + 1 rs variants exhausted. Design space fully saturated.
+
+Compiler sweep (7-sample best):
+- g++-13 -O3 -march=native → 0.080s best (**BEST**)
+- g++ -O3 -march=native → 0.081s
+- g++ -Ofast -march=native -funroll-loops → 0.083s
+- g++-13 -Ofast -march=native -funroll-loops → 0.084s
+- clang++ -O3 -march=native → 0.088s
+- clang++-18 -O3 -march=native → 0.089s
+- clang++-18 -Ofast -march=native -funroll-loops → 0.093s
+
+Edge: 9/9. No new variants — design space saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) long implemented; dp2 champion supersedes both. index.html shows 80ms on this VM (expected judge ~55-65ms on bare metal CLEARS rank-18 bar ≤69.3ms).
+
+**STOP-FLOOR ×229. Champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.080s (1.08× floor). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
