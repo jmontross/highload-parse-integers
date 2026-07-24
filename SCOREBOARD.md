@@ -2263,3 +2263,25 @@ Note: ×243→×244 rapid chain of promotions is VM oscillation in the dp2 famil
 Correctness ✓ (53687387166542798). Edge 9/9. index.html: 60.0ms, CLEARS rank-18 bar (60.0ms ≤ 69.3ms).
 
 **STOP-FLOOR ×245. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 0.060s (0.11× floor 0.549s — at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×246) — STOP-FLOOR; two new judge-tuned variants (T0@256+T1@512) tested, HOLD on VM
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×246 | 0.079 (g++) | 0.080 | — | Moderate VM (floor=0.071s min/0.076s med). Champion at 1.11× floor (<2× → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+| dp2_8s_fw_t0_256_512 (new) | HOLD | 0.0800 | 0.0840 | +0.001s vs champ | T0@256B + T1@512B. Judge-tuned: T1@512B = 8 iters = ~240cy = ~80ns covers bare-metal DRAM. Slower on VM (T1@512 too short for ~300ns VM DRAM). Fills T0@256 × T1@512 gap. Correct ✓, edge 9/9. |
+| dp2_8s_fw_4acc_t0_256_512 (new) | HOLD | 0.0820 | 0.0840 | +0.003s vs champ | 4acc + T0@256B + T1@512B. Same judge-tuned rationale. Correct ✓, edge 9/9. |
+
+VM state: moderate (floor min=0.071s, median=0.076s). Champion (dp2_8s_fw_t0_256) 5-run times (g++ -O3 -march=native): best=0.079s, med=0.080s. Ratio 1.11× floor → STOP-FLOOR ×246.
+
+Two new variants created: `dp2_8s_fw_t0_256_512` (single acc) and `dp2_8s_fw_4acc_t0_256_512` (4acc), both with T0@256B (L2→L1) + T1@512B (DRAM→L2). These fill a gap in the T0@256 × T1 grid (tried: T0@256×T1@1536, T0@256×T1@2048, T0@256×T1@3072; T0@64×T1@512). The T1@512B = 8 iters × ~30cy = ~240cy ≈ 80ns at 3GHz exactly covers bare-metal DRAM latency on the judge. They appear slower on this VM because 512B is 3-5× too short for VM DRAM (~300-400ns). Both pass correctness (53687387166542798) and edge 9/9. Both left as HOLD — judge-candidate variants for the owner to consider testing.
+
+Compiler sweep (5-run best, champion dp2_8s_fw_t0_256):
+- g++ -O3 -march=native → 0.079s (**BEST**)
+- g++-13 -O3 -march=native → 0.081s
+- g++ -Ofast -march=native -funroll-loops → 0.084s
+- g++-13 -Ofast -march=native -funroll-loops → 0.083s
+
+Best compiler this run: g++ -O3 -march=native. All 181 cpp + 1 rs variants exhausted; design space fully saturated. No further algorithmic improvements possible — algorithm is at bandwidth ceiling. Champion dp2_8s_fw_t0_256 expected judge time ~55-65ms (bare-metal ratio typically 1.3-1.5× below VM best). CLEARS rank-18 bar ≤69.3ms.
+
+**STOP-FLOOR ×246. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (1.11× floor 0.071s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). Note: dp2_8s_fw_t0_256_512 and dp2_8s_fw_4acc_t0_256_512 are judge-candidate variants (T1@512B = bare-metal DRAM latency) — slower on VM but may outperform on judge.**
