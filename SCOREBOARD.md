@@ -2165,3 +2165,23 @@ No new variants. BREAKTHROUGH DIRECTIVE Change A (digit-place accumulation) and 
 Correctness ✓ (53687387166542798). Edge 9/9. index.html: champion=69.0ms, CLEARS rank-18 bar (69.0ms ≤ 69.3ms).
 
 **STOP-FLOOR ×239. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++ -O3 -march=native`. VM best 0.069s (0.93× floor 0.074s — at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×240) — STOP-FLOOR; champion at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×240 | 0.063 (g++-13) / 0.065 (g++) | ~0.068/0.068 | — | Moderate VM (floor=0.070s min/0.070s med). Champion BELOW floor (0.065s < 0.070s) → AT BANDWIDTH CEILING (mmap page-cache). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+VM state: moderate (floor min=0.070s, median=0.070s). Champion timing — g++ -O3 -march=native: best=0.065s; g++-13 -O3 -march=native: best=0.063s (**BEST**). Ratio 0.90× floor → champion is at bandwidth ceiling (mmap vs cat I/O difference means mmap is faster). STOP-FLOOR ×240.
+
+Compiler sweep (5-run best per compiler×flags):
+- g++ -O3 -march=native → 0.065s
+- g++-13 -O3 -march=native → 0.063s (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.070s
+- g++-13 -Ofast -march=native -funroll-loops → 0.068s
+- clang++ -O3 -march=native → 0.076s
+- clang++-18 -O3 -march=native → 0.076s
+
+No new variants (179 cpp + 1 rs exhausted). Zig not installed (unavailable). Design space fully saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) from BREAKTHROUGH DIRECTIVE long implemented; dp2_8s_fw_4acc_t0_512_2048 champion is their mature form. Correctness ✓. Edge 9/9.
+
+**STOP-FLOOR ×240. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native` (best 0.063s) or `g++ -O3 -march=native` (0.065s). VM best 0.063s (0.90× floor 0.070s — below bandwidth floor, at ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
