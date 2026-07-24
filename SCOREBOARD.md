@@ -2300,3 +2300,19 @@ Key judge-candidate variants already built: dp2_8s_fw_t0_256_512 (T0@256+T1@512,
 Best compiler: g++ -O3 -march=native (0.067s), marginally ahead of g++-13 (0.069s). index.html updated: 67.0ms, CLEARS rank-18 bar (67.0ms ≤ 69.3ms).
 
 **STOP-FLOOR ×247. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (0.97× floor 0.069s — at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×248) — STOP-FLOOR; new judge-candidate dp2_8s_fw_t0_128_512 created
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×248 | 0.093 | 0.097 | — | Moderate VM (floor=0.386s min at run start; 0.084s in follow-up test). Champion at 0.24× floor → STOP-FLOOR. Edge 9/9. Correctness ✓ (53687387166542798). |
+| dp2_8s_fw_t0_128_512 (new) | HOLD | 0.092 | 0.095 | −0.001s best | T0@128B + T1@512B. Judge-tuned: T1@512B=8 iters=~240cy=~80ns covers bare-metal DRAM latency. Ranked 9/182 variants. Correct ✓, edge 9/9. HOLD on VM (T1@512 too short for 300-400ns VM DRAM). |
+| dp2_8s_fw_2560_32 (existing) | HOLD | 0.091 | 0.097 | Δbest=0.002s ≥ 1.5% gate | Ranked 1st but median=0.097s = champion → median condition not met → HOLD. |
+
+VM state: moderate-to-slow (floor min=0.386s at timing start; standalone follow-up measured 0.084s floor). Full RUNS=5 interleaved run over 182 cpp + 1 rs variants. Champion best=0.093s, median=0.097s. Best variant dp2_8s_fw_2560_32 best=0.091s (Δbest=0.002s > 1.5%) but median=0.097s = champion median → HOLD. New variant dp2_8s_fw_t0_128_512 best=0.092s, median=0.095s, ranked 9th → within noise → HOLD.
+
+New variant dp2_8s_fw_t0_128_512 profile: T0@128B (2 iters = ~60cy, L2→L1 warm-up) + T1@512B (8 iters = ~240cy = ~80ns at 3GHz, exactly covers judge bare-metal DRAM latency). Judge candidate: slower on VM (~300-400ns DRAM makes T1@512B 3-4× too short) but expected to match or beat other judge-candidates (dp2_8s_fw_t0_256_512, dp2_8s_fw_4acc_t0_256_512) on bare metal. Correct ✓ (53687387166542798), edge 9/9. Total: 182 cpp + 1 rs variants.
+
+Standalone test (warm VM, floor=0.084s): champion best=0.092s, dp2_8s_fw_t0_128_512 best=0.090s — marginally faster but within noise.
+
+**STOP-FLOOR ×248. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native`. VM best ~0.067-0.093s (VM-state dependent). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
