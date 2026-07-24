@@ -2224,3 +2224,40 @@ Key insight: dp2_8s_fw_t0_64_448 (single acc, T1@448B) beat 4acc_t0_512_2048 bec
 Correctness ✓ (53687387166542798). Edge 9/9.
 
 **PROMOTE ×242 → STOP-FLOOR ×242. New champion: dp2_8s_fw_t0_64_448. SUBMIT with `g++-13 -O3 -march=native` or `g++ -Ofast -march=native -funroll-loops`. VM best 0.065s (fast state) / 0.067s (typical). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×243) — PROMOTE; dp2_8s_fw_4acc_t0_256_3072 supersedes dp2_8s_fw_t0_64_448
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_256_3072 (new champ) | PROMOTE ×243 | 0.059 | 0.061 | −3.3% best, −6.2% med | Fast VM (floor=0.252s min). 4 independent per-pair u16 accumulators + T0@256B (4 iters, L2→L1) + T1@3072B (48 iters, DRAM→L2). Edge 9/9 ✓ → PROMOTED. |
+| dp2_8s_fw_t0_64_448 (old champ) | — | 0.061 | 0.065 | — | Prior champion; superseded. |
+
+PROMOTE run (floor=0.252s): dp2_8s_fw_4acc_t0_256_3072 best=0.059s (need ≤0.060s), median=0.061s; champion (dp2_8s_fw_t0_64_448) best=0.061s, median=0.065s → Δbest=0.002s (3.3%), both conditions met, edge 9/9. PROMOTE. Champion/main.cpp updated. Correctness ✓ (53687387166542798). Edge 9/9.
+
+**PROMOTE ×243. New champion: dp2_8s_fw_4acc_t0_256_3072. VM best 0.059s (floor=0.252s). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×244) — PROMOTE; dp2_8s_fw_t0_256 supersedes dp2_8s_fw_4acc_t0_256_3072
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_256 (new champ) | PROMOTE ×244 | 0.060 | 0.063 | −10.4% best, −7.4% med | Moderate VM (floor=0.462s). T0@256B only (4 iters, L2→L1). No T1 dual-level. Edge 9/9 ✓ → PROMOTED. |
+| dp2_8s_fw_4acc_t0_256_3072 (old champ) | — | 0.067 | 0.068 | — | Prior champion; superseded. VM showed 0.067s this run (oscillation). |
+
+Confirmation run (floor=0.462s): champion (dp2_8s_fw_4acc_t0_256_3072) best=0.067s, median=0.068s (VM oscillation from ×243). dp2_8s_fw_t0_256 best=0.060s (need ≤0.066s), median=0.063s → Δbest=0.007s (10.4%), both conditions met, edge 9/9 → PROMOTE. Champion/main.cpp updated to dp2_8s_fw_t0_256. Correctness ✓ (53687387166542798). Edge 9/9. index.html: 60.0ms, CLEARS rank-18 bar (60.0ms ≤ 69.3ms).
+
+**PROMOTE ×244. New champion: dp2_8s_fw_t0_256. VM best 0.060s (floor=0.462s, 0.13× floor). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-24 (scheduled run ×245) — STOP-FLOOR; dp2_8s_fw_t0_256 confirmed at bandwidth ceiling
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×245 | 0.060 | 0.063 | — | Fast VM (floor=0.549s min). Champion at 0.11× floor → AT BANDWIDTH CEILING. Edge 9/9. Correctness ✓ (53687387166542798). |
+| dp2_8s_fw_4acc_t0_256_3072 | HOLD | 0.059 | 0.063 | need ≤0.0591s | best=0.059s within rounding of threshold (0.0591s); median tied 0.063s → not both met → HOLD. |
+
+Second confirmation (floor=0.549s): champion (dp2_8s_fw_t0_256) best=0.060s, median=0.063s. Best variant dp2_8s_fw_4acc_t0_256_3072 best=0.059s (need ≤0.0591s = 1.5% of 0.060s), median=0.063s (not lower than champion median). HOLD. STOP-FLOOR also fires (0.060s < 2×0.549s). All 180 cpp + 1 rs variants exhausted; design space fully saturated.
+
+Note: ×243→×244 rapid chain of promotions is VM oscillation in the dp2 family — all variants cluster within 0.001–0.003s of each other on this VM; ranking flips between runs. True judge performance depends on bare-metal memory latency. dp2_8s_fw_t0_256 (T0@256B only) and dp2_8s_fw_4acc_t0_256_3072 (4acc + T0@256B + T1@3072B) are essentially tied locally; the judge will determine which is actually faster. Best compiler remains g++ -O3 -march=native or g++-13 -O3 -march=native.
+
+Correctness ✓ (53687387166542798). Edge 9/9. index.html: 60.0ms, CLEARS rank-18 bar (60.0ms ≤ 69.3ms).
+
+**STOP-FLOOR ×245. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 0.060s (0.11× floor 0.549s — at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
