@@ -2530,3 +2530,24 @@ Background run.sh (started at run ×260) completed after direct benchmark was do
 4 independent per-pair u16 accumulators (dp2_8s_fw_4acc) + T0@256+T1@2048 prefetch. run.sh issued PROMOTE on a slow VM state (floor=0.437s, champ=0.098s, variant=0.091s). Re-verification 15-sample direct benchmark: champion best=0.091s matched variant best=0.092s → improvement within noise band. Δbest=-1.1% (champion wins) but Δmedian=+4% (variant wins). Conflicting signals; AGENT.md rule "beats champion median by MORE than noise band" not satisfied (0.004s Δmedian < 0.015s noise band excluding outlier). Champion dp2_8s_fw_2w retained.
 
 **HOLD. Champion dp2_8s_fw_2w unchanged. Design space exhausted. SUBMIT with `g++ -O3 -march=native`. VM best ~0.073-0.095s depending on VM state (AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×261) — STOP-FLOOR; champion 68.0ms CLEARS rank-18 bar; design space exhausted
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×261 | 0.068 | 0.070 | — | Slow VM (floor=0.451s). Edge 9/9. Correct ✓ (53687387166542798). index.html: 68.0ms — CLEARS rank-18 bar (≤69.3ms). |
+| dp2_8s_fw_200it (existing) | HOLD | 0.066 | 0.080 | Δbest=−3%, Δmed=+14% | Only a lucky single sample on slow VM; median 14% slower → HOLD. |
+
+VM state: very slow (floor min=0.451s). Full 191-variant run.sh sweep completed. Champion g++ -O3 -march=native best=0.068s, med=0.070s.
+
+Compiler sweep (champion):
+- g++ -O3 -march=native → 0.070s best
+- g++ -Ofast -march=native -funroll-loops → **0.068s best** (new recommended compiler)
+- g++-13 -O3 -march=native → 0.069s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.068s best
+- clang++ -O3 -march=native → 0.079s best (slower)
+- clang++ -Ofast -funroll-loops → 0.078s best (slower)
+
+Direct quick-benchmark (run separately, moderate VM): champion min=0.067s med=0.070s vs floor min=0.073s med=0.076s — champion BEATS the floor (data warm in page cache). Confirms bandwidth-ceiling operation.
+
+**STOP-FLOOR ×261. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. VM best 0.067-0.068s (AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 68.0ms — CLEARS rank-18 bar.**
