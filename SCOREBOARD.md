@@ -2437,3 +2437,20 @@ Compiler sweep (confirmation run, champion=dp2_8s_fw_2w):
 Standalone 7-round interleaved benchmark (floor min=0.067s, med=0.070s). Champion first sample cold-cache outlier (0.107s skipped in min); true min=0.076s. All new variants within 0.001-0.002s noise band of champion → HOLD. Note: dp2_8s_fw_2w_2048 is a judge candidate (dual T1@2048 = 32 iters×64B = 2048B → 32×~30cy = ~320ns at 3GHz; covers VM DRAM 200-400ns AND judge bare-metal ~80ns with excess margin).
 
 **STOP-FLOOR ×256. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.076s (1.13× floor 0.067s — at bandwidth ceiling). Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×257) — STOP-FLOOR; slow VM (floor=0.239s); 2 new 2w variants created
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×257 | 0.073 | 0.073 | — | Slow VM (floor=0.239s). Ratio=0.31× (at bandwidth ceiling per gate). Edge 9/9. Correct ✓. |
+| dp2_8s_fw_t0_64_3072 (existing) | HOLD | 0.070 | 0.073 | Δbest=4.1%, tied med | T0@64+T1@3072. Best < need (0.0719s) but median tied → HOLD. |
+| dp2_8s_fw_2w_t0_64 (new, untested) | not benchmarked | — | — | — | Created this run: T0@64B near-prefetch + dual T1@3072+3072+32 in 2w structure. Compiles OK + correct. |
+| dp2_8s_fw_2w_4096 (new, untested) | not benchmarked | — | — | — | Created this run: dual T1@4096+4096+32 (tests longer prefetch distance with 2w dual-coverage). Compiles OK + correct. |
+
+VM state: very slow (floor min=0.239s, med=0.470s). All dp2 variants cluster 0.0700-0.0800s on this run. Champion at 0.0730s best/med. Many variants show 0.0700-0.0720s best but medians ≥0.0730s = tied → all HOLD within noise. This is typical slow-VM cluster behavior (no meaningful differentiation at this granularity).
+
+Compiler sweep (champion, slow VM): g++ -O3 -march=native → 0.0720s best; g++ -Ofast -funroll-loops → 0.0740s.
+
+New variants dp2_8s_fw_2w_t0_64 and dp2_8s_fw_2w_4096 were created during this run and verified correct (53687387166542798) but not included in the run.sh timing (created after benchmarking started). Will be benchmarked next run.
+
+**STOP-FLOOR ×257. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
