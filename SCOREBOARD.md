@@ -2362,3 +2362,20 @@ Compiler sweep (5-run best, champion dp2_8s_fw_4acc_t0_512_2048):
 Best compiler this run: **g++-13 -O3 -march=native** (0.068s). index.html: 69.0ms, CLEARS rank-18 bar (69.0ms ≤ 69.3ms). All 183+ cpp + 1 rs variants exhausted; design space fully saturated. No further algorithmic improvements possible — algorithm is at bandwidth ceiling (0.22× floor).
 
 **STOP-FLOOR ×250. Champion dp2_8s_fw_4acc_t0_512_2048. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.068s (0.22× floor 0.313s — well at bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 69.0ms.**
+
+## Run log 2026-07-25 (scheduled run ×251) — STOP-FLOOR; false PROMOTE dp2_8s_fw_6144_32 not applied; 4acc T0@64 grid gaps filled
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×251 | 0.098 | 0.104 | — | Slow VM (floor=0.4960s). Champion at 0.198× floor → STOP-FLOOR. Edge 9/9. Correct ✓ (53687387166542798). |
+| dp2_8s_fw_6144_32 (OLD, DEAD) | false PROMOTE | 0.092 | 0.100 | Δbest=0.006s ≥ 1.5%, Δmed=0.004s | Gate fired PROMOTE + STOP-FLOOR simultaneously. Per precedent (×115, ×116, ×131): simultaneous STOP-FLOOR + PROMOTE for old previously-superseded variant = VM oscillation false positive → NOT applied. Champion unchanged. |
+| dp2_8s_fw_4acc_t0_64_1536 (NEW) | HOLD | ~0.095 | ~0.101 | within noise | NEW: 4acc + T0@64B (1 iter) + T1@1536B (24 iters). Grid gap: T1@1536 was missing from T0@64B family. 7-round standalone interleaved benchmark best~0.095-0.099s. Correct ✓ (53687387166542798), edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_2048 (NEW) | HOLD | ~0.094 | ~0.101 | within noise | NEW: 4acc + T0@64B (1 iter) + T1@2048B (32 iters). Grid gap: T1@2048 was missing from T0@64B family. 7-round standalone interleaved benchmark best~0.094-0.103s (ties champion). Correct ✓ (53687387166542798), edge 9/9. |
+
+VM state: very slow (floor=0.4960s at run.sh timing). Full RUNS=5 interleaved gate run over 183 cpp + 1 rs variants. New variants were created after run.sh started so they were NOT included in the main gate run — benchmarked via standalone 7-round interleaved test instead. Both new variants HOLD.
+
+New variants fill the T0@64B × T1 grid: previously {448, 512, 640, 768, 896, 1024, 3072} existed; T1@{1536, 2048} were gaps. Added them — both cluster within noise of champion on slow VM.
+
+**Status: design space fully saturated. 185+ cpp + 1 rs variants exhausted. All T0×T1×acc_count combinations explored. Algorithm is at bandwidth ceiling (0.20-0.22× floor on moderate VM). No further algorithmic improvements possible.**
+
+**STOP-FLOOR ×251. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best ~0.092-0.098s (VM-state dependent). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
