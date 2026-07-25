@@ -2517,3 +2517,16 @@ Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T1 pr
 ns/line: 0.093s / 50M = 1.86 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal).
 
 **STOP-FLOOR ×260. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.093s (1.41× floor 0.066s — at bandwidth ceiling, higher ratio due to moderate VM load vs recent fast VM runs). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×260 — addendum: run.sh PROMOTE investigated, verdict HOLD)
+
+Background run.sh (started at run ×260) completed after direct benchmark was done.
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | HOLD | 0.091 | 0.099 | — | 15-sample direct (floor=0.081s). Champion min beaten ONCE to 0.091s. Ratio=1.12× floor. Edge 9/9 ✓. |
+| dp2_8s_fw_4acc_t0_256_2048 | HOLD (not confirmed) | 0.092 | 0.095 | Δbest=-1.1% vs champ | run.sh PROMOTE (0.091 vs 0.098 on slow VM). Verification (15-sample): variant median 0.095 vs champ 0.099 (4% better), BUT champion best 0.091 beats variant best 0.092. Δmedian 0.004s vs noise band 0.015s excl-outlier → HOLD. |
+
+4 independent per-pair u16 accumulators (dp2_8s_fw_4acc) + T0@256+T1@2048 prefetch. run.sh issued PROMOTE on a slow VM state (floor=0.437s, champ=0.098s, variant=0.091s). Re-verification 15-sample direct benchmark: champion best=0.091s matched variant best=0.092s → improvement within noise band. Δbest=-1.1% (champion wins) but Δmedian=+4% (variant wins). Conflicting signals; AGENT.md rule "beats champion median by MORE than noise band" not satisfied (0.004s Δmedian < 0.015s noise band excluding outlier). Champion dp2_8s_fw_2w retained.
+
+**HOLD. Champion dp2_8s_fw_2w unchanged. Design space exhausted. SUBMIT with `g++ -O3 -march=native`. VM best ~0.073-0.095s depending on VM state (AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
