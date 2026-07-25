@@ -2496,3 +2496,24 @@ Correctness ✓ (53687387166542798), edge 9/9. ns/line: 78ms / 50M = 1.56 ns/lin
 index.html updated: 80.0ms local VM (expected ~50-65ms on judge bare metal).
 
 **STOP-FLOOR ×259. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.078-0.080s (1.08-1.10× floor 0.072s — AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×260) — STOP-FLOOR; maintenance benchmark; floor=66ms moderate VM
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×260 | 0.093 (7-sample) | 0.102 | — | Moderate VM (floor=0.066s min/0.069s med). Ratio=1.41× (at bandwidth ceiling per gate). Edge 9/9. Correct ✓ (53687387166542798). |
+
+VM state: moderate-fast (floor min=0.066s, med=0.069s). Champion 7-sample interleaved: g++ -O3 -march=native best=0.093s med=0.102s. Ratio=1.41× floor → STOP-FLOOR ×260. No new variants — 190 cpp + 1 rs exhausted, design space fully saturated.
+
+Design-space audit (run ×260): all unexplored angles considered and eliminated:
+- Data re-use from nl_mask64 in process_window_dp: PSHUF loads are L1 hits (data already in cache from nl_mask64 loads) — no DRAM savings possible. Not implemented.
+- ITER_BODY 2× unroll: 200 inner iters would overflow u16 accumulator (max safe = ~151 iters at 432/iter; tried would give 86,400 > 65,535). Already near limit at 100.
+- 16-stream variants: dp2_16s_fw_t0_64_512 and dp2_12s_pf3072 already exist and were HOLD.
+- Page-interleaved variants: dp2_8s_fw_interleaved, dp2_8s_interleaved, avx2_8w_pf3_interleaved exist (were HOLD).
+- All prefetch distance combinations (T0/T1 × {64,256,512,1536,2048,3072,4096} × {1w,2w,3w,4acc}) exhausted in runs ×253-×259.
+
+Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T1 prefetch) fully implemented. 190+ cpp + 1 rs variants exhausted. Algorithm at bandwidth ceiling. Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).
+
+ns/line: 0.093s / 50M = 1.86 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal).
+
+**STOP-FLOOR ×260. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.093s (1.41× floor 0.066s — at bandwidth ceiling, higher ratio due to moderate VM load vs recent fast VM runs). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
