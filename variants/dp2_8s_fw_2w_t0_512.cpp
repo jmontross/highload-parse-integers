@@ -1,4 +1,6 @@
-// dp2_8s_fw_3072_32.cpp — double-loop structure (from dp2_8s_fixed_3072) +
+// dp2_8s_fw_2w_t0_512.cpp — dual T1@3072+T0@512: 2w dual T1 + near L2->L1 warmup.
+// Same as champion dp2_8s_fw_2w but adds T0@512B (8 iters near) to cover L2->L1 fill.
+// Theory: dual T1 brings data DRAM->L2 (48 iters ahead), T0@512 warms L1 just-in-time.
 // dual T1 prefetch per stream at p+3072 AND p+3072+32 (from dp2_8s_pf3072_32).
 // Untested combination: fixed_3072 used single prefetch; pf3072_32 used single-loop.
 // nl_mask64 does two 32B AVX2 loads at p and p+32; when (p+3072)%64 >= 32,
@@ -249,20 +251,28 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
 // One iteration body (prefetch + mask + process + accumulate).
 // Macro to avoid duplicating the inner body three times.
 #define ITER_BODY(PFD) \
+    _mm_prefetch((const char*)(p0 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p1 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p2 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p3 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p4 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p5 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p6 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p7 + 512), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
     { \

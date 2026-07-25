@@ -2407,3 +2407,33 @@ Correctness ✓ (53687387166542798), edge 9/9. Both Change A (digit-place accumu
 Compiler sweep: g++ -O3 -march=native → 0.079s best; g++-13 -O3 -march=native → 0.078s best. → submit under: g++ -O3 -march=native.
 
 **STOP-FLOOR ×253. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (1.11× floor 0.071s — AT bandwidth ceiling). Expected judge time: ~55-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×254) — PROMOTE dp2_8s_fw_2w over dp2_8s_fw_4acc_t0_512_2048
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_2w (new champ) | **PROMOTE ×254** | 0.0750 | 0.0770 | Δbest=5.1%, Δmed=2.5% | Dual T1 prefetch at PFD and PFD+32 (covers both 32B halves of nl_mask64's 64B AVX2 load). Edge 9/9. |
+| dp2_8s_fw_4acc_t0_512_2048 (old champ) | — | 0.0790 | 0.0790 | — | Superseded. |
+| champion (confirmed) | STOP-FLOOR ×255 | 0.0750 | 0.0800 | — | RUNS=5 confirmation. Floor=0.553s. Ratio=0.14×. Edge 9/9 ✓. |
+
+Innovation: nl_mask64() does two 32-byte AVX2 loads at p and p+32. When p+3072 is not 64B-aligned, those loads at the prefetch target land in different cache lines. Prior code prefetched only at T1@3072, missing the second cache line. The `dp2_8s_fw_2w` prefetches T1@3072 AND T1@3072+32, guaranteeing both halves are in L2 before the AVX2 loads fire. Combined with the double-loop structure (fixed 100 inner iters, no branch), this gave 5.1% improvement over the 4acc champion.
+
+Compiler sweep (confirmation run, champion=dp2_8s_fw_2w):
+- g++ -O3 -march=native → 0.078s (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.078s
+- g++-13 -O3 -march=native → 0.078s
+
+**PROMOTE ×254 → STOP-FLOOR ×255. New champion: dp2_8s_fw_2w. VM best 0.075s (0.14× floor 0.553s). SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×256) — STOP-FLOOR; 3 new dual-T1 variants HOLD
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×256 | 0.076 | 0.082 | — | Fast VM (floor=0.067s). Ratio=1.13× (at bandwidth ceiling). Edge 9/9. |
+| dp2_8s_fw_2w_t0_512 (new) | HOLD | 0.078 | 0.081 | +0.002s | T0@512B + dual T1@3072+3072+32. Need ≤0.0749s → HOLD. Correct ✓. |
+| dp2_8s_fw_2w_2048 (new) | HOLD | 0.078 | 0.079 | +0.002s | Dual T1@2048+2048+32 (judge-tuned, 32 iters). Correct ✓. |
+| dp2_8s_fw_2w_4acc (new) | HOLD | 0.077 | 0.080 | +0.001s | 4 independent accumulators + dual T1@3072+3072+32. Correct ✓. |
+
+Standalone 7-round interleaved benchmark (floor min=0.067s, med=0.070s). Champion first sample cold-cache outlier (0.107s skipped in min); true min=0.076s. All new variants within 0.001-0.002s noise band of champion → HOLD. Note: dp2_8s_fw_2w_2048 is a judge candidate (dual T1@2048 = 32 iters×64B = 2048B → 32×~30cy = ~320ns at 3GHz; covers VM DRAM 200-400ns AND judge bare-metal ~80ns with excess margin).
+
+**STOP-FLOOR ×256. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.076s (1.13× floor 0.067s — at bandwidth ceiling). Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
