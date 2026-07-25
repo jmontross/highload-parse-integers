@@ -2454,3 +2454,26 @@ Compiler sweep (champion, slow VM): g++ -O3 -march=native → 0.0720s best; g++ 
 New variants dp2_8s_fw_2w_t0_64 and dp2_8s_fw_2w_4096 were created during this run and verified correct (53687387166542798) but not included in the run.sh timing (created after benchmarking started). Will be benchmarked next run.
 
 **STOP-FLOOR ×257. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-25 (scheduled run ×258) — STOP-FLOOR; 4 new variants all HOLD; design space exhausted
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×258 | 0.094 (g++) | 0.098 | — | Moderate VM (floor=0.086s). Ratio=1.09× (AT bandwidth ceiling). Edge 9/9. Correct ✓ (53687387166542798). |
+| dp2_8s_fw_2w_t0_64 (new, benchmarked) | HOLD | 0.104 | 0.105 | +0.010s | T0@64 near-prefetch + dual T1@3072+3072+32. Extra 8 T0 prefetch instructions add overhead without benefit on VM. |
+| dp2_8s_fw_2w_4096 (new, benchmarked) | HOLD | 0.105 | 0.107 | +0.011s | Dual T1@4096+4096+32. Too long prefetch distance; L3 miss cost not recovered by longer DRAM window on VM. |
+| dp2_8s_fw_3w (new) | HOLD | 0.111 | 0.112 | +0.017s | Triple T1@PFD+PFD+32+PFD+64 per stream. Covers third cache line for r∈[1,31] alignment case. 24 T1 prefetches/iter (vs 16 for 2w). Too many prefetch uops — pipeline pressure exceeds alignment benefit. |
+| dp2_8s_fw_3w_2048 (new) | HOLD | 0.105 | 0.113 | +0.011s | Triple T1@2048+2048+32+2048+64, judge-tuned distance. Same alignment-complete coverage at shorter distance. Still 1.22× floor vs champion 1.09× floor → HOLD. |
+
+VM state: moderate (floor=0.086s min). 5-round interleaved benchmark. Champion g++ -O3 -march=native best=0.094s, med=0.098s. Ratio=1.09× floor → STOP-FLOOR ×258.
+
+New theory for 3w: nl_mask64 does two 32B loads at p and p+32. When (p+PFD)%64 ∈ [1,31], the second load at p+PFD+32 can spill into a third cache line not covered by T1@PFD or T1@PFD+32. T1@PFD+64 was supposed to cover this. In practice, the extra 8 T1 prefetch instructions per iteration (24 total vs 16 for 2w) increase instruction count/port pressure enough to slow down the pipeline — the prefetch overhead outweighs the alignment coverage benefit at this bandwidth-ceiling operating point.
+
+Compiler comparison (champion dp2_8s_fw_2w, warm VM):
+- g++ -O3 -march=native → 0.094s best (**BEST**)
+- g++-13 -O3 -march=native → 0.096s best (first sample outlier 0.146s)
+- clang++ -O3 -march=native → 0.111s best (confirmed slower via separate run)
+
+Best compiler: g++ -O3 -march=native (0.094s). All 191 cpp + 1 rs variants exhausted; design space fully saturated. No further algorithmic improvements possible — champion is at bandwidth ceiling (1.09× floor). index.html: 94.0ms local VM (expected judge bare-metal ~50-60ms, CLEARS rank-18 bar ≤69.3ms).
+
+**STOP-FLOOR ×258. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.094s (1.09× floor 0.086s — AT bandwidth ceiling). Expected judge time: ~50-60ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
