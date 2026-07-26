@@ -2743,3 +2743,24 @@ Compiler sweep: not re-run (fast VM, champion at floor — no upside). Best prio
 ns/line: 0.068s / 50M = 1.36 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champion CLEARS rank-18 bar on this fast VM. Expected judge bare-metal: ~50-65ms. index.html: 68.0ms.
 
 **STOP-FLOOR ×273. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.068s (1.00× floor — champion AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 68.0ms.**
+
+## Run log 2026-07-26 (scheduled run ×273 — full run.sh sweep result)
+
+Full 191-variant run.sh sweep completed (floor=0.262s slow-VM during sweep; champion 0.069s during sweep).
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | — | 0.069 | 0.070 | — | Sweep-time measurement; floor=0.262s (slow I/O-heavy VM during sweep). |
+| dp2_8s_fw_4acc_t0_64_896 | HOLD (confirmed) | 0.064→0.066 | 0.067 | tied | run.sh fired PROMOTE (0.064s vs 0.069s in sweep); direct 7-sample interleaved confirmation: variant min=0.066s med=0.067s vs champion min=0.066s med=0.067s → TIED → VM cache-state artifact → HOLD. |
+
+Direct confirmation (7-sample interleaved, fast VM floor=0.066s):
+- Champion: min=0.066s med=0.067s
+- Variant dp2_8s_fw_4acc_t0_64_896: min=0.066s med=0.067s
+- Floor (cat): min=0.066s med=0.068s
+- Both at 1.00× floor → STOP-FLOOR ×273 confirmed. Promotion reverted to HOLD.
+
+Compiler sweep (from full run): g++ -O3 -march=native → 0.066s best; g++-13 -O3 -march=native → 0.066s best. → submit under: g++ -O3 -march=native.
+
+ns/line: 0.066s / 50M = 1.32 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champion CLEARS rank-18 bar on fast VM. index.html: 68.0ms (from direct benchmark).
+
+**STOP-FLOOR ×273 (confirmed). Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.066-0.068s (1.00× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
