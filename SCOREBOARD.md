@@ -2644,3 +2644,17 @@ Compiler sweep (3-sample per combo): g++ -O3 -march=native → 0.069s best; g++ 
 ns/line: 0.067s / 50M = 1.34 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champion CLEARS rank-18 bar on this fast VM. Expected judge bare-metal: ~50-65ms.
 
 **STOP-FLOOR ×268. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (1.03× floor — at bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html updated: 67ms.**
+
+## Run log 2026-07-26 (scheduled run ×269) — STOP-FLOOR; moderate VM (93ms champion, 1.52× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×269 | 0.093 | 0.095 | — | Moderate VM (floor=0.061s min). Ratio=1.52× (at bandwidth ceiling per gate). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor min=0.061s, 5-sample; floor med≈0.063s). Champion 7-sample direct (g++ -O3 -march=native): best=0.093s med=0.095s. Ratio=1.52× floor → STOP-FLOOR ×269. No new variants — 191+ cpp + 1 rs exhausted, design space fully saturated. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch) implemented and at bandwidth ceiling.
+
+Compiler sweep (3-sample per combo): g++ -O3 -march=native → 0.105s best; g++ -Ofast -march=native -funroll-loops → 0.100s best; g++-13 -O3 -march=native → 0.098s best. → submit under: g++-13 -O3 -march=native (0.098s best, moderate VM).
+
+ns/line: 0.093s / 50M = 1.86 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal). index.html updated: 93ms (moderate VM — fast VM runs 0.066-0.068s which CLEARS rank-18 bar ≤69.3ms).
+
+**STOP-FLOOR ×269. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++-13 -O3 -march=native` (or `g++ -Ofast -march=native -funroll-loops`). VM best 0.093s (moderate VM, 1.52× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
