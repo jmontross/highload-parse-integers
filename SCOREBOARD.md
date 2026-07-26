@@ -2604,3 +2604,15 @@ VM state: moderate (floor min=0.065s, 5-sample). Champion 5-sample direct (g++ -
 ns/line: 0.095s / 50M = 1.90 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal).
 
 **STOP-FLOOR ×264. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13`). VM best 0.095s (moderate VM, 1.46× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-26 (scheduled run ×266) — STOP-FLOOR; moderate VM (79ms champion, BEATS floor via mmap)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×266 | 0.079 | 0.081 | — | Moderate VM (floor=0.082s min). Ratio=0.963× — champion BEATS `cat` due to mmap MAP_POPULATE pre-faulting. Edge 9/9. Correct ✓ (53687387166542798). |
+
+VM state: moderate (floor min=0.082s, 5-sample). Champion 7-sample direct (g++ -O3 -march=native): best=0.079s med=0.081s. Champion beats bandwidth floor (0.963×) — mmap+MAP_POPULATE pre-faults pages so data is warm in cache when champion runs, while `cat` reads cold. Design space fully saturated: 191+ cpp + 1 rs variants exhausted.
+
+ns/line: 0.079s / 50M = 1.58 ns/line (rank-18 bar = 1.39 ns/line = 69ms). On fast VM (run ×262: 0.066s; run ×261: 0.068s) champion clears rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+**STOP-FLOOR ×266. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13`). VM best 0.079s (0.963× floor — mmap pre-faulting effect). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
