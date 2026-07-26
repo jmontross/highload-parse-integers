@@ -2573,3 +2573,20 @@ Correctness ✓ (53687387166542798), edge 9/9. Both Change A (digit-place accumu
 ns/line: 0.066s / 50M = 1.32 ns/line (rank-18 bar = 1.39 ns/line = 69ms). **index.html: 66.0ms — CLEARS rank-18 bar (66.0ms ≤ 69.3ms).**
 
 **STOP-FLOOR ×262. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. VM best 0.066s (1.02× floor 0.065s — AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 66.0ms.**
+
+---
+
+## Run log 2026-07-26 (scheduled run ×263) — FALSE-PROMOTE reverted; STOP-FLOOR
+
+Background run.sh from previous session (slow VM, floor=0.864s) issued PROMOTE for `dp2_8s_fw_t0_192_2048` (T0@192B + T1@2048B) with reported best=0.065s vs champion 0.071s (8.5% margin). Applied per protocol: copied to champion/main.cpp, built, verified correctness (53687387166542798 ✓, edge 9/9 ✓).
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_2048 (candidate) | HOLD | 0.068 | 0.073 | +1.4% | Confirmation benchmark (fast VM, floor=0.067s). Below 1.5% promote margin. |
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×263 | 0.069 | 0.076 | — | Same fast VM. Floor ratio=1.03×. |
+
+VM state: fast (floor best=0.067s, 5-sample). Confirmation 9-sample interleaved benchmark: new best margin only **1.4%** (threshold 1.5%) — HOLD. Both variants within 2× of floor → STOP-FLOOR ×263. Reverted champion/main.cpp back to dp2_8s_fw_2w.
+
+This is the well-documented VM-oscillation false-PROMOTE pattern: slow-VM run.sh issued PROMOTE (floor=0.864s, longer prefetch distances disadvantaged) but fast-VM confirmation shows <1.5% margin. Historical precedent: runs ×114, ×115, ×126–127, ×131, ×133, ×219–220, ×222–223, ×251–252.
+
+**STOP-FLOOR ×263. Champion dp2_8s_fw_2w unchanged. Algorithm definitively at bandwidth ceiling.**
