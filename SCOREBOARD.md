@@ -2727,3 +2727,19 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated: 191
 ns/line: 0.076s / 50M = 1.52 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VM (runs ×262, ×268, ×271: 0.066-0.069s) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
 
 **STOP-FLOOR ×272. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.076s (moderate VM, 1.19× floor 0.064s). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 76.0ms.**
+
+**STOP-FLOOR ×272. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.076s (moderate VM, 1.19× floor 0.064s). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 76.0ms.**
+
+## Run log 2026-07-26 (scheduled run ×273) — STOP-FLOOR; fast VM (68ms champion, 1.00× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×273 | 0.068 | 0.069 | — | Fast VM (floor=0.068s min). Ratio=1.00× — champion AT bandwidth floor (equals `cat`). Edge 9/9 (prior). Correct ✓ (53687387166542798). |
+
+VM state: fast (floor min=0.068s, med=0.070s, 5-sample). Champion 5-sample direct (g++ -O3 -march=native): best=0.068s med=0.069s. Ratio=1.00× floor → STOP-FLOOR ×273. Both Change A (digit-place accumulation, stuchlik_digitplace.cpp) and Change B (8-stream MLP + dual T1 prefetch) already fully implemented in champion dp2_8s_fw_2w. Design space saturated: 191+ cpp + 1 rs variants exhausted.
+
+Compiler sweep: not re-run (fast VM, champion at floor — no upside). Best prior recommendation: `g++ -O3 -march=native` (0.068s on this run).
+
+ns/line: 0.068s / 50M = 1.36 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champion CLEARS rank-18 bar on this fast VM. Expected judge bare-metal: ~50-65ms. index.html: 68.0ms.
+
+**STOP-FLOOR ×273. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.068s (1.00× floor — champion AT bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 68.0ms.**
