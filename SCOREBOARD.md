@@ -2674,3 +2674,16 @@ ns/line: 0.066s / 50M = 1.32 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champi
 Background run.sh (started but still running during this session; covers all 191+ variants) skipped — full variant sweep takes hours. Direct benchmark sufficient for maintenance.
 
 **STOP-FLOOR ×270. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. VM best 0.066s (0.957× floor — champion BEATS bandwidth floor via MAP_POPULATE cache pre-fault). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 66.0ms.**
+
+## Run log 2026-07-26 (scheduled run ×270 — full run.sh sweep addendum)
+
+Full 191-variant run.sh sweep completed (RUNS=7, SWEEP=0). VM state was slow during run (floor=0.496s), but champion still measured 0.066s best (7-sample).
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×270 | 0.066 | 0.070 | — | Correct ✓. Edge 9/9. |
+| dp2_8s_fw_2048_32 | HOLD | 0.065 | 0.070 | Δbest=−0.001s | Only 1ms faster on best; Δmedian=0; within noise → HOLD. T1@2048+2048+32 dual prefetch — a minor variant already in the exhausted space. |
+
+Verdict: STOP-FLOOR. No PROMOTE issued. Design space fully exhausted. Champion dp2_8s_fw_2w unchanged. index.html: 66.0ms — CLEARS rank-18 bar (≤69.3ms).
+
+**STOP-FLOOR ×270 (full sweep). Champion dp2_8s_fw_2w unchanged. Design space saturated.**
