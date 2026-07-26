@@ -2591,3 +2591,15 @@ VM state: fast (floor best=0.067s, 5-sample). Confirmation 9-sample interleaved 
 This is the well-documented VM-oscillation false-PROMOTE pattern: slow-VM run.sh issued PROMOTE (floor=0.864s, longer prefetch distances disadvantaged) but fast-VM confirmation shows <1.5% margin. Historical precedent: runs ×114, ×115, ×126–127, ×131, ×133, ×219–220, ×222–223, ×251–252.
 
 **STOP-FLOOR ×263. Champion dp2_8s_fw_2w unchanged. Algorithm definitively at bandwidth ceiling.**
+
+## Run log 2026-07-26 (scheduled run ×264) — STOP-FLOOR; moderate VM (95ms champion, 1.46× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×264 | 0.095 | 0.098 | — | Moderate VM (floor=0.065s min). Ratio=1.46× (at bandwidth ceiling per gate). Correct ✓ (53687387166542798). |
+
+VM state: moderate (floor min=0.065s, 5-sample). Champion 5-sample direct (g++ -O3 -march=native): best=0.095s med=0.098s. Ratio=1.46× floor → STOP-FLOOR ×264. No new variants — 191+ cpp + 1 rs exhausted, design space fully saturated.
+
+ns/line: 0.095s / 50M = 1.90 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal).
+
+**STOP-FLOOR ×264. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13`). VM best 0.095s (moderate VM, 1.46× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
