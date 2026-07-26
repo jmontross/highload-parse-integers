@@ -6,3 +6,5 @@ bench_parsers
 *.out
 .expected_*
 champion/prog
+__pycache__/
+*.pyc
