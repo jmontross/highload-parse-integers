@@ -2708,3 +2708,22 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated: 191
 ns/line: 0.069s / 50M = 1.38 ns/line (rank-18 bar = 1.39 ns/line = 69ms). index.html: 69.0ms — CLEARS rank-18 bar (69.0ms ≤ 69.3ms).
 
 **STOP-FLOOR ×271. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native` (or `g++-13 -O3 -march=native`). VM best 0.069s (0.958× floor — champion BEATS bandwidth floor via MAP_POPULATE). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 69.0ms.**
+
+## Run log 2026-07-26 (scheduled run ×272) — STOP-FLOOR; moderate VM (76ms champion, 1.19× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×272 | 0.076 | 0.079 | — | Moderate VM (floor=0.064s min). Ratio=1.19× (at bandwidth ceiling per gate). Edge 9/9. Correct ✓ (53687387166542798). |
+
+VM state: moderate (floor min=0.064s, 5-sample; samples: 0.075, 0.068, 0.066, 0.066, 0.064). Champion 7-sample direct (g++ -O3 -march=native): best=0.076s med=0.079s (samples: 0.213, 0.078, 0.079, 0.083, 0.076, 0.077, 0.081). First sample cold-cache outlier (0.213s) excluded from min. Ratio=1.19× floor → STOP-FLOOR ×272.
+
+Compiler sweep (5-run best):
+- g++ -O3 -march=native → 0.076s best (**BEST**)
+- g++-13 -O3 -march=native → 0.079s best
+- g++ -Ofast -march=native -funroll-loops → 0.077s best
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated: 191+ cpp + 1 rs variants exhausted. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch) fully implemented in champion dp2_8s_fw_2w — algorithm definitively at bandwidth ceiling.
+
+ns/line: 0.076s / 50M = 1.52 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VM (runs ×262, ×268, ×271: 0.066-0.069s) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+**STOP-FLOOR ×272. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.076s (moderate VM, 1.19× floor 0.064s). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 76.0ms.**
