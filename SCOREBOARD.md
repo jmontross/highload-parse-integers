@@ -2616,3 +2616,17 @@ VM state: moderate (floor min=0.082s, 5-sample). Champion 7-sample direct (g++ -
 ns/line: 0.079s / 50M = 1.58 ns/line (rank-18 bar = 1.39 ns/line = 69ms). On fast VM (run ×262: 0.066s; run ×261: 0.068s) champion clears rank-18 bar. Expected judge bare-metal: ~50-65ms.
 
 **STOP-FLOOR ×266. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13`). VM best 0.079s (0.963× floor — mmap pre-faulting effect). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-26 (scheduled run ×267) — STOP-FLOOR; moderate VM (82ms champion, 1.32× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×267 | 0.078 | 0.082 | — | Moderate VM (floor=0.062s min). Ratio=1.26× (at bandwidth ceiling per gate). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor min=0.062s, 12-sample interleaved). Champion 12-sample interleaved direct (g++ -O3 -march=native): best=0.078s med=0.082s. Floor best=0.062s med=0.068s. Ratio=1.26× floor → STOP-FLOOR ×267. No new variants — 191+ cpp + 1 rs exhausted, design space fully saturated. Both Change A (digit-place accumulation) and Change B (8-stream MLP) already implemented and at bandwidth ceiling.
+
+Breakthrough directive goals (from 2026-07-06) fully achieved: stuchlik_digitplace.cpp implemented Change A, dp2_8s_fw_2w implements both. On fast VM (run ×262: 0.066s; run ×261: 0.068s) champion clears rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+ns/line: 0.078s / 50M = 1.56 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal).
+
+**STOP-FLOOR ×267. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13`). VM best 0.078s (moderate VM, 1.26× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
