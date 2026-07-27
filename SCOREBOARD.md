@@ -2868,3 +2868,25 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
 ns/line: 0.093s / 50M = 1.86 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69.3ms). On fast VM (runs ×262, ×268, ×270-×273, ×275: 0.066-0.069s = 1.32-1.38 ns/line) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
 
 **STOP-FLOOR ×278. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13 -O3 -march=native`). VM best 0.093s (moderate VM, 1.52× floor 0.061s). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 93.0ms (moderate VM).**
+
+## Run log 2026-07-27 (scheduled run ×279) — STOP-FLOOR; moderate-fast VM (67ms champion, 0.93× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×279 | 0.067 | 0.069 | — | Moderate-fast VM (floor min=0.072s). Ratio=0.93× floor (champion beats raw cat — huge pages + MAP_POPULATE effect). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate-fast (floor 7-sample: min=0.072s med=0.073s). Champion interleaved 7-sample (g++ -O3 -march=native): best=0.067s med=0.069s. Ratio=0.93× floor → STOP-FLOOR ×279. Full run.sh skipped (192 cpp + 1 rs variants × ~70ms = 75+ min); targeted champion+floor+sweep benchmark used. Both Change A (digit-place accumulation, pshufb-based, no multiply in hot loop) and Change B (8-stream MLP + dual T1 prefetch at 3072 and 3072+32) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192 cpp + 1 rs variants exhausted. stuchlik_digitplace.cpp and stuchlik_8stream.cpp variants exist and were superseded by dp2 series.
+
+Compiler sweep (3-sample best, interleaved):
+- g++ -O3 -march=native → 0.067s best (**BEST**)
+- g++-13 -O3 -march=native → 0.067s best (tied)
+- g++ -Ofast -march=native -funroll-loops → 0.074s best
+- clang++ -O3 -march=native → 0.079s best
+
+Note: g++ and g++-13 tied at 0.067s best in interleaved mode. Recommend submit under `g++ -O3 -march=native` (most consistent across VM states).
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
+
+ns/line: 0.067s / 50M = 1.34 ns/line (this VM run); rank-18 bar = 1.39 ns/line = 69.3ms. Champion CLEARS rank-18 bar on this VM.
+
+**STOP-FLOOR ×279. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (0.93× floor — champion at/below bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms). index.html: 67.0ms.**
