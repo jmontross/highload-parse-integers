@@ -2778,3 +2778,21 @@ Full run.sh skipped (190 variants × 5 samples × ~80ms = 75+ min); targeted cha
 ns/line: 0.079s / 50M = 1.58 ns/line (rank-18 bar = 1.39 ns/line = 69ms; expected judge ~1.0-1.3 ns/line on bare metal). On fast VM (runs ×261-×262: 0.066-0.068s; ×270-×273: 0.066s) champion clears rank-18 bar. Expected judge bare-metal: ~50-65ms.
 
 **STOP-FLOOR ×274. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (moderate-fast VM, 1.14× floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+### Run ×274 addendum — full run.sh PROMOTE reverted to HOLD (false-PROMOTE)
+
+Full run.sh (background, completed ~7 min after targeted benchmark): floor=0.4960s (SLOW DISK; programs use page cache via mmap), champion best=0.0770s, variant `dp2_8s_fw_t0_2048` best=0.0650s → 15.6% margin → PROMOTE issued.
+
+**Confirmation benchmark (20-sample interleaved, 2-program-only, clean):**
+
+| Metric | dp2_8s_fw_t0_2048 | champion (dp2_8s_fw_2w) |
+|---|---|---|
+| Min (best) | 0.068s | 0.069s |
+| Median | 0.071s | 0.073s |
+| Cold start | 0.142s (1st run) | 0.081s (1st run) |
+
+Gate check: need ≤ 0.069 × 0.985 = 0.06797s; variant min 0.068 > 0.06797 → condition (a) FAILS by ~0.1ms. **Verdict: HOLD.**
+
+Variant median (0.071) < champion median (0.073) satisfies condition (b) alone, but both conditions are required for PROMOTE. This is the documented VM-oscillation false-PROMOTE pattern (historical precedents: ×114, ×115, ×126, ×131, ×133, ×219-220, ×222-223, ×251-252, ×264 addendum, ×273 addendum). The large margin in the full run.sh arises from 191-program interleaved context causing cache/TLB thrashing that differentially affects different variants. Champion `dp2_8s_fw_2w` remains unchanged.
+
+**STOP-FLOOR ×274 (confirmed, false-PROMOTE reverted). Champion dp2_8s_fw_2w unchanged.**
