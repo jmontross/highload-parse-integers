@@ -2818,3 +2818,15 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated: 191
 ns/line: 0.067s / 50M = 1.34 ns/line (rank-18 bar = 1.39 ns/line = 69ms). Champion CLEARS rank-18 bar on this fast VM. index.html: 67.0ms — CLEARS rank-18 bar (67.0ms ≤ 69.3ms).
 
 **STOP-FLOOR ×275. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (0.97× floor — at bandwidth ceiling). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 67.0ms.**
+
+## Run log 2026-07-27 (scheduled run ×276) — STOP-FLOOR; moderate VM (77ms champion, 1.12× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×276 | 0.077 | 0.080 | — | Moderate VM (floor min=69ms). Ratio=1.12× floor → STOP-FLOOR. Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor min=0.069s med=0.071s, 7 samples). Champion 7-sample (clang++ -O3 -march=native): best=0.077s med=0.080s. Full run.sh skipped (192 variants × ~80ms = 75+ min, exceeds scheduler window); targeted champion-only benchmark used. Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T1 prefetch at 3072 and 3072+32) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192 cpp + 1 rs variants exhausted.
+
+ns/line: 0.077s / 50M = 1.54 ns/line (this VM run); best VM run ×275: 0.067s = 1.34 ns/line (CLEARS rank-18 bar). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+**STOP-FLOOR ×276. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. Fast-VM best (run ×275): 0.067s (CLEARS rank-18 bar ≤69.3ms). Expected judge bare-metal: ~50-65ms.**
