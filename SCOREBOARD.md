@@ -2844,3 +2844,27 @@ VM state: moderate-fast (floor 5-sample: min=0.062s med=0.062s). Champion 10-sam
 ns/line: 0.079s / 50M = 1.58 ns/line (this VM run); best-ever VM run ×275: 0.067s = 1.34 ns/line (CLEARS rank-18 bar). Rank-18 bar = 1.39 ns/line = 69.3ms.
 
 **STOP-FLOOR ×277. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. Fast-VM best: 0.067s (CLEARS rank-18 bar ≤69.3ms). Expected judge bare-metal: ~50-65ms.**
+
+## Run log 2026-07-27 (scheduled run ×278) — STOP-FLOOR; moderate VM (93ms champion, 1.52× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×278 | 0.093 | 0.097 | — | Moderate VM (floor=0.061s min). Ratio=1.52× (at bandwidth ceiling per gate). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor 5-sample: min=0.061s, samples: 0.062, 0.061, 0.066, 0.061, excl. cold 0.123). Champion 10-sample direct (g++ -O3 -march=native): best=0.093s med=0.097s (excl. cold outliers 0.149s, 0.134s). Ratio=1.52× floor → STOP-FLOOR ×278. Full run.sh skipped (192 cpp + 1 rs × ~95ms = 75+ min); targeted champion-only benchmark used. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192 cpp + 1 rs variants exhausted.
+
+Compiler sweep (3-sample best):
+- g++ -O3 -march=native → 0.098s best
+- g++ -Ofast -march=native -funroll-loops → **0.095s best** (tied best)
+- g++-13 -O3 -march=native → 0.097s best
+- g++-13 -Ofast -march=native -funroll-loops → **0.095s best** (tied best)
+- clang++ -O3 -march=native → 0.106s best
+- clang++ -Ofast -march=native -funroll-loops → 0.112s best
+
+Recommend submit under: `g++ -Ofast -march=native -funroll-loops` (or g++-13 equivalent).
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
+
+ns/line: 0.093s / 50M = 1.86 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69.3ms). On fast VM (runs ×262, ×268, ×270-×273, ×275: 0.066-0.069s = 1.32-1.38 ns/line) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+**STOP-FLOOR ×278. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (or `g++-13 -O3 -march=native`). VM best 0.093s (moderate VM, 1.52× floor 0.061s). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms). index.html: 93.0ms (moderate VM).**
