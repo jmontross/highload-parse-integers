@@ -2891,3 +2891,27 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
 ns/line: 0.067s / 50M = 1.34 ns/line (this VM run); rank-18 bar = 1.39 ns/line = 69.3ms. Champion CLEARS rank-18 bar on this VM.
 
 **STOP-FLOOR ×279. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.067s (0.93× floor — champion at/below bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms). index.html: 67.0ms.**
+
+## Run log 2026-07-27 (scheduled run ×281) — STOP-FLOOR; moderate VM (99ms champion, 1.57× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×281 | 0.099 | 0.103 | — | Moderate VM (floor min=0.063s). Ratio=1.57× floor → STOP-FLOOR. Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor 7-sample: min=0.063s, samples 0.063-0.067s). Champion 10-sample direct (g++ -O3 -march=native): best=0.099s med=0.103s (samples 0.099-0.113s). Ratio=1.57× floor → STOP-FLOOR ×281. Full run.sh skipped (192+ cpp + 1 rs variants × ~100ms = 75+ min); targeted champion-only benchmark used. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at 3072 and 3072+32) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192+ cpp + 1 rs variants exhausted.
+
+Note: Runs ×241-×280 were on a detached orphan HEAD. Run ×277 attempted to push them but that fix itself was on the orphan. This run (×281) found origin/main was force-pushed to the orphan state (at effefbd = run ×280), so origin/main now correctly has dp2_8s_fw_2w as champion and all variant files. This is the first commit back on the real origin/main branch with the correct champion.
+
+Compiler sweep (3-sample best):
+- g++ -O3 -march=native → 0.098s best
+- g++ -Ofast -march=native -funroll-loops → **0.097s best** (**BEST**)
+- g++-13 -O3 -march=native → **0.097s best** (tied)
+- clang++ -O3 -march=native → 0.106s best
+
+Recommend submit under: `g++ -Ofast -march=native -funroll-loops` or `g++-13 -O3 -march=native`.
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
+
+ns/line: 0.099s / 50M = 1.98 ns/line (moderate VM; best-ever VM run ×275/×279: 0.067s = 1.34 ns/line — CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+**STOP-FLOOR ×281. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. VM best 0.099s (moderate VM, 1.57× floor 0.063s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**

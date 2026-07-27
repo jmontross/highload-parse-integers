@@ -1,1 +1,1 @@
-0.079
+Run ×281 2026-07-27: STOP-FLOOR moderate VM (99ms, 1.57× floor 63ms). Champion dp2_8s_fw_2w unchanged. git orphan-HEAD recovered (×241-×280 files restored to main). Correctness ✓ edge 9/9.
