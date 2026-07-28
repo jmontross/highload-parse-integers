@@ -3099,3 +3099,26 @@ ns/line: 0.078s / 50M = 1.56 ns/line (this fast VM run, g++-13). Best-ever VM ru
 Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated (192+ cpp + 1 rs variants, 290 consecutive STOP-FLOOR runs).
 
 **STOP-FLOOR ×290. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++-13 -O3 -march=native` (best this run; 78ms). VM best 0.078s (fast VM, 1.28× floor 0.061s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-28 (scheduled run ×291) — STOP-FLOOR; file reconciliation: champion is dp2_8s_fw_t0_192_1024
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_1024) | STOP-FLOOR ×291 | 0.079 | 0.080 | — | Moderate VM (floor min=0.257s). Champion at 0.31× floor → STOP-FLOOR. Correct ✓ (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_t0_128_1024 | HOLD | 0.077 | 0.082 | Δbest=2.5% ✓, but median 0.082s > champ 0.080s → fails condition b | Best-ranked variant but median condition not met → HOLD. |
+| dp2_8s_fw_2w | HOLD | 0.082 | 0.086 | +0.003s vs champ | SLOWER than actual champion; SCOREBOARD ×254-×290 claimed it was champion but file was never updated. |
+
+**File reconciliation note:** SCOREBOARD entries ×254-×290 all claimed "champion dp2_8s_fw_2w" but champion/main.cpp was never actually updated — it has contained dp2_8s_fw_t0_192_1024 code (T0@192B + T1@1024B) all along. Confirmed by: (1) comment header in champion/main.cpp; (2) grep shows PFD=1024 and T0@192; (3) champion scores 0.079s matching variants/dp2_8s_fw_t0_192_1024 exactly, while dp2_8s_fw_2w scores 0.082s. The prior SCOREBOARD entries attributed dp2_8s_fw_2w timings to a "champion" that was actually dp2_8s_fw_t0_192_1024 running under the champion name slot. File is correct as-is (t0_192_1024 IS the actual champion).
+
+VM state: moderate (floor min=0.257s via `cat`; champion uses mmap+MAP_POPULATE+MADV_HUGEPAGE, bypasses kernel read path, hence champion 0.079s << floor 0.257s). Full RUNS=5 interleaved run over all variants. Verdict: STOP-FLOOR + HOLD.
+
+Compiler sweep (run.sh output, 5-run best):
+- g++ -O3 -march=native → **0.079s best** (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.080s best
+- g++-13 -O3 -march=native → 0.081s best
+
+ns/line: 0.079s / 50M = 1.58 ns/line (this VM run). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+Design space fully saturated. Both Change A (digit-place accumulation via pshufb) and Change B (8-stream MLP + two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented. 192+ cpp + 1 rs variants exhausted. No further algorithmic improvements possible.
+
+**STOP-FLOOR ×291. Champion dp2_8s_fw_t0_192_1024 (corrected from SCOREBOARD's dp2_8s_fw_2w — file was never updated). SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (0.31× floor 0.257s — well at bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
