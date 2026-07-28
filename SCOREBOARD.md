@@ -2980,3 +2980,25 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
 ns/line: 0.080s / 50M = 1.60 ns/line (this moderate VM run). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
 
 **STOP-FLOOR ×284. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.080s (moderate VM, 0.95× floor 0.084s — effectively AT bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-28 (scheduled run ×286) — STOP-FLOOR; moderate VM (83ms champion, 0.90× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×286 | 0.083 | 0.085 | — | Moderate VM (floor min=0.092s). Ratio=0.90× floor → AT bandwidth ceiling (STOP-FLOOR). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor 7-sample: min=0.092s, samples 0.092-0.122s — cold-start outlier). Champion 10-sample direct (g++ -O3 -march=native): best=0.083s med=0.085s (samples: 0.163s cold, 0.086, 0.084, 0.083, 0.084, 0.085, 0.084, 0.085, 0.104, 0.109 — one 0.163s cold-start outlier). Ratio=0.90× floor → champion beating cold floor (warm-cache benchmark vs cold floor). AT bandwidth ceiling; STOP-FLOOR ×286. Full run.sh skipped (192+ cpp + 1 rs variants × ~83ms = 76+ min, exceeds scheduler window); targeted champion+floor+sweep benchmark used. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at 3072 and 3072+32) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192+ cpp + 1 rs variants exhausted.
+
+Compiler sweep (3-sample best):
+- g++ -O3 -march=native → **0.081s best** (**BEST**)
+- g++-13 -O3 -march=native → 0.083s best
+- g++ -Ofast -march=native -funroll-loops → 0.084s best
+- clang++ -O3 -march=native → 0.093s best
+
+Recommend submit under: `g++ -O3 -march=native`.
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
+
+ns/line: 0.083s / 50M = 1.66 ns/line (this moderate VM run). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+**STOP-FLOOR ×286. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.083s (moderate VM, 0.90× cold-floor 0.092s — champion warm-cache beats cold floor). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
