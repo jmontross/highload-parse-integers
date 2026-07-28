@@ -1,1 +1,1 @@
-Run ×290 2026-07-28: STOP-FLOOR fast VM (78ms g++-13 best, 1.28× floor 61ms). Champion dp2_8s_fw_2w unchanged. Correctness ✓ edge 9/9.
+Run ×291 2026-07-28: STOP-FLOOR fast VM (67ms champion best, 0.93× floor 72ms — FASTER than cat via mmap+hugepage). g++-13 -O3 -march=native best at 68ms. Edge 9/9. Champion dp2_8s_fw_t0_192_1024 unchanged.
