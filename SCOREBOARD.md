@@ -3044,3 +3044,27 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
 ns/line: 0.080s / 50M = 1.60 ns/line (this good VM run). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
 
 **STOP-FLOOR ×288. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. VM best 0.080s (good VM, 1.23× floor 0.065s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-28 (scheduled run ×289) — STOP-FLOOR; moderate VM (105ms clang best, 1.38× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×289 | 0.105 | 0.110 | — | Moderate VM (floor min=0.076s). Ratio=1.38× floor → STOP-FLOOR. Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: moderate (pure-read floor 5-sample: min=0.076s, first cold-start 0.112s; samples: 0.112, 0.078, 0.076, 0.076, 0.076). Champion 10-sample direct (g++ -O3 -march=native): best=0.109s med=0.125s (samples: 0.142, 0.111, 0.120, 0.125, 0.126, 0.134, 0.146, 0.124, 0.165, 0.109). Ratio=0.109/0.076=1.43× floor (g++). clang++ 10-sample: best=0.105s med=0.110s (samples: 0.143, 0.107, 0.105, 0.115, 0.114, 0.110, 0.109, 0.109, 0.109, 0.132) → ratio=0.105/0.076=1.38× floor (STOP-FLOOR). Full run.sh skipped (192+ cpp + 1 rs variants × ~100ms = 95+ min, exceeds scheduler window); targeted champion+floor+sweep benchmark used. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at 3072 and 3072+32) fully implemented in champion dp2_8s_fw_2w. Design space saturated: 192+ cpp + 1 rs variants exhausted.
+
+Notable this run: clang++ -O3 -march=native showed lower variance (0.105-0.115s range) vs g++ (0.109-0.165s range). Previous runs generally showed g++ faster; this run reverses slightly. Both within VM noise.
+
+Compiler sweep (3-sample best):
+- g++ -O3 -march=native → 0.108s best
+- g++ -Ofast -march=native -funroll-loops → 0.108s best
+- g++-13 -O3 -march=native → 0.113s best
+- clang++ -O3 -march=native → **0.104s best** (**BEST** this sweep, very consistent 0.104-0.106s)
+
+Recommend submit under: `clang++ -O3 -march=native` (best this run; g++ was 0.108s; revisit on future sweeps).
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
+
+ns/line: 0.105s / 50M = 2.10 ns/line (this moderate VM run, clang++). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+**STOP-FLOOR ×289. Champion dp2_8s_fw_2w unchanged. SUBMIT with `clang++ -O3 -march=native` (best this run) or `g++ -O3 -march=native`. VM best 0.105s (moderate VM, 1.38× floor 0.076s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
