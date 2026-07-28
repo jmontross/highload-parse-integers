@@ -3068,3 +3068,29 @@ Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated.
 ns/line: 0.105s / 50M = 2.10 ns/line (this moderate VM run, clang++). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
 
 **STOP-FLOOR ×289. Champion dp2_8s_fw_2w unchanged. SUBMIT with `clang++ -O3 -march=native` (best this run) or `g++ -O3 -march=native`. VM best 0.105s (moderate VM, 1.38× floor 0.076s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-28 (scheduled run ×290) — STOP-FLOOR; fast VM (78ms g++-13 best, 1.28× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w) | STOP-FLOOR ×290 | 0.078 (g++-13) | 0.082 | — | Fast VM (floor min=0.061s). Ratio=1.28× (at bandwidth ceiling). Correct ✓ (53687387166542798). Edge 9/9. |
+
+VM state: fast (pure-read floor 5-sample: min=0.061s, samples: 0.061, 0.062, 0.061, 0.064, 0.061). Champion 10-sample direct (g++ -O3 -march=native): best=0.079s med=0.083s (samples: 0.084, 0.088, 0.084, 0.081, 0.081, 0.079, 0.083, 0.080, 0.083, 0.082). Full run.sh skipped (192+ cpp + 1 rs variants × ~80ms = 77+ min); targeted champion+floor+sweep benchmark used.
+
+Compiler sweep (5-sample best each):
+- g++ -O3 -march=native → **0.080s best**
+- g++ -Ofast -march=native -funroll-loops → 0.083s best
+- g++-13 -O3 -march=native → **0.078s best** (**BEST** this run)
+- g++-13 -Ofast -march=native -funroll-loops → 0.081s best
+- clang++ -O3 -march=native → 0.090s best
+- clang++-18 -O3 -march=native → 0.088s best
+
+Best compiler this run: **g++-13 -O3 -march=native** (0.078s; g++ -O3 was 0.080s). Note: g++ and g++-13 results are very consistent (within noise). Previous run ×289 showed clang++ slightly faster (105ms vs 108ms on slow VM); today g++-13 is faster (0.078s vs 0.090s). Both are within VM noise — recommend submitting with g++-13 -O3 -march=native or g++ -O3 -march=native.
+
+Ratio=0.078/0.061=1.28× floor → STOP-FLOOR ×290. Floor min=0.061s (fast VM day).
+
+ns/line: 0.078s / 50M = 1.56 ns/line (this fast VM run, g++-13). Best-ever VM run ×275/×279: 0.067s = 1.34 ns/line (CLEARS rank-18 bar ≤69.3ms). Rank-18 bar = 1.39 ns/line = 69.3ms.
+
+Correctness ✓ (53687387166542798), edge 9/9. Design space fully saturated (192+ cpp + 1 rs variants, 290 consecutive STOP-FLOOR runs).
+
+**STOP-FLOOR ×290. Champion dp2_8s_fw_2w unchanged. SUBMIT with `g++-13 -O3 -march=native` (best this run; 78ms). VM best 0.078s (fast VM, 1.28× floor 0.061s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
