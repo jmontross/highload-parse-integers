@@ -1,1 +1,1 @@
-Run ×287 2026-07-28: STOP-FLOOR moderate VM (103ms, 1.34× floor 77ms). Champion dp2_8s_fw_2w unchanged. Correctness ✓ edge 9/9.
+Run ×288 2026-07-28: STOP-FLOOR good VM (80ms, 1.23× floor 65ms). Champion dp2_8s_fw_2w unchanged. Correctness ✓ edge 9/9.
