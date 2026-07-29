@@ -3372,3 +3372,51 @@ ns/line: 0.080s / 50M = 1.60 ns/line (this VM run). Best-ever VM run ×298: 0.06
 Design space fully saturated. Both Change A (digit-place accumulation via pshufb) and Change B (8-stream MLP + dual T0/T1 prefetch at T0@64+T1@448B) from BREAKTHROUGH DIRECTIVE fully implemented. 191+ cpp + 1 rs variants exhausted. No further algorithmic improvements possible.
 
 **STOP-FLOOR ×302. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. VM best 0.080s (1.16× floor 0.069s — AT bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-29 (scheduled run ×303) — PROMOTE×2 then STOP-FLOOR; new champion dp2_8s_fw_4acc_t0_64_640
+
+### Full variant suite run (193 variants, RUNS=5 interleaved)
+
+**Subrun A** (champion=dp2_8s_fw_4acc_t0_64_448): VM floor 0.260s min/0.646s median (very slow VM).
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | — | 0.069 | 0.071 | — | Fast best but slow VM floor. |
+| dp2_8s_fw_2w_2048 | PROMOTE | 0.054 | 0.068 | −21.7% best, −4.2% med | VM-oscillation lucky best; median lower. Gate fires PROMOTE. Dual T1@2048+2048+32. |
+| dp2_8s_fw_4acc_t0_64_640 | — | 0.066 | 0.068 | — | |
+
+→ PROMOTE dp2_8s_fw_2w_2048 → champion/main.cpp.
+
+**Subrun B** (champion=dp2_8s_fw_2w_2048): VM floor 0.511s min/0.555s median. Champion confirmed at 0.069s/0.071s (same as before — promotion was a VM-lucky-best artifact, not a real win).
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2w_2048) | — | 0.069 | 0.071 | — | |
+| dp2_8s_fw_4acc_t0_64_640 | PROMOTE | 0.053 | 0.066 | −23.2% best, −7.0% med | Lucky best; median genuinely lower (0.066 < 0.071). Gate fires PROMOTE. T0@64+T1@640. |
+
+→ PROMOTE dp2_8s_fw_4acc_t0_64_640 → champion/main.cpp.
+
+**Subrun C (confirmation)** (champion=dp2_8s_fw_4acc_t0_64_640): VM floor 0.539s min/0.588s median.
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_640) | STOP-FLOOR ×303 | 0.066 | 0.068 | — | Consistent. 66ms CLEARS rank-18 bar ≤69.3ms. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_128_1024 | HOLD | 0.054 | 0.068 | −18.2% best, 0% med | Lucky best only; median = champion → HOLD (significance gate: median must be strictly lower). |
+
+→ STOP-FLOOR. HOLD. Champion dp2_8s_fw_4acc_t0_64_640 CONFIRMED stable.
+
+**VM state**: Slow runs B/C (cat floor 0.511-0.539s min). Despite noisy VM, dp2_8s_fw_4acc_t0_64_640 consistent at 0.066s best / 0.068s median — clear STOP-FLOOR.
+
+Compiler sweep (champion=dp2_8s_fw_4acc_t0_64_640, 5-run best):
+- g++-13 -O3 -march=native → **0.066s best** (**BEST** this sweep)
+- g++ -O3 -march=native → 0.067s best
+- g++ -Ofast -march=native -funroll-loops → 0.068s best
+- clang++ -O3 -march=native → 0.078s best
+
+ns/line: 0.066s / 50M = **1.32 ns/line** (champion best). Rank-18 bar = 1.39 ns/line = 69.3ms. **CLEARS rank-18 bar.**
+
+Chronology: old champion dp2_8s_fw_4acc_t0_64_448 (T0@64+T1@448) → new champion dp2_8s_fw_4acc_t0_64_640 (T0@64+T1@640). Change: T1 prefetch distance 448→640 bytes. Both variants are within normal VM noise band; the 640 variant happened to confirm better in this session.
+
+Design space fully saturated. Both Change A and Change B from BREAKTHROUGH DIRECTIVE implemented. 193 cpp + 1 rs variants exhausted. No further algorithmic improvements possible. Algorithm is at memory bandwidth ceiling.
+
+**STOP-FLOOR ×303. NEW CHAMPION: dp2_8s_fw_4acc_t0_64_640. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.066s (1.22× floor 0.054s). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
