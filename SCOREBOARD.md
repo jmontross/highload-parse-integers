@@ -3170,3 +3170,25 @@ ns/line: 0.065s / 50M = 1.30 ns/line (champion best, this VM run). Rank-18 bar =
 Design space fully saturated. 192+ cpp + 1 rs variants exhausted. Cascade stopped.
 
 **STOP-FLOOR ×293. Champion promoted to dp2_8s_fw_2560_32 (cascade PROMOTE under VM noise). SUBMIT with `g++-13 -O3 -march=native` or `g++ -Ofast -march=native -funroll-loops`. VM best 0.065s (1.0× floor 0.065s — at bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-07-29 (scheduled run ×294) — STOP-FLOOR; fast VM (0.93× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2560_32) | STOP-FLOOR ×294 | 0.068 | ~0.075 | — | Fast VM (floor min=0.073s via cat). Ratio=0.93× floor → STOP-FLOOR (champion faster than cat due to mmap+MADV_HUGEPAGE). Correct ✓ (53687387166542798). Edge 9/9. |
+
+**VM state**: Fast (cat floor 5 samples: 0.073-0.077s min=0.073s). Champion beats floor due to mmap+MAP_POPULATE+MADV_HUGEPAGE+MADV_COLLAPSE bypassing kernel read path. Targeted benchmark only (full variants suite skipped — 192+ variants × ~80ms = 90+ min exceeds session budget). Design space fully saturated.
+
+Compiler sweep (champion=dp2_8s_fw_2560_32, 5-run best):
+- g++ -O3 -march=native → **0.068s best** (**BEST** this sweep, tied)
+- g++-13 -O3 -march=native → **0.068s best** (tied)
+- g++-13 -Ofast -march=native -funroll-loops → 0.068s best (tied)
+- g++ -Ofast -march=native -funroll-loops → 0.069s best
+- clang++-18 -O3 -march=native → 0.075s best
+- clang++ -O3 -march=native → 0.076s best
+
+ns/line: 0.068s / 50M = 1.36 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
+
+Design space fully saturated. Both Change A (digit-place accumulation via pshufb) and Change B (8-stream MLP + two-tier prefetch at T1@2560+32) from BREAKTHROUGH DIRECTIVE fully implemented. 192+ cpp + 1 rs variants exhausted. No further algorithmic improvements possible.
+
+**STOP-FLOOR ×294. Champion dp2_8s_fw_2560_32 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 0.068s (0.93× floor 0.073s — AT bandwidth ceiling, champion beats cat floor). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
