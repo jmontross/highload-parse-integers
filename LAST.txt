@@ -1,1 +1,1 @@
-Run ×292 2026-07-28: STOP-FLOOR moderate VM (94ms g++ best, 1.11× floor 85ms). g++ -O3 -march=native best at 94ms. Edge 9/9. Champion dp2_8s_fw_t0_192_1024 unchanged.
+Run ×304 2026-07-30: PROMOTE dp2_8s_fw_t0_256 (T0@256+T1@3072) beats old champion 4acc+T0@64+T1@640 by 9ms median (all 7 runs). g++ -O3 best 0.091s. Edge 9/9. Champion updated.
