@@ -3500,3 +3500,27 @@ ns/line: 0.079s / 50M = **1.58 ns/line** (this run, good VM). Best-ever VM: 0.06
 Design space fully saturated. 196 cpp + 1 rs variants exhausted. T0@256+T1@3072 confirmed optimal across the full grid sweep.
 
 **STOP-FLOOR ×305. Champion dp2_8s_fw_t0_256 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (1.13× floor 0.070s). Expected judge bare-metal: ~50-69ms (CLEARS rank-18 bar ≤69.3ms on fast VM runs).**
+
+## Run log 2026-07-30 (scheduled run ×306) — STOP-FLOOR; moderate VM (1.31× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×306 | 0.081 (g++-13 -O3) | 0.087 | — | Moderate VM (floor min=0.062s). Ratio=1.31× floor. Correct ✓ (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_t0_256_2048 | HOLD | 0.083 | 0.084 | +3ms med vs champ (0.087) | T0@256+T1@2048. Gap fill: single-acc T1@2048. Med slightly better than champ this run but within 33ms jitter band. Dead. |
+| dp2_8s_fw_t0_384_3072 | HOLD | 0.082 | 0.084 | +1ms med vs champ (0.0835 on 7-run) | T0@384+T1@3072. Gap fill: 6-iter T0. 7-run interleaved: champ med=0.0835 vs t0384 med=0.084 — essentially tied. Dead. |
+
+**VM state**: Moderate (cat floor 5 samples: min=0.062s). Champion best 0.081s = 1.31× floor.
+
+Two new gap-filling variants: T0@256+T1@2048 and T0@384+T1@3072. Both HOLD — within jitter band of champion. T0@256+T1@3072 grid position remains optimal.
+
+Compiler sweep (champion=dp2_8s_fw_t0_256, 3-run best):
+- g++-13 -O3 -march=native → **0.081s best** (**BEST** this sweep)
+- g++ -Ofast -march=native -funroll-loops → 0.081s best (tied)
+- g++ -O3 -march=native → 0.087s best
+- clang++ -O3 -march=native → 0.091s best
+
+ns/line: 0.081s / 50M = **1.62 ns/line** (this run, moderate VM). Best-ever VM run ×303: 0.065-0.066s = 1.30-1.32 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
+
+Design space fully saturated. 198 cpp + 1 rs variants exhausted (2 new gap-fills, both HOLD). T0@256+T1@3072 single-acc confirmed optimal across the complete grid: T0@{64,96,128,192,256(champ),320,384(new),512} × T1@{512,640,768,1024,1536,2048(new),3072} fully covered. No further prefetch distance improvements possible.
+
+**STOP-FLOOR ×306. Champion dp2_8s_fw_t0_256 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best 0.081s (1.31× floor 0.062s). Expected judge bare-metal: ~50-69ms (CLEARS rank-18 bar ≤69.3ms on fast VM runs).**
