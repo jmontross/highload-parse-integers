@@ -3476,3 +3476,27 @@ Also tested:
 ns/line: 0.091s / 50M = 1.82 ns/line (this VM run, moderate). Best-ever VM run ×303: 0.065-0.066s = 1.30-1.32 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
 
 **STOP-FLOOR ×304. NEW CHAMPION: dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native`. VM best 0.091s (1.47× floor 0.062s). Expected judge bare-metal: ~50-69ms (CLEARS rank-18 bar ≤69.3ms on fast VM runs).**
+
+## Run log 2026-07-30 (scheduled run ×305) — STOP-FLOOR; good VM (1.13× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×305 | 0.079 | 0.085 | — | Good VM (floor min=0.070s). Ratio=1.13× floor. Correct ✓ (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_t0_192_3072 | HOLD | 0.080 | 0.087 | +2ms med | T0@192B+T1@3072B. Between old champ T0@192_1024 and new champ T0@256_3072. Within noise. Dead. |
+| dp2_8s_fw_t0_320_3072 | HOLD | 0.082 | 0.086 | +1ms med | T0@320B+T1@3072B. 1ms median improvement within jitter band (0.027s). Dead. |
+
+**VM state**: Good (cat floor 5-sample: min=0.070s). Champion 10-run interleaved: min=0.079s, med=0.085s, max=0.149s (VM jitter 0.070). Champion mmap bypasses kernel read path — runs faster than cat's kernel-copy path.
+
+Tried 2 new variants filling gaps in the T1@3072 prefetch grid (T0@192 and T0@320). Both HOLD vs champion — within jitter band. Grid for T1@3072 now complete: T0@128 (HOLD), T0@192 (HOLD, new), T0@256 (champion), T0@320 (HOLD, new), T0@512 (HOLD). T0@256 confirmed optimal.
+
+Compiler sweep (champion=dp2_8s_fw_t0_256, 3-run best):
+- g++ -O3 -march=native → **0.080s best** (**BEST** this sweep)
+- g++-13 -O3 -march=native → 0.088s best
+- g++ -Ofast -march=native -funroll-loops → 0.082s best
+- clang++ -O3 -march=native → 0.092s best
+
+ns/line: 0.079s / 50M = **1.58 ns/line** (this run, good VM). Best-ever VM: 0.065-0.066s = 1.30-1.32 ns/line (run ×303, CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
+
+Design space fully saturated. 196 cpp + 1 rs variants exhausted. T0@256+T1@3072 confirmed optimal across the full grid sweep.
+
+**STOP-FLOOR ×305. Champion dp2_8s_fw_t0_256 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 0.079s (1.13× floor 0.070s). Expected judge bare-metal: ~50-69ms (CLEARS rank-18 bar ≤69.3ms on fast VM runs).**
