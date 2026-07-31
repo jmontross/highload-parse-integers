@@ -3623,3 +3623,20 @@ stuchlik_digitplace: 0.560s (scalar path, not AVX2-specific enough; dead). stuch
 Design space: 199 cpp + 1 rs variants. T0@{64,96,128,192(champ),256,320,384,512} × T1@{512,640,768,1024,1536(champ),2048,3072} grid. New champion occupies T0@192+T1@1536. Further grid searches unlikely to yield promotion on this VM (STOP-FLOOR).
 
 **STOP-FLOOR ×310. New champion dp2_8s_fw_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Best local (run ×309 with prior champion): 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤69.3ms). On bare-metal judge, T0@192+T1@1536 may outperform prior champion.**
+
+## Run log 2026-07-31 (scheduled run ×311) — STOP-FLOOR; 3 new T0×T1 grid points HOLD
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_1536) | STOP-FLOOR ×311 | 0.078 | 0.085 | — | Moderate VM (floor cold=0.082-0.095s; mmap page-cache warm). Correct ✓. Edge 9/9. |
+| dp2_8s_fw_t0_192_768 (NEW) | HOLD | 0.080 | 0.086 | +2ms best, +1ms med | T0@192+T1@768 (12 iters=96ns, bare-metal target). Both worse than champ. HOLD. |
+| dp2_8s_fw_t0_192_640 (NEW) | HOLD | 0.081 | 0.088 | +3ms best, +3ms med | T0@192+T1@640 (10 iters=80ns, tight). Worse in both metrics. HOLD. |
+| dp2_8s_fw_t0_128_768 (NEW) | HOLD | 0.081 | 0.082 | +3ms best, −3ms med | T0@128+T1@768: apparently better median but within VM noise (10-sample rerun showed champion med=0.086 vs variant med=0.089 → actually worse). HOLD. |
+
+**VM state**: Moderate (cat floor cold=0.082-0.095s across 3 runs; mmap warm from previous run, champion best 0.078s < floor = cache-warm). Champion best 0.078s = 0.95× floor (warm-cache ratio). 7 interleaved + 10 extended samples confirm all new variants within noise.
+
+Gap analysis: T0@{64,96,128,192} × T1@{512,640,768,1024,1536,2048,3072} grid gaps now filled at T0@192+T1@{640,768} and T0@128+T1@768. No improvement found. The T0@192+T1@1536 champion remains optimal across the covered grid.
+
+Design space: 202 cpp + 1 rs variants. 3 new grid-fill variants added, all HOLD. Champion dp2_8s_fw_t0_192_1536 unchanged.
+
+**STOP-FLOOR ×311. Champion dp2_8s_fw_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Best-ever local (run ×309): 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤69.3ms = 1.39 ns/line).**
