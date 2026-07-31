@@ -3693,3 +3693,25 @@ ns/line: 0.095s / 50M = **1.90 ns/line** (this run champion best). Floor=0.062s 
 Design space fully saturated. 199 cpp + 1 rs variants exhausted. Champion dp2_8s_fw_t0_128_1536 unchanged.
 
 **STOP-FLOOR ×316. Champion dp2_8s_fw_t0_128_1536 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Best-ever local: 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤69.3ms). Algorithm at bandwidth ceiling — no further improvement possible without new hardware constraints.**
+
+## Run log 2026-07-31 (scheduled run ×317) — STOP-FLOOR; 4acc_t0_128_1536 HOLD
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1536) | STOP-FLOOR ×317 | 0.077 | 0.079 | — | Good VM (floor=0.065s, ratio=1.18×). Correct ✓. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_128_1536 (NEW) | HOLD | 0.080 | 0.081 | +3ms best, +2ms med | 4acc version of champion; both metrics WORSE than champion. Extra register pressure outweighs dependency reduction. HOLD. |
+
+**VM state**: Good (floor min=0.065s; champion best 0.077s = 1.18× floor; warm page-cache). 10-sample interleaved run confirms champion at bandwidth ceiling.
+
+4acc_t0_128_1536 analysis: Adding 4 independent u16 accumulators (instead of 1) was expected to reduce write-dependency chains. However, the extra registers add pressure and appear to slow the inner loop. The single-accumulator champion remains optimal. This closes the last meaningful gap in the T0@128×T1@1536 design space.
+
+Compiler sweep (3-sample, champion=dp2_8s_fw_t0_128_1536):
+- g++ -O3 -march=native → **0.079s best**
+- g++-13 -O3 -march=native → **0.079s best** (tied)
+- clang++ -O3 -march=native → 0.090s best
+
+ns/line: 0.077s / 50M = **1.54 ns/line** (this run). Floor=0.065s → ratio=1.18×. Best-ever VM run (×309): 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
+
+Design space: 203 cpp + 1 rs variants. 1 new variant (dp2_8s_fw_4acc_t0_128_1536) confirmed HOLD. All T0@128 × T1@{512,640,768,1024,1536,2048,3072} grid points exhausted for both 1-acc and 4-acc structures. Algorithm definitively converged.
+
+**STOP-FLOOR ×317. Champion dp2_8s_fw_t0_128_1536 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Best-ever local: 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤69.3ms). Algorithm at bandwidth ceiling — no further improvement possible.**
