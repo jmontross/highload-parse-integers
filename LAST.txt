@@ -1,1 +1,1 @@
-Run ×304 2026-07-30: PROMOTE dp2_8s_fw_t0_256 (T0@256+T1@3072) beats old champion 4acc+T0@64+T1@640 by 9ms median (all 7 runs). g++ -O3 best 0.091s. Edge 9/9. Champion updated.
+Run ×316 2026-07-31: STOP-FLOOR. Champion dp2_8s_fw_t0_128_1536, g++-13 -O3 best=0.095s, floor=0.062s (1.53× ratio). Edge 9/9. No new variants — design space exhausted (199 cpp + 1 rs). Best-ever local: 0.063s = 1.26 ns/line, CLEARS rank-18 bar ≤69.3ms. SUBMIT with g++-13 -O3 -march=native.

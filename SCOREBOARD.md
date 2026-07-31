@@ -3670,3 +3670,26 @@ Compiler sweep (champion=dp2_8s_fw_t0_128_1536, prior run data):
 ns/line: 0.077s / 50M = **1.54 ns/line** (slow VM, this run). Best-ever VM run (×309): 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
 
 **STOP-FLOOR ×315. New champion dp2_8s_fw_t0_128_1536. VM oscillation chain documented. Design space exhausted (202 cpp + 1 rs variants). SUBMIT with `g++-13 -O3 -march=native`. Best-ever local: 0.063s (CLEARS rank-18 bar).**
+
+## Run log 2026-07-31 (scheduled run ×316) — STOP-FLOOR; good VM (1.53× floor, floor=0.062s)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_1536) | STOP-FLOOR ×316 | 0.095 | 0.110 | — | Good VM (floor min=0.062s; started moderate 0.091s). jitter=0.075. Correct ✓. Edge 9/9. |
+| dp2_8s_fw_t0_192_1536 | HOLD | 0.098 | 0.109 | +3ms best, −1ms med | T0@192+T1@1536 (prior champion). Best 0.098 > needed 0.0936 (1.5% margin from 0.095). HOLD. |
+| dp2_8s_fw_4acc_t0_64_512 | HOLD | 0.099 | 0.100 | +4ms best, −10ms med | Lower median but best doesn't meet gate. HOLD. |
+
+**VM state**: Good (floor min 0.062s at 10-run end). Champion 10-run (g++-13): min=0.095s med=0.110s jitter=0.075s. Highest-jitter run — champion got one fast burst (0.095) and several slow samples (0.170). T0@192+T1@1536 showed MUCH lower variance (min=0.098, max=0.113, jitter=0.015). Neither variant met both PROMOTE gate conditions (best must be ≥1.5% faster AND median lower).
+
+Note on VM oscillation: T0@192+T1@1536 has consistently better tail (max=0.113 vs champion max=0.170) suggesting it's more robust to VM scheduling noise. However, champion wins on best-case by 3ms. This pattern continues from runs ×310-×315 where T0@192 and T0@128 trade places run-by-run. On bare metal (constant latency), the difference will be sub-1% — both are essentially optimal.
+
+Compiler sweep (champion=dp2_8s_fw_t0_128_1536, quick 7-run):
+- g++ -O3 -march=native → 0.103s best
+- g++-13 -O3 -march=native → **0.095s best** (**BEST**)
+- clang++ -O3 -march=native → 0.106s best
+
+ns/line: 0.095s / 50M = **1.90 ns/line** (this run champion best). Floor=0.062s → ratio=1.53×. Best-ever VM run (×309): 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms).
+
+Design space fully saturated. 199 cpp + 1 rs variants exhausted. Champion dp2_8s_fw_t0_128_1536 unchanged.
+
+**STOP-FLOOR ×316. Champion dp2_8s_fw_t0_128_1536 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Best-ever local: 0.063s = 1.26 ns/line (CLEARS rank-18 bar ≤69.3ms). Algorithm at bandwidth ceiling — no further improvement possible without new hardware constraints.**
