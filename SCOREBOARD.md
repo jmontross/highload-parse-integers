@@ -3826,3 +3826,49 @@ Champion best (g++-13, confirmation): **0.052s = 1.04 ns/line** (this VM). Rank-
 No new variants created. Design space: 207 cpp + 1 rs (exhausted). Champion dp2_8s_fw_t0_128_512 unchanged.
 
 **STOP-FLOOR ×323. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Best local this run: 0.052s = 1.04 ns/line (CLEARS rank-18 bar ≤69.3ms). Algorithm at bandwidth ceiling.**
+
+## Run log 2026-08-01 (scheduled run ×324) — STOP-FLOOR; moderate VM; g++ -O3 best
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×324 | 0.075 | ~0.080 | — | Direct 5-pass (moderate VM, floor≈0.068s). Ratio=1.10×. Correct ✓. Edge 9/9. |
+
+No new variants. Design space: 207 cpp + 1 rs (exhausted). Best-ever: 0.052s = 1.04 ns/line (run ×323).
+
+**STOP-FLOOR ×324. SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-08-01 (scheduled run ×325) — PROMOTE→HOLD; VM oscillation; STOP-FLOOR
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×325 | ~0.072 | ~0.078 | — | Direct confirm (moderate VM). Correct ✓. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_1536 (existing) | PROMOTE→HOLD | ~0.072 | ~0.075 | ~tied | Tied on min in direct confirm; champion better median → HOLD. VM oscillation. |
+
+**STOP-FLOOR ×325. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-08-01 (scheduled run ×326) — STOP-FLOOR; slow-ish VM; g++-13 -Ofast best
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×326 | 0.095 | 0.099 | — | 7-sample direct (moderate VM, floor=0.065–0.068s). Ratio=1.46×. Correct ✓. Edge 9/9. |
+
+Compiler sweep (3-sample): g++-13 -Ofast -march=native -funroll-loops → 0.095s BEST. No new variants. Design space: 207 cpp + 1 rs (exhausted). Best-ever: 0.052s = 1.04 ns/line (run ×323).
+
+**STOP-FLOOR ×326. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`.**
+
+## Run log 2026-08-01 (scheduled run ×327) — PROMOTE→HOLD (confirmation: median regressed); STOP-FLOOR; very slow VM
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×327 | 0.089 | 0.094 | — | Initial 5-pass direct (slow VM, floor=0.087s). Ratio=1.02×. Correct ✓. Edge 9/9. |
+| dp2_8s_fw_t0_192_640 (existing) | PROMOTE→HOLD (reverted) | 0.076 | 0.083 | −4% best | Background run.sh PROMOTE gate fired (0.076 < need=0.0778 ✓, med=0.083 < 0.085 ✓, edge 9/9 ✓). Confirmation 5-pass interleaved (g++-13 -O3): new=82ms/87ms-med vs old=84ms/86ms-med. Best marginally better (+2.4%) but MEDIAN WORSE (87>86). HOLD → reverted. |
+
+**VM state**: Very slow — floor (cat > /dev/null) = 87–91ms; champion best=89ms → ratio=1.02× floor. AT bandwidth ceiling.
+
+Confirmation analysis: run.sh PROMOTE based on timings where variant got lucky slot (0.076s vs champion 0.079s). In 5-round interleaved confirmation: new best=82ms median=87ms; old best=84ms median=86ms. Median HIGHER for new variant → HOLD. Champion dp2_8s_fw_t0_128_512 unchanged.
+
+dp2_8s_fw_t0_192_640 (T0@192B + T1@640B) marginally different prefetch distances from champion (T0@128B + T1@512B) — both within noise on this VM. File kept in variants/ for reference.
+
+No new variants. Design space: 207 cpp + 1 rs (exhausted). Best-ever: 0.052s = 1.04 ns/line (run ×323), CLEARS rank-18 bar ≤69.3ms.
+
+**STOP-FLOOR ×327. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
