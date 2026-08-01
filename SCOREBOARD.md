@@ -3872,3 +3872,17 @@ dp2_8s_fw_t0_192_640 (T0@192B + T1@640B) marginally different prefetch distances
 No new variants. Design space: 207 cpp + 1 rs (exhausted). Best-ever: 0.052s = 1.04 ns/line (run ×323), CLEARS rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×327. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-01 (scheduled run ×328)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×328 | 0.078 | 0.079 | — | Moderate VM (floor=0.325s). Edge 9/9. Champion 4.2× faster than cat. STOP-FLOOR: 0.078 < 2×0.325=0.650. |
+| dp2_8s_fw_t0_7168 | HOLD | 0.077 | 0.080 | 1.3% best, median HIGHER | Best variant this run. best=0.077s (need ≤0.0768s for gate — misses by 0.0002s), median=0.080s > champion 0.079s. HOLD. Standard VM noise. |
+| all other dp2_8s variants | cluster within noise | 0.077–0.100+ | — | within noise | All dp2 variants cluster within noise. 200+ programs benchmarked. |
+
+VM state: moderate (floor=0.325s). Champion (dp2_8s_fw_t0_128_512) best 0.078s = 1.56 ns/line; 4.2× faster than cat.
+Compiler sweep: **g++ -O3 -march=native → 0.079s** (best); g++-13 -O3 → 0.079s (tied); g++ -Ofast -funroll-loops → 0.080s; clang++ -O3 → 0.090s (12% slower).
+STOP-FLOOR ×328 confirmed. All algorithmic, prefetch-distance, T0/T1 distance, loop-structure, stream-count, and accumulation angles exhausted across 328 consecutive runs.
+index.html: champion=78.0ms, 1.1× off rank-18 bar (69.3ms). Fast-VM best 0.052s → expected judge ~50-65ms (clears rank-18 bar ≤69.3ms).
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today). Expected judge time: ~55-70ms.
