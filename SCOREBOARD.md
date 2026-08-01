@@ -3889,3 +3889,17 @@ Compiler sweep: **g++ -O3 -march=native → 0.079s** (best); g++-13 -O3 → 0.07
 STOP-FLOOR ×328 confirmed. All algorithmic, prefetch-distance, T0/T1 distance, loop-structure, stream-count, and accumulation angles exhausted across 328 consecutive runs.
 index.html: champion=78.0ms, 1.1× off rank-18 bar (69.3ms). Fast-VM best 0.052s → expected judge ~50-65ms (clears rank-18 bar ≤69.3ms).
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best today). Expected judge time: ~55-70ms.
+
+## Run log 2026-08-01 (scheduled run ×329)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×329 | 0.078 | 0.082 | — | Moderate VM (floor=0.400s). Edge 9/9. Champion 5.1× faster than cat. STOP-FLOOR: 0.078 < 2×0.400=0.800. |
+| dp2_8s_fw_4acc_t0_128_512 (NEW) | HOLD | 0.082 | 0.083 | +5% best (SLOWER) | Closes final untried grid point: 4acc + T0@128B + T1@512B (judge-tuned). Identical prefetch to champion, just 4 independent u16 accumulators. Beat/tied champion: No — 0.082 vs champion 0.078. Extra register pressure from 4 accumulators outweighs dependency-chain benefit. HOLD. |
+| dp2_8s_fw_2w_2048 (existing) | HOLD | 0.078 | 0.083 | 0.0% best (tied) | Best non-champion this run. Same best time as champion (0.078s) but gate requires strictly beating champion median. Within noise → HOLD. |
+
+VM state: moderate (floor=0.400s). Champion best 0.078s = 1.56 ns/line; 5.1× faster than cat.
+STOP-FLOOR ×329 confirmed. dp2_8s_fw_4acc_t0_128_512 (the last untried 4acc×T0@128 grid point) confirmed slower — 4acc register pressure outweighs benefit at this competition level.
+Design space: 208 cpp + 1 rs. All angles exhausted. Algorithm is memory-bound (champion < 2× cat floor).
+index.html: champion=78.0ms, 1.1× off rank-18 bar (69.3ms). Fast-VM best 0.052s → expected judge ~50-65ms (clears rank-18 bar).
+**STOP-FLOOR ×329. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -O3 -march=native`.**
