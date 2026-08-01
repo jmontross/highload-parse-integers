@@ -3796,3 +3796,29 @@ No new variants created. Design space: 207 cpp + 1 rs (exhausted). All Change A 
 ns/line: 0.076s / 50M = **1.52 ns/line** (this run champion best). Real floor=0.069s → ratio=1.10×. Best-ever VM run (×321): 0.055s = 1.10 ns/line (CLEARS rank-18 bar ≤1.39 ns/line = 69.3ms). Expected judge time: ~55-70ms on bare metal.
 
 **STOP-FLOOR ×322. Champion dp2_8s_fw_t0_128_512 (in file; judge-tuned T1@512). SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (new best compiler). index.html: 76.0ms (moderate VM). Design space: 207 cpp + 1 rs. Algorithm at bandwidth ceiling — no further improvement possible.**
+
+## Run log 2026-08-01 (scheduled run ×323) — PROMOTE→HOLD (confirmation revert); VM oscillation; g++-13 best
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×323 | 0.069 | 0.070 | — | Full run (RUNS=3, floor=0.706s). Correct ✓. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_896 (existing) | PROMOTE→HOLD (reverted) | 0.051 | 0.054 | −26% best, −23% med | PROMOTE gate fired in full run (0.051 < need=0.068 ✓, med=0.054 < 0.070 ✓). Confirmation 7-round interleaved (g++-13): both tied at min=0.052s — HOLD. Classic VM oscillation (champion got slow timeslot in full run). Not promoted. |
+
+**VM state**: Slow (floor=0.706s under compile load for 207-variant build). Champion 7-round confirmation (g++-13): min=0.052s, med=0.068s. dp2_8s_fw_4acc_t0_64_896 7-round: min=0.052s, med=0.065s. Both effectively tied.
+
+Confirmation analysis: Full run gate fired due to VM lottery — champion got 0.069s best while variant got 0.051s. In equal-conditions 7-round interleaved both reached 0.052s min (g++-13). Gate requires best_variant ≤ 0.985 × best_champ = 0.0512s; variant got 0.0520s → HOLD by 0.0008s. Promotion correctly reverted.
+
+Compiler sweep (run.sh, champion=dp2_8s_fw_t0_128_512):
+- g++ -O3 -march=native → 0.067s best
+- g++ -Ofast -march=native -funroll-loops → 0.071s best
+- **g++-13 -O3 -march=native → 0.056s best** ← **BEST**
+- g++-13 -Ofast -march=native -funroll-loops → 0.058s best
+- clang++ -O3 -march=native → 0.063s best
+- clang++ -Ofast -march=native -funroll-loops → 0.060s best
+→ **submit under: g++-13 -O3 -march=native** (consistent best across runs)
+
+Champion best (g++-13, confirmation): **0.052s = 1.04 ns/line** (this VM). Rank-18 bar: 1.39 ns/line = 69.3ms. CLEARS rank-18 bar by 33%.
+
+No new variants created. Design space: 207 cpp + 1 rs (exhausted). Champion dp2_8s_fw_t0_128_512 unchanged.
+
+**STOP-FLOOR ×323. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Best local this run: 0.052s = 1.04 ns/line (CLEARS rank-18 bar ≤69.3ms). Algorithm at bandwidth ceiling.**
