@@ -4096,3 +4096,22 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=65.0ms, **CLEARS rank-18 bar (65.0ms ≤ 69.3ms)** — 6.1% below the bar.
 
 **STOP-FLOOR ×339. Champion dp2_8s_fw_t0_256_768 PROMOTED. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted. Champion clears rank-18 bar.**
+
+## Run log 2026-08-02 (scheduled run ×340) — STOP-FLOOR; very fast VM; edge 9/9; bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_256_768 | STOP-FLOOR ×340 | 0.067 | 0.069 | — | Fast VM (floor min=0.071s). Edge 9/9. Correct (53687387166542798). 0.067/0.071=0.94× floor — champion faster than cat (warm huge-page TLB effect). Rank-18 bar: CLEARS. |
+
+VM state: very fast (floor min=0.071s, med=0.073s). Champion 7-sample interleaved: best=0.067s, med=0.069s = 1.38 ns/line. STOP-FLOOR: 0.067 < 2×0.071=0.142 ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion beats or ties floor on most samples — MAP_POPULATE + MADV_COLLAPSE + MADV_HUGEPAGE eliminates TLB fault overhead that `cat > /dev/null` still pays for cold pages.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → **0.070s best**; g++-13 -O3 -march=native → **0.070s best** (tied); clang++ -O3 -march=native → 0.076s. **Best: g++ or g++-13 -O3 -march=native → 0.070s = 1.40 ns/line.**
+
+No new variants created. Design space: 210 cpp + 1 rs — fully exhausted. All algorithmic, prefetch-distance, stream-count, accumulation angles tried across 340 consecutive scheduled runs.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+index.html: champion=67.0ms, **CLEARS rank-18 bar (67.0ms ≤ 69.3ms)** — 3.3% below the bar.
+
+**STOP-FLOOR ×340. Champion dp2_8s_fw_t0_256_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
