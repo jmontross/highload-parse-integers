@@ -3935,3 +3935,17 @@ No new variants. Design space: 208 cpp + 1 rs (fully exhausted). Both Change A (
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
 
 **STOP-FLOOR ×331. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×332) — STOP-FLOOR; two passes; edge 9/9; bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×332 | 0.075 | 0.077 | — | Two-pass run. Pass 1: moderate VM (floor=0.247s), best=0.075s, med=0.077s. Pass 2: slow cat (floor=0.632s), best=0.076s, med=0.078s. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_2048 | HOLD | 0.074 | 0.075 | 1.3% best, median lower | Pass 1 best variant: 0.074s best (need ≤0.0739s — misses by 0.0001s), median 0.075s < 0.077s. Both conditions not simultaneously met; also within noise. HOLD. |
+| dp2_8s_fw_4acc_t0_64_3072 | HOLD | 0.074 | 0.078 | 2.6% best, 0% median | Pass 2 best variant: 0.074s best (need ≤0.0749s — met), median 0.078s = champion 0.078s (not strictly lower). HOLD. |
+
+VM state: moderate (pass 1 floor=0.247s) → slow cat (pass 2 floor=0.632s). Champion best 0.075s = 1.50 ns/line; STOP-FLOOR both passes.
+BREAKTHROUGH DIRECTIVE note: stuchlik_digitplace.cpp and stuchlik_8stream.cpp both exist and verified correct. Champion dp2_8s_fw_t0_128_512 IS the full Change A + Change B implementation. Both 4acc variants (t0_64_2048 and t0_64_3072) show 0.074s best but fail the gate (best margin just misses by 0.0001s, or median tied); standard VM noise. Design space: 208 cpp + 1 rs — fully exhausted. No new variants created.
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+index.html: champion=76.0ms, 1.1× off rank-18 bar (69.3ms).
+**STOP-FLOOR ×332. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
