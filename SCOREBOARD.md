@@ -3967,3 +3967,20 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=95.0ms (moderate VM today).
 
 **STOP-FLOOR ×333. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×334) — STOP-FLOOR; fast VM; edge 9/9; bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×334 | 0.065 | 0.070 | — | Fast VM (floor min=0.068s). Edge 9/9. Champion best 0.065s < 2×0.068=0.136. AT bandwidth ceiling. |
+
+VM state: fast (floor min=0.068s, med≈0.074s). Champion 5-sample: best=0.065s, med=0.070s = 1.30 ns/line. STOP-FLOOR: 0.065 < 2×0.068=0.136 ✓. Correct (53687387166542798). Edge: 9/9.
+
+Compiler sweep (3 samples per compiler): g++ -O3 -march=native → 0.063s best; g++-13 -O3 -march=native → **0.057s best** (today's fastest); g++ -Ofast -march=native -funroll-loops → 0.058s best; clang++ -O3 → 0.066s best. **Best: g++-13 -O3 -march=native → 0.057s = 1.14 ns/line.**
+
+No new variants. Design space: 208 cpp + 1 rs (fully exhausted). Both Change A (pshufb digit-place accumulation) and Change B (8 independent spatial streams + T0/T1 prefetch) implemented in champion since run ×280+. Algorithm at bandwidth ceiling.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+Today's compiler-sweep best: **0.057s with g++-13 -O3 -march=native** = 1.14 ns/line.
+
+**STOP-FLOOR ×334. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
