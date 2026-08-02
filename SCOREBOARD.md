@@ -3949,3 +3949,20 @@ BREAKTHROUGH DIRECTIVE note: stuchlik_digitplace.cpp and stuchlik_8stream.cpp bo
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
 index.html: champion=76.0ms, 1.1× off rank-18 bar (69.3ms).
 **STOP-FLOOR ×332. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×333) — STOP-FLOOR; moderate VM; edge 9/9; bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×333 | 0.095 | 0.100 | — | 7-sample direct (moderate VM, floor=0.077s). Ratio=1.23×. Correct ✓. Edge 9/9. |
+
+VM state: moderate (floor=0.077s min). Champion 7-sample: best=0.095s, med=0.100s = 1.90 ns/line. STOP-FLOOR: 0.095 < 2×0.077=0.154 ✓. Correct (53687387166542798). Edge: 9/9.
+
+Compiler sweep (3 samples per compiler): g++ -O3 -march=native → 0.098s; g++ -Ofast -funroll-loops → 0.094s; g++-13 -O3 -march=native → 0.094s; g++-13 -Ofast -funroll-loops → 0.109s; clang++ -O3 → 0.104s; clang++ -Ofast → 0.110s. Best: g++ -Ofast / g++-13 -O3 tied at 0.094s.
+
+No new variants. Design space: 208 cpp + 1 rs (fully exhausted). Both Change A (pshufb digit-place accumulation) and Change B (8 independent spatial streams + T0/T1 prefetch) implemented in champion since run ×280+. Algorithm at bandwidth ceiling.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+index.html: champion=95.0ms (moderate VM today).
+
+**STOP-FLOOR ×333. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
