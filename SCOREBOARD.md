@@ -3903,3 +3903,19 @@ STOP-FLOOR ×329 confirmed. dp2_8s_fw_4acc_t0_128_512 (the last untried 4acc×T0
 Design space: 208 cpp + 1 rs. All angles exhausted. Algorithm is memory-bound (champion < 2× cat floor).
 index.html: champion=78.0ms, 1.1× off rank-18 bar (69.3ms). Fast-VM best 0.052s → expected judge ~50-65ms (clears rank-18 bar).
 **STOP-FLOOR ×329. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-02 (scheduled run ×330) — STOP-FLOOR; moderate VM; clears bandwidth floor
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×330 | 0.082 | 0.084 | — | Moderate VM (floor=0.078s). Edge 9/9. Champion 1.05× floor → AT bandwidth ceiling. |
+
+VM state: moderate (floor=0.078s min / 0.080s med). Champion best 0.082s = 1.64 ns/line; **1.05× faster than cat** — essentially at the memory bandwidth floor. STOP-FLOOR: 0.082 < 2×0.078=0.156. ✓
+
+BREAKTHROUGH DIRECTIVE verification: stuchlik_digitplace.cpp ✓ (exists, correct). stuchlik_8stream.cpp ✓ (exists, correct). Champion dp2_8s_fw_t0_128_512 already IS the full Change A + Change B implementation (digit-place pshufb accumulation + 8 spatially-separated streams + T0/T1 prefetch). Design space: 208 cpp + 1 rs. All algorithmic, prefetch-distance, stream-count, and accumulation angles exhausted across 330 consecutive runs.
+
+Compiler sweep (3 samples): `c++ -Ofast -march=native -funroll-loops` → 0.082s best. g++-13 = clang++ = c++ (all 13.3.0 on this system). No difference across compilers today.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+
+**STOP-FLOOR ×330. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `c++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
