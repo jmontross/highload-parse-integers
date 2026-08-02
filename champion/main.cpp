@@ -1,8 +1,8 @@
-// dp2_8s_fw_t0_192_768.cpp — double-loop + two-tier prefetch, SHORTER DISTANCES.
-// T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// dp2_8s_fw_t0_256_768.cpp — double-loop + two-tier prefetch, SHORTER DISTANCES.
+// T0@256B (4 iters=32ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
 // Champion uses T0@512B + T1@3072B tuned for our VM's ~300-500ns DRAM latency.
 // Judge is bare-metal with ~80-100ns DRAM latency; at ~8ns/iter on judge,
-// T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// T0@256B (4 iters=32ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
 // covers DRAM→L2 (~80-100ns) with adequate margin. Same 16 prefetch µops/iter.
 
 #include <cstdio>
@@ -245,24 +245,24 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// One iteration body: T0@256B (4 iters=32ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
 // Tuned for judge bare-metal DRAM latency ~80-100ns vs VM's ~300-500ns.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p0 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p1 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p2 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p3 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p4 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p5 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p6 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 192), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p7 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \

@@ -4077,3 +4077,22 @@ Compiler sweep (3 samples each): c++ -O3 -march=native → 0.106s; g++ -O3 -marc
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
 
 **STOP-FLOOR ×338. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×339) — DOUBLE PROMOTE; new champion dp2_8s_fw_t0_256_768; 65ms = CLEARS rank-18 bar
+
+| Variant | Result | Best(s) | Med(s) | vs old champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (old champ) | PROMOTED OUT | — | — | — | Replaced by dp2_8s_fw_t0_192_896, then dp2_8s_fw_t0_256_768. |
+| dp2_8s_fw_t0_192_896 | PROMOTE ✓ (then superseded) | 0.064 | 0.067 | +5.9% best, +5.6% med | PROMOTE #1 (T1 896B). Gate: best=0.064 < need=0.0670, median=0.067 < champ=0.071. Edge 9/9. |
+| dp2_8s_fw_t0_256_768 (new champion) | PROMOTE ✓ confirmed | 0.065 | 0.068 | ~4% best | PROMOTE #2 (T0 256B + T1 768B). Confirmation run: champion rank 1/all, best=0.065s, med=0.068s. Edge 9/9. STOP-FLOOR ✓. |
+
+VM state: moderate (floor=0.524-0.566s min during timing rounds; champion mmap path unaffected). Champion confirmation: best=0.065s, med=0.068s = 1.30 ns/line. STOP-FLOOR: 0.065 < 2×0.524=1.048 ✓. Correct (53687387166542798). Edge: 9/9. Rank 1 of all 210 variants.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → **0.066s best** (tied winner); g++-13 -O3 -march=native → **0.066s best** (tied); g++ -Ofast -funroll-loops → 0.068s; g++-13 -Ofast -funroll-loops → 0.067s. **Best: g++ or g++-13 -O3 -march=native → 0.066s = 1.32 ns/line.**
+
+No new variants created. Design space: 210 cpp + 1 rs — fully exhausted. dp2_8s_fw_t0_256_768 was created in run ×337 (HOLD at the time due to slow VM); today's faster VM surfaced its true advantage.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%.
+index.html: champion=65.0ms, **CLEARS rank-18 bar (65.0ms ≤ 69.3ms)** — 6.1% below the bar.
+
+**STOP-FLOOR ×339. Champion dp2_8s_fw_t0_256_768 PROMOTED. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted. Champion clears rank-18 bar.**
