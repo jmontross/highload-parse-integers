@@ -4019,3 +4019,21 @@ BREAKTHROUGH DIRECTIVE note: stuchlik_digitplace.cpp ✓ (exists, correct). stuc
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
 
 **STOP-FLOOR ×336. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×336 — PROMOTE follow-up) — PROMOTED dp2_8s_fw_t0_192_768
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_128_512 (old champion) | PROMOTED OUT | 0.077 | 0.081 | — | Full run.sh: 5 interleaved rounds. Floor=0.259s (slow VM during build). |
+| dp2_8s_fw_t0_192_768 (new champion) | PROMOTE ✓ | 0.073 | 0.075 | 5.2% best / 7.4% median | PROMOTE verdict from run.sh gate. Edge 9/9. Confirmation run: ties within noise. |
+
+**PROMOTED: dp2_8s_fw_t0_192_768 → champion/main.cpp**
+
+Changes: T0 prefetch distance 128B→192B, T1 distance 512B→768B. Tuned for judge bare-metal DRAM latency (~80-100ns): T1@768B = 12 iters ≈ 96ns, vs T1@512B = 8 iters ≈ 64ns (slightly short on bare-metal).
+
+Confirmation run (fast VM, floor=0.069s): new champion 0.075s best = 1.07× floor. Edge 9/9. Correct ✓.
+Compiler sweep (3 samples each): g++ -O3 -march=native → **0.074s best** (winner); g++ -Ofast → 0.076s; g++-13 -O3 → 0.076s; clang++ -O3 → 0.083s.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+
+**STOP-FLOOR: 0.074s < 2×0.069s=0.138s ✓. New champion dp2_8s_fw_t0_192_768 at bandwidth ceiling. SUBMIT with `g++ -O3 -march=native`.**

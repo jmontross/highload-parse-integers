@@ -1,8 +1,9 @@
-// dp2_8s_fw_t0_128_512.cpp — T0@128B + T1@512B, judge bare-metal DRAM tuned.
-// T0@128B = 2 iters = ~60cy, comfortably covers L2->L1 (~15cy) latency.
-// T1@512B = 8 iters = ~240cy = ~80ns at 3GHz — exactly covers bare-metal DRAM latency.
-// On VM (~300-400ns DRAM), T1@512 is too short → slower; judge candidate only.
-// Same 16 prefetch uops/iter as champion; tighter T0 vs dp2_8s_fw_t0_256_512.
+// dp2_8s_fw_t0_192_768.cpp — double-loop + two-tier prefetch, SHORTER DISTANCES.
+// T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// Champion uses T0@512B + T1@3072B tuned for our VM's ~300-500ns DRAM latency.
+// Judge is bare-metal with ~80-100ns DRAM latency; at ~8ns/iter on judge,
+// T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// covers DRAM→L2 (~80-100ns) with adequate margin. Same 16 prefetch µops/iter.
 
 #include <cstdio>
 #include <cstdint>
@@ -244,24 +245,24 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@128B (2 iters = ~60cy, comfortably covers L2->L1 ~15cy latency).
-// Very tight distances tuned for ~80ns bare-metal DRAM latency.
+// One iteration body: T0@192B (3 iters=24ns, L1) + T1@768B (12 iters=96ns, matches bare-metal ~80-100ns DRAM).
+// Tuned for judge bare-metal DRAM latency ~80-100ns vs VM's ~300-500ns.
 #define ITER_BODY(PFD) \
-    _mm_prefetch((const char*)(p0 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p0 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p1 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p2 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p3 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p4 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p5 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p6 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + 128), _MM_HINT_T0); \
+    _mm_prefetch((const char*)(p7 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
@@ -338,13 +339,13 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(512)
+                ITER_BODY(768)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(512)
+            ITER_BODY(768)
         }
         widen_u16(acc_u16, wide_acc);
 
