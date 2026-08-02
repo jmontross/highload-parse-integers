@@ -4057,3 +4057,23 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=81.0ms, 1.2× off rank-18 bar (69.3ms).
 
 **STOP-FLOOR ×337. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×338) — STOP-FLOOR; fast VM; edge 9/9; bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_192_768 | STOP-FLOOR ×338 | 0.093 | 0.096 | — | Fast VM (floor min=0.062s). Edge 9/9. Ratio=1.50×. Correct ✓. |
+| dp2_8s_fw_t0_128_512 | HOLD | 0.093 | 0.096 | 0% best / 0% med | Tied with champion on both metrics. HOLD. |
+| dp2_8s_fw_nta | HOLD | 0.221 | — | +138% slower | NTA prefetch confirmed very slow (bypasses L2/L3 wastefully). |
+| dp2_8s_fw_t0only | HOLD | 0.110 | — | +18% slower | T0-only prefetch (no T1) is slower. |
+| dp2_16s_fw_t0_64_512 | HOLD | 0.097 | — | +4% slower | 16 streams still slower than 8 (register pressure). |
+
+VM state: fast (floor=0.062s min / 0.086s med — some jitter). Champion: best=0.093s, med=0.096s = 1.86 ns/line. STOP-FLOOR: 0.093 < 2×0.062=0.124 ✓. Correct (53687387166542798). Edge: 9/9.
+
+No new variants created. Design space: 209 cpp + 1 rs — fully exhausted. All T0×T1 prefetch-distance grid points, stream counts (8/16), accumulation strategies (u8-tree, 4acc, 2w), NTA prefetch, and loop structures tried across 338 consecutive STOP-FLOOR runs.
+
+Compiler sweep (3 samples each): c++ -O3 -march=native → 0.106s; g++ -O3 -march=native → 0.099s; g++-13 -O3 -march=native → 0.104s; g++ -Ofast -funroll-loops → 0.104s; clang++ -O3 → 0.113s. **Best today: g++ -O3 -march=native → 0.099s.** (Note: 3-sample variance is significant on this VM; direct champion benchmark with 5 samples gives 0.093s best.)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+
+**STOP-FLOOR ×338. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
