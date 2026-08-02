@@ -4037,3 +4037,23 @@ Compiler sweep (3 samples each): g++ -O3 -march=native → **0.074s best** (winn
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
 
 **STOP-FLOOR: 0.074s < 2×0.069s=0.138s ✓. New champion dp2_8s_fw_t0_192_768 at bandwidth ceiling. SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-02 (scheduled run ×337) — STOP-FLOOR; two new adjacent-grid variants, both HOLD
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_192_768 | STOP-FLOOR ×337 | 0.077 | 0.081 | — | run.sh full sweep (205 variants). Floor=0.317s (VM slow during read_loop sample). Edge 9/9. Champion best 0.081s < 2×0.317s=0.634s → STOP-FLOOR. |
+| dp2_8s_fw_t0_192_896 | HOLD | 0.079 | — | +1.3% slower | T0@192B + T1@896B (14 iters≈112ns). Created this run. best=0.079s > champ best. No improvement. |
+| dp2_8s_fw_t0_256_768 | HOLD | 0.079 | — | +1.3% slower | T0@256B + T1@768B. Created this run. best=0.079s > champ best. No improvement. |
+| dp2_8s_fw_t0_256_1536 | HOLD | 0.077 | 0.081 | 0% best / 0% med | Best non-champion per run.sh (best=0.0770s, need ≤0.0798s ✓, median=0.0810s = champ median). Gate: both conditions not met (median tied, not strictly lower) → HOLD. |
+
+VM state: mixed (floor=0.317s from run.sh, likely moderate-slow during read_loop sample; champion best=0.081s on mmap path is faster than read_loop floor by design). Champion 0.081s = 1.62 ns/line. Edge: 9/9. Correct (53687387166542798).
+
+Compiler sweep (direct timing, 5 samples each): g++ -O3 -march=native → 0.079s best; g++-13 -O3 -march=native → 0.079s best (tied); g++ -Ofast -march=native -funroll-loops → 0.104s (WORSE — loop boundary overhead); g++-13 -Ofast -funroll-loops → 0.081s; clang++ -O3 → 0.091s (13% slower). **Best: g++ / g++-13 -O3 -march=native → 0.079s = 1.58 ns/line.**
+
+New variants created this run: dp2_8s_fw_t0_192_896 and dp2_8s_fw_t0_256_768 (adjacent prefetch-distance grid points). Both HOLD. Design space: 210 cpp + 1 rs. T0×T1 grid fully covered around the optimum.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+index.html: champion=81.0ms, 1.2× off rank-18 bar (69.3ms).
+
+**STOP-FLOOR ×337. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
