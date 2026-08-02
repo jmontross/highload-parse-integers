@@ -3984,3 +3984,22 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 Today's compiler-sweep best: **0.057s with g++-13 -O3 -march=native** = 1.14 ns/line.
 
 **STOP-FLOOR ×334. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-02 (scheduled run ×335) — STOP-FLOOR; REMARKABLE: champion = bandwidth floor
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_128_512 | STOP-FLOOR ×335 | 0.069 | 0.071 | — | Fast VM (floor min=0.069s). Edge 9/9. Champion best = floor min → AT the theoretical bandwidth ceiling (1.00×). |
+
+VM state: fast (floor min=0.069s, med=0.077s). Champion 7-sample: best=0.069s, med=0.071s = 1.38 ns/line. **STOP-FLOOR: 0.069 < 2×0.069=0.138 ✓.** Correct (53687387166542798). Edge: 9/9.
+
+**REMARKABLE**: champion best (0.069s) = floor min (0.069s) → ratio = 1.00× — the algorithm is at the theoretical bandwidth ceiling. Cannot go faster without reading fewer bytes.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → 0.071s; g++-13 -O3 -march=native → 0.071s; g++-13 -Ofast -funroll-loops → 0.071s; clang++ -O3 → 0.080s. **Best: g++ or g++-13 -O3 -march=native → 0.071s.** All within noise of floor.
+
+No new variants. Design space: 208 cpp + 1 rs (fully exhausted). Both Change A (pshufb digit-place accumulation) and Change B (8 independent spatial streams + T0/T1 prefetch) implemented in champion since run ×280+. Algorithm IS the bandwidth floor.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 33%.
+Today's fastest: **0.069s = 1.38 ns/line** (same as cat/bandwidth floor).
+
+**STOP-FLOOR ×335. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm AT bandwidth ceiling (1.00× floor) — nothing left to optimize.**
