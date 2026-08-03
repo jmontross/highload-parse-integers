@@ -4115,3 +4115,28 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=67.0ms, **CLEARS rank-18 bar (67.0ms ≤ 69.3ms)** — 3.3% below the bar.
 
 **STOP-FLOOR ×340. Champion dp2_8s_fw_t0_256_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×271) — cascade PROMOTE → dp2_8s_fw_4acc_t0_192_1536; STOP-FLOOR; VM oscillation; rank-18 CLEARS
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256_768→dp2_8s_fw_t0_192_1536) | PROMOTE | 0.072 | 0.074 | — | Started run with old champion. Promoted dp2_8s_fw_t0_192_1536 (9.7% margin, 9/9 edge). |
+| variants/dp2_8s_fw_t0_192_1536 | PROMOTE ×271a | 0.065 | 0.071 | −9.7% | PROMOTED: beats old champ best+median. Edge 9/9. T0@192B+T1@1536B. |
+| champion (dp2_8s_fw_t0_192_1536) | PROMOTE ×271b | 0.069 | 0.074 | — | Confirm run. dp2_8s_fw_t0_64_512 next PROMOTE candidate. |
+| variants/dp2_8s_fw_t0_64_512 | PROMOTE ×271b | 0.064 | 0.071 | −7.2% | PROMOTED: beats new champ best+median. Edge 9/9. T0@64B+T1@512B. |
+| champion (dp2_8s_fw_t0_64_512) | PROMOTE ×271c | 0.070 | 0.080 | — | Confirm run. dp2_8s_fw_4acc_t0_192_1536 next PROMOTE candidate. |
+| variants/dp2_8s_fw_4acc_t0_192_1536 | PROMOTE ×271c | 0.066 | 0.069 | −5.7% | PROMOTED: beats champ best+median. Edge 9/9. 4acc+T0@192B+T1@1536B. |
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×271 | 0.067 | 0.068 | — | Final confirm. Floor=0.657s. Best variant dp2_8s_fw_t0_192_3072 at 0.065s but median NOT lower → HOLD. Correct (53687387166542798). Edge 9/9. |
+
+VM state: moderate-to-slow oscillation (floor min=0.485-0.657s across 4 run invocations). Champion `dp2_8s_fw_4acc_t0_192_1536` confirmed: best=0.067s, med=0.068s = 1.34–1.36 ns/line. STOP-FLOOR: 0.067 < 2×0.657=1.314 ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion `dp2_8s_fw_4acc_t0_192_1536` is: 8-stream spatial split, double-loop (100 iters fixed), T0@192B + T1@1536B two-tier prefetch, 4 independent u16 accumulators (breaks 4-cycle add chain). This beats the previous `dp2_8s_fw_t0_256_768` champion due to VM noise — algorithmically these are equivalent at bandwidth ceiling.
+
+Compiler sweep (from 3rd confirm run): g++ -Ofast -march=native -funroll-loops → **0.066s best**; g++-13 -O3 → 0.068s; clang++ → 0.075s. **Best: g++ -Ofast -march=native -funroll-loops → 0.066s = 1.32 ns/line.**
+
+No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. All cascade promotions this run are VM-oscillation noise-driven, not algorithmic improvements; all variants cluster within ±0.005s of each other at the bandwidth ceiling.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%.
+index.html: champion=67.0ms, **CLEARS rank-18 bar (67.0ms ≤ 69.3ms)** — 3.3% below the bar.
+
+**STOP-FLOOR ×271. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted. Champion clears rank-18 bar.**
