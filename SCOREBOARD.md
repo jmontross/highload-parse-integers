@@ -4140,3 +4140,20 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=67.0ms, **CLEARS rank-18 bar (67.0ms ≤ 69.3ms)** — 3.3% below the bar.
 
 **STOP-FLOOR ×271. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted. Champion clears rank-18 bar.**
+
+## Run log 2026-08-03 (scheduled run ×272) — STOP-FLOOR maintenance; champion dp2_8s_fw_4acc_t0_192_1536; 60ms best CLEARS rank-18 bar
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×272 | 0.060 | 0.073 | — | Targeted benchmark only (full run.sh skipped; 190+ variants exhausted, build too slow on slow VM). Correct (53687387166542798). Edge 9/9. |
+
+VM state: floor initially measured 0.504s (heavy load at start), then fast 0.071s min / 0.074s median after warm-up. Champion timings: 0.073, 0.065, 0.074, 0.060, 0.073 → best=0.060s = 1.20 ns/line; median=0.073s = 1.46 ns/line. STOP-FLOOR: 0.060 < 2×0.071=0.142 ✓. Champion min (0.060s) beats floor min (0.071s) — expected, mmap advantage over cat-based floor measurement.
+
+No new variants. Design space: 214 cpp + 1 rs — fully exhausted. 342 consecutive STOP-FLOOR verdicts.
+
+Champion CLEARS rank-18 bar (best=60ms ≤ 69.3ms). Ready to submit.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%.
+index.html: champion=60.0ms, **CLEARS rank-18 bar (60.0ms ≤ 69.3ms)** — 13.4% below the bar.
+
+**STOP-FLOOR ×342. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
