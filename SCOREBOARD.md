@@ -4204,3 +4204,23 @@ No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 345 c
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 59ms; champion 81ms; rank-18 bar 69.3ms; champion above bar on this VM, clears on fast VMs).
 
 **STOP-FLOOR ×345. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×346) — STOP-FLOOR maintenance; champion dp2_8s_fw_4acc_t0_192_1536; BREAKTHROUGH DIRECTIVE Changes A+B confirmed done
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×346 | 0.081 | 0.082 | — | g++-13 -O3 -march=native (today's best compiler). Correct (53687387166542798). Edge 9/9. |
+| stuchlik_digitplace (BREAKTHROUGH Change A) | BENCHMARKED | 0.572 | 0.572 | +607% | Confirmed exists; single-stream, no 8-stream MLP. Superseded by dp2 champion. |
+| stuchlik_8stream (BREAKTHROUGH Change B) | BENCHMARKED | 0.190 | 0.192 | +135% | Confirmed exists; older 8-stream variant. Superseded by dp2 champion. |
+
+VM state: moderate (floor min=0.071s, med=0.072s). Champion g++-13 7-sample best=0.081s med=0.082s = 1.62 ns/line. STOP-FLOOR: 0.081 < 2×0.071=0.142 ✓ (1.14× floor). Correct (53687387166542798). Edge: 9/9.
+
+BREAKTHROUGH DIRECTIVE status: COMPLETE. Both Change A (digit-place accumulation) and Change B (8-stream MLP) from the 2026-07-06 directive are fully implemented and superseded by the dp2 champion series. stuchlik_digitplace.cpp implements Change A alone (0.572s — bottlenecked by single-stream memory). stuchlik_8stream.cpp implements Change A+B (0.190s — older variant). The current champion dp2_8s_fw_4acc_t0_192_1536 implements A+B with additional optimizations: 4 independent u16 accumulators, two-tier prefetch T0@192B+T1@1536B, and double-loop structure. No further algorithmic gains remain.
+
+Compiler sweep (7 samples each): g++ -O3 -march=native → 0.082s best; g++-13 -O3 -march=native → **0.081s best** (today's best); g++ -Ofast -march=native -funroll-loops → 0.084s; clang++ -O3 -march=native → 0.091s. **Best: g++-13 -O3 -march=native → 0.081s = 1.62 ns/line.**
+
+No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 346 consecutive STOP-FLOOR verdicts.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 71ms; champion 81ms; rank-18 bar 69.3ms; champion slightly above bar on today's VM, clears on fast VMs).
+
+**STOP-FLOOR ×346. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted. BREAKTHROUGH DIRECTIVE fully implemented.**
