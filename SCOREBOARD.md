@@ -4262,3 +4262,27 @@ Design space: 216 cpp + 1 rs — two new variants added. All major algorithmic a
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 68ms; champion 76ms; rank-18 bar 69.3ms; champion above bar on today's VM, clears on fast VMs at ≤0.067s).
 
 **STOP-FLOOR ×348. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space 216 variants exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×349) — STOP-FLOOR; two new variants (T0@256+T1@1024, T0@192+T1@768); v256_768 re-tested; HOLD; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×349 | 0.057 | 0.071 | — | 13-sample interleaved; confirm 7-sample: 0.069/0.069. STOP-FLOOR: 0.057 < 2×0.069=0.138 ✓. Correct (53687387166542798). Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_256_768 | HOLD (re-test) | 0.056 | 0.068 | −1.75% best / −4.2% med (initial); confirm=0.0 vs champ 0.0 | Re-tested: initial 13 samples showed 1.75% best improvement (above 1.5% gate) but 7-sample confirm shows confirm_min=0.069 vs champ confirm_min=0.069 — tied. VM oscillation. HOLD. Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_256_1024 | HOLD | 0.061 | 0.070 | +7.0% best | NEW: T0@256B + T1@1024B (16 iters, ~107ns). Fills gap between T1@768 and T1@1536 at T0=256. Slower than champion. Grid point exhausted. Edge CORRECT. |
+| variants/dp2_8s_fw_4acc_t0_192_768 | HOLD | 0.060 | 0.069 | +5.3% best | NEW: T0@192B (same as champion) + T1@768B (~84ns). Isolates T1 effect vs champion's T1@1536. Slower than champion. Grid point exhausted. Edge CORRECT. |
+
+VM state: moderate-fast (floor min=0.069s, med=0.077s initially; confirm pass: both champion and v256_768 at 0.069s). Champion 13-sample initial: best=0.057s med=0.071s; 7-sample confirm: best=0.069s med=0.069s — VM settled near floor.
+
+Two new variants created and benchmarked this run:
+1. **dp2_8s_fw_4acc_t0_256_1024**: T0@256B (4-iter lookahead) + T1@1024B (16-iter ~107ns). Fills the gap between T0@256+T1@768 (HOLD, run ×348) and T0@256+T1@2048. Best=0.061 — slower than champion. Exhausted.
+2. **dp2_8s_fw_4acc_t0_192_768**: T0@192B (same as champion) + T1@768B (12-iter ~84ns). Isolates whether T1 distance (768 vs 1536) matters independent of T0. Best=0.060 — slower than champion. Exhausted.
+3. **dp2_8s_fw_4acc_t0_256_768 (re-test)**: Appeared to promote in initial 13-sample pass (1.75% margin), but 7-sample confirm showed tied with champion at 0.069s. VM oscillation false alarm. HOLD confirmed.
+
+T0/T1 grid now fully exhausted at T0@256: T1@512✓, T1@768✓(HOLD), T1@1024✓(HOLD), T1@2048✓, T1@3072✓. All T0 points (64, 128, 192, 256, 512) × all T1 points fully covered. No untried grid combinations remain.
+
+Design space: **218 cpp + 1 rs — fully exhausted.** 349 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented and superseded.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 69ms; champion 57ms initial / 69ms confirm; rank-18 bar 69.3ms; champion on fast passes clears bar).
+
+**STOP-FLOOR ×349. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space 218 variants fully exhausted. No new untried grid points remain.**
