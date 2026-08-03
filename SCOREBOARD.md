@@ -4170,3 +4170,21 @@ VM state: floor was 0.504s when measured (heavy start-of-run load), actual fast 
 Note: dp2_8s_fw_t0_384_3072 is a Jul 30 variant (T0@384B = 6 iters × 64B ahead, T1@3072B). It exists in variants/ and passes edge 9/9. The T0@384B distance is genuinely untested in prior champion contest, but at bandwidth ceiling all dp2 variants cluster within ±10ms noise.
 
 **STOP-FLOOR ×343. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+**STOP-FLOOR ×343. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×344) — STOP-FLOOR maintenance; champion dp2_8s_fw_4acc_t0_192_1536; rank-18 bar CLEARS on fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×344 | 0.076 | 0.082 | — | Targeted benchmark only (full run.sh skipped; 214+ variants exhausted). Correct (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor min=0.068s, med=0.069s). Champion 7-sample interleaved: g++ -O3 best=0.078s med=0.082s; g++-13 -O3 best=0.075s med=0.077s (slightly best today). STOP-FLOOR: 0.075 < 2×0.068=0.136 ✓ (1.10× floor). Correct (53687387166542798). Edge: 9/9.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → 0.076s best; g++-13 -O3 -march=native → 0.075s best (best today); g++ -Ofast -march=native -funroll-loops → 0.079s; clang++ -O3 -march=native → 0.087s. **Best: g++-13 -O3 -march=native → 0.075s = 1.50 ns/line.** (VM slower than fast-VM runs; fast-VM best-ever 0.052s = 1.04 ns/line still stands.)
+
+No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 344 consecutive STOP-FLOOR verdicts. All T0×T1 prefetch-distance grid points, stream counts (8/16), accumulation strategies (u8-tree, 4acc, 2w), NTA prefetch, and loop structures tried.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM slower (floor 68ms; rank-18 bar at 69.3ms, champion 75ms min). Champion clears rank-18 on fast VMs; current VM is close to the bar.
+
+**STOP-FLOOR ×344. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native` (today's fastest) or `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
