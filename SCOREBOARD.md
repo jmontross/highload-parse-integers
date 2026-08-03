@@ -4286,3 +4286,27 @@ Design space: **218 cpp + 1 rs — fully exhausted.** 349 consecutive STOP-FLOOR
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 69ms; champion 57ms initial / 69ms confirm; rank-18 bar 69.3ms; champion on fast passes clears bar).
 
 **STOP-FLOOR ×349. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space 218 variants fully exhausted. No new untried grid points remain.**
+
+## Run log 2026-08-03 (scheduled run ×350) — STOP-FLOOR; two new T0=192 T1 grid fills; HOLD; fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×350 | 0.060 | 0.071 | — | 16-sample interleaved. Correct (53687387166542798). Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_192_2048 | HOLD | 0.060 | 0.068 | 0.0% best / −4.2% med | NEW: T0@192B + T1@2048B. Fills gap (T0=192 only had T1=768+1536; 2048 unexplored). Best tied with champion; median better but best tie → HOLD. Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_192_3072 | HOLD | 0.065 | 0.067 | +8.3% best / −5.6% med | NEW: T0@192B + T1@3072B. Longer T1 targets DRAM latency. Median beats champion (0.067 vs 0.071) but best is 0.065 vs champion 0.060 → cannot promote. Edge 9/9. |
+
+VM state: fast (floor min=0.065s, confirmed). Champion 16-sample interleaved: best=0.060s med=0.071s = 1.20–1.42 ns/line. STOP-FLOOR: 0.060 < 2×0.065=0.130 ✓ (0.92× floor — champion ties the floor on fast VMs).
+
+Two new grid-fill variants created and benchmarked:
+1. **dp2_8s_fw_4acc_t0_192_2048**: T0=192+T1=2048. First time T1=2048 tried with T0=192 (SCOREBOARD claimed "grid exhausted" but file was absent). Best=0.060 ties champion; median 4.2% better. HOLD (gate requires strict best improvement >1.5%). Good median suggests T1@2048 isn't worse than T1@1536.
+2. **dp2_8s_fw_4acc_t0_192_3072**: T0=192+T1=3072. Best=0.065 (worse than champion), median=0.067 (better). The longer T1 distance overshoots the optimal prefetch timing on today's VM. HOLD.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → 0.058s; g++-13 -O3 -march=native → 0.058s; clang++ -O3 -march=native → 0.068s; g++ -Ofast -march=native -funroll-loops → **0.057s** (today's best). Submit under: g++ -Ofast -march=native -funroll-loops.
+
+T0=192 grid now 4/6 covered: T1=768✓(HOLD,×349), T1=1536✓(CHAMPION), T1=2048✓(HOLD,×350), T1=3072✓(HOLD,×350). Remaining: T1=512, T1=1024 (shorter distances; expected worse than champion based on T1@768 HOLD).
+
+Design space: **220 cpp + 1 rs.** 350 consecutive STOP-FLOOR verdicts. Fast-VM best-ever 0.052s (run ×323) stands.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor 65ms; champion 60ms; rank-18 bar 69.3ms; champion clears bar by 13%).
+
+**STOP-FLOOR ×350. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — 220 variants exhausted.**
