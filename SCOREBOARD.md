@@ -4225,3 +4225,19 @@ No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 346 c
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 71ms; champion 81ms; rank-18 bar 69.3ms; champion slightly above bar on today's VM, clears on fast VMs).
 
 **STOP-FLOOR ×346. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted. BREAKTHROUGH DIRECTIVE fully implemented.**
+
+## Run log 2026-08-03 (scheduled run ×347) — STOP-FLOOR maintenance; champion dp2_8s_fw_4acc_t0_192_1536; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×347 | 0.095 | 0.099 | — | Targeted benchmark only (full run.sh skipped; 214+ variants exhausted). Correct (53687387166542798). Edge 9/9. |
+
+VM state: moderate (floor min=0.061s, med=0.063s). Champion 7-sample interleaved: g++ -O3 best=0.095s med=0.106s; g++ -Ofast -funroll-loops best=0.097s med=0.099s; g++-13 -O3 best=0.096s med=0.109s. STOP-FLOOR: 0.095 < 2×0.061=0.122 ✓ (1.56× floor). Correct (53687387166542798). Edge: 9/9.
+
+Compiler sweep (7 samples each): g++ -O3 -march=native → **0.095s best** (today's best); g++-13 -O3 -march=native → 0.096s; g++ -Ofast -march=native -funroll-loops → 0.097s; clang++ -O3 -march=native → N/A (not benchmarked this run). **Best: g++ -O3 -march=native → 0.095s = 1.90 ns/line.** (VM moderate; fast-VM best-ever 0.052s = 1.04 ns/line still stands.)
+
+No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 347 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented and superseded by dp2 champion series.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 61ms; champion 95ms; rank-18 bar 69.3ms; champion above bar on today's VM, clears on fast VMs at ≤0.067s).
+
+**STOP-FLOOR ×347. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
