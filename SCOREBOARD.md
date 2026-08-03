@@ -4242,3 +4242,23 @@ No new variants created. Design space: 214 cpp + 1 rs — fully exhausted. 347 c
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 61ms; champion 95ms; rank-18 bar 69.3ms; champion above bar on today's VM, clears on fast VMs at ≤0.067s).
 
 **STOP-FLOOR ×347. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×348) — STOP-FLOOR; two new variants (T0@256+T1@768, triple-tier T2); HOLD on V1; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×348 | 0.076 | 0.079 | — | 13-sample interleaved benchmark. Correct (53687387166542798). Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_256_768 | HOLD | 0.075 | 0.076 | −1.32% best / −3.80% med | T0@256B+T1@768B+4acc. NEW grid point (T0@256 existed with T1@512/2048/3072; T1@768 with T0@256 never tried). Median clearly better; best margin 1.32% < 1.5% promote gate → HOLD. Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0t1t2 | STOP-FLOOR | 0.078 | 0.080 | +2.6% best / +1.3% med | Triple-tier T0@192B+T1@1536B+T2@8192B. FIRST-EVER T2/PREFETCHT2 trial (none of 214 prior cpp variants used T2). Slower than champion; 2/13 samples spiked to 0.100-0.133s (T2 may cause extra L3 bus transactions). Overhead not justified. Edge 9/9. |
+
+VM state: moderate (floor min=0.068s, med=0.070s). Champion 13-sample interleaved: best=0.076s, med=0.079s = 1.52–1.58 ns/line. STOP-FLOOR: 0.076 < 2×0.068=0.136 ✓ (1.12× floor). Correct (53687387166542798). Edge: 9/9.
+
+Two new variants created and benchmarked this run:
+1. **dp2_8s_fw_4acc_t0_256_768**: T0@256B (4 iter lookahead) + T1@768B (~84ns at 3GHz). Fills grid gap — prior T0@256 variants only tried T1@512/2048/3072, never T1@768. Median 3.8% better than champion; best only 1.32% better (misses 1.5% gate by 0.18%). HOLD. On a fast VM, this might promote.
+2. **dp2_8s_fw_4acc_t0t1t2**: First-ever triple-tier prefetch (T0+T1+T2). T2@8192B to prime L3 before T1 fetch arrives. Theory sound but practice shows 15% spike frequency — T2 likely causes excess bus-tracking entries on Cascade Lake. STOP-FLOOR.
+
+Design space: 216 cpp + 1 rs — two new variants added. All major algorithmic angles (digit-place accumulation, 8-stream MLP, T0/T1 grid, 4acc, T2 tier) now tried.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 68ms; champion 76ms; rank-18 bar 69.3ms; champion above bar on today's VM, clears on fast VMs at ≤0.067s).
+
+**STOP-FLOOR ×348. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space 216 variants exhausted.**
