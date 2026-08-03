@@ -4157,3 +4157,16 @@ Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar 
 index.html: champion=60.0ms, **CLEARS rank-18 bar (60.0ms ≤ 69.3ms)** — 13.4% below the bar.
 
 **STOP-FLOOR ×342. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
+
+## Run log 2026-08-03 (scheduled run ×272b) — full run.sh PROMOTE→false; re-confirm HOLD; STOP-FLOOR ×343
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | — | 0.061 | 0.068 | — | Full run.sh (190+ variants, ~5 RUNS interleaved). |
+| variants/dp2_8s_fw_t0_384_3072 | FALSE PROMOTE | 0.052 | 0.066 | −14.8% | PROMOTE verdict fired (0.052 < 0.0601 AND med 0.066<0.068 AND edge 9/9). Re-confirm: new 0.068 best / 0.071 med vs old 0.067 best / 0.071 med → NOT a win. VM oscillation false PROMOTE. NOT promoted. |
+
+VM state: floor was 0.504s when measured (heavy start-of-run load), actual fast floor ≈0.071s min after settling. Full run.sh: champion best=0.061s, dp2_8s_fw_t0_384_3072 best=0.052s (14.8% apparent gap). Re-confirm interleaved: new=0.068/old=0.067 → essentially equal. False PROMOTE confirmed — VM oscillation. Champion dp2_8s_fw_4acc_t0_192_1536 retained.
+
+Note: dp2_8s_fw_t0_384_3072 is a Jul 30 variant (T0@384B = 6 iters × 64B ahead, T1@3072B). It exists in variants/ and passes edge 9/9. The T0@384B distance is genuinely untested in prior champion contest, but at bandwidth ceiling all dp2 variants cluster within ±10ms noise.
+
+**STOP-FLOOR ×343. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space exhausted.**
