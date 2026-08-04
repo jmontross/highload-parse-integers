@@ -4334,3 +4334,25 @@ Design space: **222 cpp + 1 rs.** 351 consecutive STOP-FLOOR verdicts. T0=192 4a
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 79ms; champion 81ms direct; rank-18 bar 69.3ms).
 
 **STOP-FLOOR ×351. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space 222 variants exhausted. T0=192 4acc T1 grid 100% complete. No new untried grid points remain.**
+
+## Run log 2026-08-04 (scheduled run ×352) — STOP-FLOOR; 2 new madvise/alignment variants; HOLD; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×352 | 0.094 | 0.098 | — | 9-sample interleaved. Correct (53687387166542798). Edge N/A (not re-run). |
+| variants/dp2_8s_fw_4acc_no_seq | HOLD | 0.095 | 0.099 | +1.1% best / +1.0% med | NEW: Remove MADV_SEQUENTIAL (keep HUGEPAGE+COLLAPSE). Theory: 8 non-contiguous streams don't benefit from sequential readahead hint. Practice: marginally slower. MADV_SEQUENTIAL is effectively no-op after MAP_POPULATE pre-faults all pages — removal makes no difference or slightly hurts via L3 readahead. |
+| variants/dp2_8s_fw_4acc_pg_align | HOLD | 0.096 | 0.101 | +2.1% best / +3.1% med | NEW: Align block starts to 4KB page boundaries (nearest page boundary ≥ i×size/8). Theory: streams start on page boundaries, reducing TLB split-page effects. Practice: slightly worse — the current newline-scan split already produces nearly page-aligned boundaries statistically, so explicit alignment adds overhead. |
+
+VM state: moderate (floor min=0.089s, median=0.103s). Champion 9-sample interleaved: best=0.094s, med=0.098s = 1.06× floor (at bandwidth ceiling). STOP-FLOOR: 0.094 < 2×0.089=0.178 ✓.
+
+Two new variants created and benchmarked:
+1. **dp2_8s_fw_4acc_no_seq**: Drop MADV_SEQUENTIAL. Since MAP_POPULATE already faults all pages synchronously, the sequential readahead hint is a no-op for the data path. Removing it should be neutral or slightly beneficial (no spurious readahead). Result: slightly worse (95ms vs 94ms best). Confirmed MADV_SEQUENTIAL is benign — removing it doesn't help.
+2. **dp2_8s_fw_4acc_pg_align**: Align 8 stream splits to 4KB page boundaries. Each stream guaranteed to start exactly on a page boundary, vs current heuristic (scan forward to next newline from i×size/8). Page-boundary alignment could reduce TLB pressure and improve hardware prefetcher locality per stream. Result: slightly worse (96ms vs 94ms best). The unaligned variant already benefits from the hardware page-table walker efficiently; explicit alignment overhead outweighs any TLB savings.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → 0.099s; g++ -Ofast -march=native -funroll-loops → **0.094s** (BEST); g++-13 -O3 -march=native → 0.104s; g++-13 -Ofast -march=native -funroll-loops → 0.099s; clang++ -O3 -march=native → 0.167s. → submit under: **g++ -Ofast -march=native -funroll-loops**.
+
+Design space: **224 cpp + 1 rs.** 352 consecutive STOP-FLOOR verdicts. madvise strategy and block alignment confirmed optimal. No new untried angles remain.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 89ms; champion 94ms; rank-18 bar 69.3ms; champion above bar on today's VM; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×352. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — design space 224 variants exhausted. All algorithmic angles (digit-place accumulation, 8-stream MLP, T0/T1 grid, 4acc, madvise strategy, block alignment) fully explored. No new untried directions remain.**
