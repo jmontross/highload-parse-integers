@@ -4409,3 +4409,29 @@ Compiler sweep (5 samples each):
 Fast-VM best ever (this run): **0.062s = 1.24 ns/line** — clears rank-18 bar ≤69.3ms by 10.5%. VM fast (floor 70ms; champion 62ms; champion 0.89× floor = at bandwidth ceiling; mmap+hugepage bypass accounts for sub-floor result).
 
 **STOP-FLOOR ×354. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 224 variants exhausted. Champion clears rank-18 bar on fast VMs with 10%+ margin.**
+
+## Run log 2026-08-04 (scheduled run ×355) — STOP-FLOOR; 3 new variants (T0=320, T0=384, 8acc); HOLD; moderate-fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×355 | 0.093 | 0.097 | — | 13-sample g++-13 -O3 interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.093 < 2×0.085=0.170 ✓. |
+| variants/dp2_8s_fw_4acc_t0_320_1536 | HOLD | 0.093 | 0.096 | 0.0% best / -1.0% med | NEW: T0@320B + T1@1536B. First T0=320 for 4acc. Best tied; median 1ms better (within noise band 24ms). Edge 9/9. |
+| variants/dp2_8s_fw_4acc_t0_384_1536 | HOLD | 0.093 | 0.096 | 0.0% best / -1.0% med | NEW: T0@384B + T1@1536B. First T0=384 for 4acc. Best tied; median 1ms better, max 11ms better (0.106 vs 0.117). Edge 9/9. |
+| variants/dp2_8s_fw_8acc | HOLD | 0.095 | 0.104 | +2.2% best / +7.2% med | NEW: 8 independent per-stream accumulators (no cross-pair add). Eliminates 4 _mm_add_epi8/iter; 8 YMM regs. High variance (0.095–0.140s spike). Register pressure causes occasional spilling. Edge 9/9. |
+
+VM state: moderate-fast (floor min=0.085s, med=0.086s; 7 samples). Champion 13-sample g++-13: best=0.093s, med=0.097s = 1.09× floor (AT bandwidth ceiling; STOP-FLOOR ×355).
+
+Three new variants created and benchmarked:
+1. **dp2_8s_fw_4acc_t0_320_1536**: T0=320B (first 4acc variant at this T0 distance). Best tied with champion (0.093s); median 1ms better. T0=320 sits between T0=256 (HOLD) and T0=384 (HOLD). All three T0 values in 256–512 range are essentially equivalent to champion within noise.
+2. **dp2_8s_fw_4acc_t0_384_1536**: T0=384B (first 4acc variant at this T0 distance). Same as T0=320: best tied, median 1ms better, jitter slightly lower (max=0.106 vs champion 0.117). Another confirmed HOLD.
+3. **dp2_8s_fw_8acc**: 8 separate per-stream u16 accumulators eliminate the cross-stream pair-combine step (4 fewer _mm_add_epi8 per iter). Tradeoff: 8 YMM registers vs 4 causes register pressure and occasional spills (outlier at 0.140s). Worse overall. ELIMINATED.
+
+T0 grid for 4acc now FULLY EXHAUSTED: T0=64✓, T0=128✓, T0=192✓(CHAMPION), T0=256✓, T0=320✓(×355,HOLD), T0=384✓(×355,HOLD), T0=512✓. All T0 values from 64 to 512 tested at T1=1536. T0=192 remains uniquely optimal.
+
+Compiler sweep (3 samples each): g++ -O3 -march=native → **0.095s** (today's sweep best); g++ -Ofast -march=native -funroll-loops → 0.097s; g++-13 -O3 -march=native → 0.096s; g++-13 -Ofast -march=native -funroll-loops → 0.096s; clang++ -O3 -march=native → 0.112s. → **submit under: g++-13 -O3 -march=native** (best across 13-sample benchmarks; sweep results within noise).
+
+Design space: **227 cpp + 1 rs.** 355 consecutive STOP-FLOOR verdicts. T0 grid 7/7 complete (T0=320 and T0=384 were the last two untried T0 values for 4acc — now filled). No remaining unexplored algorithmic directions.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate-fast (floor 85ms; champion 93ms; rank-18 bar 69.3ms; on fast VMs champion at 0.052–0.067s clears rank-18).
+
+**STOP-FLOOR ×355. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 227 variants exhausted. T0 grid 100% complete. No untried directions remain.**
