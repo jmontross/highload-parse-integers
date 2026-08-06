@@ -4831,3 +4831,19 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.063s; champion best=0.080s; 1.27× floor; rank-18 bar 69.3ms; champion 15.6% above bar on this moderate VM).
 
 **STOP-FLOOR ×370. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-06 (scheduled run ×371) — STOP-FLOOR; champion-only benchmark; moderate VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×371 | 0.084 | 0.087 | — | 5-sample interleaved (g++-13 -O3 -march=native). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.084 ≤ 2×0.076=0.152 ✓ (1.11× floor). |
+
+VM state: moderate (floor min=0.076s, med=0.077s; 3-sample cat). Champion 5-sample interleaved: best=0.084s, med=0.087s = 1.68–1.80 ns/line. STOP-FLOOR: 0.084 ≤ 2×0.076=0.152 ✓ (1.11× floor). Champion within bandwidth ceiling. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. run.sh skipped (all 228 variants; times out).
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 371 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented since prior runs.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.076s; champion best=0.084s; 1.11× floor; rank-18 bar 69.3ms; champion 21% above bar on this moderate VM).
+
+**STOP-FLOOR ×371. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
