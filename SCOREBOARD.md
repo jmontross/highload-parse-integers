@@ -4778,3 +4778,32 @@ Compiler sweep (3 samples each, moderate VM):
 No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 368 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
 
 **STOP-FLOOR ×368. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 228 variants exhausted. No untried directions remain.**
+
+## Run log 2026-08-06 (scheduled run ×369) — STOP-FLOOR; champion-only + secondary check; moderate VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×369 | 0.081 | 0.085 | — | 9-sample interleaved (g++-13 -O3 -march=native). Correct (53687387166542798). STOP-FLOOR: 0.081 < 2×0.078=0.156 ✓ (1.04× floor). |
+| dp2_8s_fw_4acc_200it | HOLD | 0.079 | 0.086 | ~2.4% med, within noise | 10-sample interleaved: champion med=0.086, 200it med=0.086 — TIED. VM oscillation. |
+| dp2_8s_fw_wide400 | HOLD | 0.080 | 0.081 | 4.7% med, but noise band=0.012 | 9-sample interleaved: wide400 med=0.081 vs champion med=0.085. Margin (0.004s) < noise band (0.012s) → HOLD. Correct (53687387166542798). |
+| dp2_8s_fw_8acc | HOLD | 0.080 | 0.082 | 3.5% med, within noise | 9-sample interleaved: 8acc med=0.082 vs champion med=0.085. Within noise band → HOLD. Correct. |
+| dp2_8s_fw_400it | WRONG | — | — | — | Returns 35053317851843534 (overflow bug: 400 iters × 4 accs × 2 streams × 108/lane > 65535 u16 limit). Do not promote. |
+
+VM state: moderate (floor min=0.078s, med=0.080s; 5-sample cat). Champion 9-sample interleaved: best=0.081s, med=0.085s, max=0.093s = 1.62–1.86 ns/line. STOP-FLOOR: 0.081 < 2×0.078=0.156 ✓ (1.04× floor).
+
+Compiler sweep (3 samples each):
+- g++-13 -Ofast -march=native -funroll-loops → **0.081s** best (today's tied winner)
+- g++ -O3 -march=native → **0.081s** best (today's tied winner)
+- g++-13 -O3 -march=native → 0.084s best
+- g++ -Ofast -march=native -funroll-loops → 0.087s best
+- clang++ -O3 -march=native → 0.089s best
+- clang++-18 -O3 -march=native → 0.092s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner; g++ -O3 tied today at 0.081s)
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 369 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented since prior runs.
+
+dp2_8s_fw_wide400 and dp2_8s_fw_8acc both show 0.080-0.081s best — essentially tied with the champion and the bandwidth floor (0.078s). No algorithmic headroom remains.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.078s; champion best=0.081s; 1.04× floor; rank-18 bar 69.3ms; champion 17% above bar on this moderate VM).
+
+**STOP-FLOOR ×369. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm AT bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
