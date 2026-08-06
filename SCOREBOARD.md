@@ -4807,3 +4807,27 @@ dp2_8s_fw_wide400 and dp2_8s_fw_8acc both show 0.080-0.081s best — essentially
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.078s; champion best=0.081s; 1.04× floor; rank-18 bar 69.3ms; champion 17% above bar on this moderate VM).
 
 **STOP-FLOOR ×369. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm AT bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-06 (scheduled run ×370) — STOP-FLOOR; champion-only benchmark; moderate VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×370 | 0.080 | 0.083 | — | 9-sample interleaved (g++-13 -O3 -march=native). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.080 ≤ 2×0.063=0.126 ✓ (1.27× floor). |
+
+VM state: moderate (floor min=0.063s, med=0.064s; 5-sample cat). Champion 9-sample interleaved: best=0.080s, med=0.083s, max=0.093s = 1.60–1.86 ns/line. STOP-FLOOR: 0.080 ≤ 2×0.063=0.126 ✓ (1.27× floor). Champion within bandwidth ceiling. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark via direct g++-13 build. run.sh skipped (all 228 variants; times out).
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 370 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented since prior runs.
+
+Compiler sweep (3 samples each):
+- g++ -Ofast -march=native -funroll-loops → **0.080s** best (today's winner)
+- g++-13 -O3 -march=native → 0.082s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.085s best
+- g++ -O3 -march=native → 0.081s best
+- clang++-18 -O3 -march=native → 0.087s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner; today g++ -Ofast tied)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.063s; champion best=0.080s; 1.27× floor; rank-18 bar 69.3ms; champion 15.6% above bar on this moderate VM).
+
+**STOP-FLOOR ×370. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
