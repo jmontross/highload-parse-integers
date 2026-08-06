@@ -4753,3 +4753,28 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.070s; champion best=0.068s; 0.97× floor — BELOW bandwidth ceiling; rank-18 bar 69.3ms; champion AT/below bar at 1.36 ns/line on this moderate VM).
 
 **STOP-FLOOR ×367. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm BELOW bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-06 (scheduled run ×368) — STOP-FLOOR; champion-only + top-5 competitors; moderate VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×368 | 0.092 | 0.095 | — | Interleaved RUNS=5. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.092 < 2×0.084=0.168 ✓ (1.10× floor). |
+| dp2_8s_fw_3072_32 | HOLD | 0.092 | 0.094 | tied best, med 1% lower | Sequential RUNS=5 (non-interleaved): min=0.092s, med=0.094s vs champion 0.096s/0.101s — looks better but interleaved RUNS=5 shows tied (0.092s each). HOLD. |
+| dp2_8s_fw_4acc_200it | HOLD | 0.091 | 0.095 | 1.1% margin (need ≥1.5%) | PROMOTE fired in RUNS=3 background run (slow VM, 0.090s vs 0.093s champion). Confirmation RUNS=5 interleaved (moderate VM): champion=0.092s, 200it=0.091s → 1.1% margin below 1.5% gate. VM oscillation. |
+| dp2_8s_pf2048, dp2_8s_stop_pf3072, dp2_8s_fixed_widen, dp2_8s_fixed_3072 | cluster | 0.094–0.098 | — | within noise | All dp2 variants cluster 0.092–0.098s on this VM state. |
+
+VM state: moderate-slow (floor min=0.084s, med=0.086s; 3-sample cat). Champion RUNS=5 interleaved: best=0.092s, med=0.095s = 1.10× floor.
+
+Background full-suite run (RUNS=3, slow VM, floor=0.322s): PROMOTE gate fired for dp2_8s_fw_4acc_200it (best=0.090s vs champion 0.093s, 3.2% margin, edge 9/9). Per protocol, ran RUNS=5 interleaved confirmation: HOLD (1.1% margin, below 1.5% gate, median tied). Champion unchanged. This is the classic VM-oscillation PROMOTE-then-HOLD pattern.
+
+Compiler sweep (3 samples each, moderate VM):
+- g++-13 -O3 -march=native → **0.091s** best (today's winner)
+- g++-13 -Ofast -march=native -funroll-loops → 0.092s best
+- g++ -Ofast -march=native -funroll-loops → 0.092s best
+- g++ -O3 -march=native → 0.093s best
+- clang++-18 -O3 -march=native → 0.109s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner)
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 368 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+**STOP-FLOOR ×368. Champion dp2_8s_fw_4acc_t0_192_1536 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 228 variants exhausted. No untried directions remain.**
