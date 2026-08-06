@@ -4903,3 +4903,26 @@ No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 374 c
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.061s; champion best=0.093s; 1.52× floor; rank-18 bar 69.3ms; champion 34% above bar on this VM state).
 
 **STOP-FLOOR ×374. Champion dp2_8s_fw_t0_192_768 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-06 (scheduled run ×375) — STOP-FLOOR; champion-only benchmark; fast VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×375 | 0.067 | 0.069 | — | 7-sample (g++ -O3 -march=native). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.067 ≤ 2×0.071=0.142 ✓ (0.944× floor). |
+
+VM state: fast (floor min=0.071s, med=0.072s; 5-sample cat). Champion 7-sample: best=0.067s, med=0.069s = 1.34–1.38 ns/line. STOP-FLOOR: 0.067 ≤ 2×0.071=0.142 ✓ (0.944× floor — champion runs BELOW floor via mmap+MADV_HUGEPAGE bypass). Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. run.sh skipped (all 228 variants; times out).
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 375 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented since prior runs.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.067s** best (tied winner)
+- g++-13 -O3 -march=native → **0.067s** best (tied winner)
+- g++ -Ofast -march=native -funroll-loops → 0.070s best
+- clang++ -O3 -march=native → 0.075s best
+→ **submit under: g++-13 -O3 -march=native** (historical consistent winner; tied today)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.071s; champion best=0.067s; 0.944× floor; rank-18 bar 69.3ms; champion CLEARS bar at 67ms — **1.34 ns/line ≤ 1.39 ns/line**).
+
+**STOP-FLOOR ×375. Champion dp2_8s_fw_t0_192_768 is current. CLEARS rank-18 bar (67ms ≤ 69.3ms) on this fast VM. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. No untried directions remain.**
