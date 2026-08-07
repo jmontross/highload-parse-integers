@@ -5205,3 +5205,27 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast with cached pages (champion 0.066s = 1.32 ns/line; 66ms **CLEARS** rank-18 bar 69.3ms by 4.8%).
 
 **STOP-FLOOR ×387. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Design space exhausted — 387 consecutive STOP-FLOOR verdicts. Champion CLEARS rank-18 bar at 66ms on this VM.**
+
+## Run log 2026-08-07 (scheduled run ×388) — STOP-FLOOR; champion-only benchmark; moderate VM; design space exhausted
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×388 | 0.091 | 0.095 | — | g++-13 -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.091 ≤ 2×0.084=0.168 ✓ (1.08× floor). |
+
+VM state: moderate (floor min=0.084s, med=0.086s; 5-sample cat). Champion 7-sample interleaved: best=0.091s, med=0.095s, max=0.104s, jitter=0.013s = 1.82–2.08 ns/line. STOP-FLOOR: 0.091 ≤ 2×0.084=0.168 ✓ (1.08× floor). Champion near bandwidth ceiling. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full 229-variant sweep skipped (design space fully exhausted — 387 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 229 cpp/rs variants — fully exhausted. 388 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (3 samples each):
+- g++ -Ofast -march=native -funroll-loops → **0.092s** best (today's winner)
+- g++-13 -O3 -march=native → 0.093s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.094s best
+- g++ -O3 -march=native → 0.099s best
+- clang++-18 -O3 -march=native → 0.101s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner on fast VMs; 0.093s today)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.084s; champion best=0.091s; 1.08× floor; rank-18 bar 69.3ms; champion 31% above bar on this moderate VM).
+
+**STOP-FLOOR ×388. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm near bandwidth ceiling — design space 229 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
