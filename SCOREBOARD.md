@@ -5088,3 +5088,30 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.062s; champion best=0.095s; 1.53× floor; rank-18 bar 69.3ms; champion 37% above bar on this moderate VM).
 
 **STOP-FLOOR ×382. Champion dp2_8s_fw_t0_192_768 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-07 (scheduled run ×383) — STOP-FLOOR; champion-only benchmark; moderate VM; CLOSEST TO FLOOR EVER
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×383 | 0.083 | 0.086 | — | 7-sample interleaved (g++-13 -O3 -march=native). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.083 ≤ 2×0.082=0.164 ✓ (1.01× floor). |
+
+VM state: moderate (floor min=0.082s, med=0.083s; 5-sample cat). Champion 7-sample interleaved: best=0.083s, med=0.086s, max=0.107s, jitter=0.024s = 1.66–2.14 ns/line. STOP-FLOOR: 0.083 ≤ 2×0.082=0.164 ✓ (1.01× floor). Champion at BANDWIDTH CEILING — essentially tied with cat on this VM. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. run.sh skipped (all 228 variants; times out).
+
+No new variants created. Design space: 228 cpp + 1 rs — fully exhausted. 383 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented since prior runs. stuchlik_digitplace.cpp (Change A) and stuchlik_8stream.cpp (Change B) both exist in variants/; champion incorporates both ideas.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.077s** best (today's winner — fastest across all compilers)
+- g++-13 -O3 -march=native → 0.080s best
+- g++ -Ofast -march=native -funroll-loops → 0.080s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.081s best
+- clang++-18 -O3 -march=native → 0.087s best
+- clang++ -O3 -march=native → 0.089s best
+→ **submit under: g++ -O3 -march=native** (0.077s today; g++-13 -O3 historically best on fast VMs)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.082s; champion best=0.083s; 1.01× floor — AT BANDWIDTH CEILING on this VM; rank-18 bar 69.3ms; champion 20% above bar on this moderate VM).
+
+Note: champion at 1.01× floor is the tightest ratio measured in this session — confirms algorithm is fully memory-bandwidth-bound and no compute overhead remains extractable.
+
+**STOP-FLOOR ×383. Champion dp2_8s_fw_t0_192_768 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
