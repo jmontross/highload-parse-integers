@@ -5180,3 +5180,28 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.085s; champion best=0.095s; 1.12× floor — near bandwidth ceiling; rank-18 bar 69.3ms; champion 37% above bar on this moderate VM).
 
 **STOP-FLOOR ×386. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Design space fully exhausted — 386 consecutive STOP-FLOOR verdicts. Algorithm at bandwidth ceiling.**
+
+## Run log 2026-08-07 (scheduled run ×387) — STOP-FLOOR; full sweep; fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×387 | 0.066 | 0.068 | — | g++ -O3 -march=native, 5-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.066 ≤ 2×0.264=0.528 ✓ (0.25× floor — pages cached from MAP_POPULATE). |
+| dp2_8s_fw_2w_t0_64 | HOLD | 0.066 | 0.071 | Δbest=0.000s | Ties champion best but median 0.071s > champion 0.068s → HOLD (noise). |
+| all other dp2_8s_fw variants | cluster | 0.066–0.073 | — | within noise | All within normal VM jitter. |
+
+VM state: fast (floor min=0.264s cold-cat; champion best=0.066s = 1.32 ns/line with MAP_POPULATE pages cached; rank-18 bar 69.3ms; champion 66ms — **CLEARS bar by 4.8%**). STOP-FLOOR: 0.066 ≤ 2×0.264 = 0.528 ✓.
+
+No new variants created. Design space: 229 cpp/rs variants — fully exhausted. 387 consecutive STOP-FLOOR verdicts.
+
+Compiler sweep (3 samples each):
+- g++ -Ofast -march=native -funroll-loops → **0.068s** best (co-winner)
+- g++-13 -Ofast -march=native -funroll-loops → **0.068s** best (co-winner)
+- g++ -O3 -march=native → 0.069s best
+- g++-13 -O3 -march=native → 0.070s best
+- clang++ -O3 -march=native → 0.076s best
+- clang++ -Ofast -march=native -funroll-loops → 0.076s best
+→ **submit under: g++ -Ofast -march=native -funroll-loops** (0.068s today; consistently in top-2 across VMs)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast with cached pages (champion 0.066s = 1.32 ns/line; 66ms **CLEARS** rank-18 bar 69.3ms by 4.8%).
+
+**STOP-FLOOR ×387. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Design space exhausted — 387 consecutive STOP-FLOOR verdicts. Champion CLEARS rank-18 bar at 66ms on this VM.**
