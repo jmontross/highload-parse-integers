@@ -5256,3 +5256,29 @@ Compiler sweep (5 samples each, run.sh):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's champion: 75ms on slow-disk VM (cat floor inflated; actual memory state moderate-fast). index.html: "75.0 ms, 1.1× off rank-18 bar."
 
 **STOP-FLOOR ×389. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Design space exhausted — 389 consecutive STOP-FLOOR verdicts. Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-08-07 (scheduled run ×390) — STOP-FLOOR; champion-only benchmark; fast VM; champion CLEARS rank-18 bar
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×390 | 0.067 | 0.068 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.067 < 2×0.071=0.142 ✓ (champion FASTER than cat due to MAP_POPULATE). |
+
+VM state: fast (floor min=0.071s cat cold; champion 0.067s best via mmap+MAP_POPULATE = pages pre-cached). Champion 7-sample interleaved (g++ -O3): best=0.067s, med=0.068s, max=0.082s, jitter=0.015s = 1.34–1.64 ns/line. STOP-FLOOR ✓. Champion CLEARS rank-18 bar (69.3ms) by 3.2% at 67ms. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full 229-variant sweep skipped (design space fully exhausted — 389 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 229 cpp/rs variants — fully exhausted. 390 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.069s** best
+- g++ -Ofast -march=native -funroll-loops → **0.068s** best (co-winner)
+- g++-13 -O3 -march=native → **0.068s** best (co-winner)
+- g++-13 -Ofast -march=native -funroll-loops → 0.071s best
+- clang++-18 -O3 -march=native → 0.079s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner on fast VMs; 0.068s today)
+
+g++-13 7-sample interleaved: best=0.068s, med=0.070s, max=0.075s, jitter=0.007s — lowest jitter of all compilers today.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.071s cat; champion best=0.067s at 1.34 ns/line; champion CLEARS rank-18 bar 69.3ms at 67ms; 3.2% margin on this VM).
+
+**STOP-FLOOR ×390. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 229 variants exhausted. Champion CLEARS rank-18 bar at 67ms on this VM (3.2% margin). Expected judge bare-metal: ~50-65ms (well clear of rank-18 bar ≤69.3ms).**
