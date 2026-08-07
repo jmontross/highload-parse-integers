@@ -5139,3 +5139,21 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.065s; champion best=0.073s; 1.12× floor; rank-18 bar 69.3ms; champion 5.5% above bar on this fast VM — approaching submittable territory).
 
 **STOP-FLOOR ×384. Champion dp2_8s_fw_t0_192_768 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-07 (scheduled run ×385) — STOP-FLOOR; full 229-variant sweep; new dp2_8s_fw_t0_192_512 (DEAD)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×385 | 0.092 | 0.095 | — | Medium VM (floor=0.412s min / 0.478s med). STOP-FLOOR: 0.092 < 2×0.412=0.824. Edge 9/9. Champion 2.23× above bandwidth floor. |
+| dp2_8s_fw_t0_128_768 | HOLD | 0.089 | 0.098 | +3.3% best, −3.2% med | Best 0.001s below gate (need ≤0.0906s; got 0.0890s ✓), BUT median 0.098s > champion 0.095s → HOLD (median condition fails). Standard VM noise: T0@128B slight L2→L1 advantage on this VM but jitter undermines median. |
+| dp2_8s_fw_t0_192_512 | DEAD | 0.097 | 0.099 | −5.4% SLOWER | NEW 2026-08-07. T0@192B + T1@512B (8 iters = 64ns at judge speed). Fills last gap in T0@192 family (T1@{384,512}B both untested before). On VM with ~400ns DRAM: T1@512B (8 iters × ~8ns VM iter time = 64ns, far too short for ~400ns DRAM) provides no useful prefetch — DRAM requests miss coverage window entirely, causing stalls. Compare champion T1@768B = 12 iters × ~8ns = 96ns which is still too short for VM but less so. Result: 0.097s vs champion 0.092s = 5.4% SLOWER. DEAD for VM. On judge (~80-100ns DRAM), T1@512B = 8 iters × 6ns/iter = 48ns is still short of ~80ns; champion T1@768B = 72ns is closer to optimal. DEAD. |
+| all other 226 dp2 fw variants | cluster | 0.089–0.097 | 0.091–0.106 | within noise | All dp2_8s_fw variants cluster 0.089–0.097s best. 220 correct variants benchmarked (1 WRONG: dp2_8s_u8tree). |
+
+VM state: medium (floor=0.412s min / 0.478s median). Champion (dp2_8s_fw_t0_192_768) best 0.092s = 1.84 ns/line; 4.48× faster than cat.
+Best variant dp2_8s_fw_t0_128_768 at 0.089s best is technically within the gate threshold on best (Δbest=0.003s = 3.3% ≥ 1.5%) BUT fails the median condition (0.098s > 0.095s). HOLD.
+dp2_8s_fw_t0_192_512 (NEW): DEAD. T1@512B too short for both VM DRAM (~400ns) and judge DRAM (~80-100ns). T1@640B through T1@768B is the established sweet spot for the judge.
+Compiler sweep (champion): **g++ -O3 -march=native → 0.090s** best; g++ -Ofast -funroll-loops → 0.091s; g++-13 -O3 → 0.091s; g++-13 -Ofast -funroll-loops → 0.094s; clang++ -O3 → 0.101s; clang++ -Ofast → 0.099s. → submit under: g++ -O3 -march=native (0.090s today).
+STOP-FLOOR ×385 confirmed. 229 variants (228 cpp + 1 rs), all exhausted. Design space: T0@{64,96,128,192,256,320,384}B × T1@{320..9216}B, single/double loop, 8/12/16 streams, all accumulation structures — complete.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM medium (champion 0.092s = 2.23× floor of 0.412s).
+**STOP-FLOOR ×385. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` (0.090s today) or `g++-13 -O3 -march=native` (historically best on fast VMs). Design space fully exhausted — 385 consecutive STOP-FLOOR verdicts.**
