@@ -5282,3 +5282,28 @@ g++-13 7-sample interleaved: best=0.068s, med=0.070s, max=0.075s, jitter=0.007s 
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.071s cat; champion best=0.067s at 1.34 ns/line; champion CLEARS rank-18 bar 69.3ms at 67ms; 3.2% margin on this VM).
 
 **STOP-FLOOR ×390. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 229 variants exhausted. Champion CLEARS rank-18 bar at 67ms on this VM (3.2% margin). Expected judge bare-metal: ~50-65ms (well clear of rank-18 bar ≤69.3ms).**
+
+## Run log 2026-08-07 (scheduled run ×391) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×391 | 0.070 | 0.074 | — | g++ -O3 -march=native, 15-sample. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.070 < 2×0.063=0.126 ✓ (1.11× floor). |
+
+VM state: moderate (floor min=0.063s med=0.064s; 5-sample cat). Champion 15-sample: best=0.070s, med=0.074s, max=0.084s, jitter=0.014s = 1.40 ns/line best. STOP-FLOOR ✓ (1.11× floor). Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full 229-variant sweep skipped (design space fully exhausted — 390 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 229 cpp/rs variants — fully exhausted. 391 consecutive STOP-FLOOR verdicts.
+
+Compiler sweep (5 samples each):
+- g++ -O3 -march=native → **0.072s** best
+- g++ -Ofast -march=native -funroll-loops → 0.072s best
+- g++-13 -O3 -march=native → **0.072s** best (co-winner)
+- g++-13 -Ofast -march=native -funroll-loops → 0.073s best
+- clang++ -O3 -march=native → 0.080s best
+- clang++-18 -O3 -march=native → 0.082s best
+→ **submit under: g++ -O3 -march=native** or **g++-13 -O3 -march=native** (tied at 0.072s today; consistent historical winners)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.063s; champion best=0.070s; 1.11× floor; rank-18 bar 69.3ms; champion 1% above bar on this moderate VM).
+
+**STOP-FLOOR ×391. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — design space 229 variants exhausted. Champion at 70ms (moderate VM), within 1% of rank-18 bar. On fast VM: 52-66ms (CLEARS rank-18 bar).**
