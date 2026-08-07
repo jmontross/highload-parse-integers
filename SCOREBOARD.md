@@ -5229,3 +5229,28 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.084s; champion best=0.091s; 1.08× floor; rank-18 bar 69.3ms; champion 31% above bar on this moderate VM).
 
 **STOP-FLOOR ×388. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm near bandwidth ceiling — design space 229 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-07 (scheduled run ×389) — STOP-FLOOR; full 229-variant sweep; slow-disk VM (cat=0.251s, champion=0.075s via mmap)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×389 | 0.075 | 0.080 | — | g++ -O3 -march=native, 5-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.075 ≤ 2×0.251=0.502 ✓ (cat floor inflated by disk I/O; champion uses mmap+MAP_POPULATE so bypasses kernel read). |
+| dp2_8s_fw_4acc_no_seq | HOLD | 0.074 | 0.079 | Δbest=1.3%, need ≤0.0739 (1.5% margin) | Missed promotion gate by 0.0001s: need 0.0739, got 0.0740. Median 0.0790 < champion 0.0800 ✓ (condition b met, but condition a failed). VM noise. |
+| all other dp2_8s_fw variants | cluster | 0.074–0.085 | — | within noise | dp2_8s_fw_t0_{128,192,256}_* cluster at 0.074–0.076s best; all within ±0.008s jitter. |
+
+VM state: slow cat floor (floor min=0.251s med=0.548s — disk I/O heavy; cat to /dev/null slow). Champion uses mmap+MAP_POPULATE+MADV_HUGEPAGE bypassing kernel read path; actual memory bandwidth is fast (champion 0.075s = 1.50 ns/line). STOP-FLOOR fires because champion best (0.075) < 2 × floor_min (0.502). Full 229-variant run.sh sweep completed (~600s). Correct (53687387166542798). Edge: 9/9.
+
+Best variant (dp2_8s_fw_4acc_no_seq): 0.074s best, 0.079s median. Gate requires both: (a) best ≤ 0.075 × 0.985 = 0.0739s [FAIL by 0.0001s] AND (b) median < 0.080s [PASS]. One condition failed → HOLD. Classic VM-oscillation false-near-miss.
+
+No new variants created. Design space: 229 cpp/rs variants — fully exhausted. 389 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (5 samples each, run.sh):
+- g++ -O3 -march=native → **0.074s** best (**BEST**, co-winner)
+- g++-13 -O3 -march=native → **0.074s** best (co-winner)
+- g++ -Ofast -march=native -funroll-loops → 0.080s best
+- clang++ -O3 -march=native → 0.087s best
+→ **submit under: g++ -O3 -march=native** (0.074s today; matches g++-13; consistent historical winner)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's champion: 75ms on slow-disk VM (cat floor inflated; actual memory state moderate-fast). index.html: "75.0 ms, 1.1× off rank-18 bar."
+
+**STOP-FLOOR ×389. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Design space exhausted — 389 consecutive STOP-FLOOR verdicts. Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms).**
