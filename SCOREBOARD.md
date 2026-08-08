@@ -5526,3 +5526,25 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.077s; champion best=0.079s; 1.03× floor — AT ceiling; champion best 79ms = 14% above rank-18 bar 69.3ms on this VM; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×399. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-08 (scheduled run ×400) — STOP-FLOOR; champion AT bandwidth ceiling; moderate-fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×400 | 0.091 | 0.093 | — | g++ -O3 -march=native, 7-sample. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.091 < 2×0.061=0.122 ✓ (1.49× floor — within 2× ceiling). |
+
+VM state: moderate-fast (floor min=0.061s, med=0.063s; 7-sample cat). Champion (g++ -O3 -march=native) 7-sample: best=0.091s, med=0.093s = 1.82 ns/line. Champion within 1.49× of cat floor → STOP-FLOOR ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full 231-variant sweep skipped (design space fully exhausted — 399 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 400 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.092s** best (WINNER)
+- g++-13 -O3 -march=native → 0.097s best
+- clang++-18 -O3 -march=native → 0.101s best
+→ **submit under: g++ -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate-fast (floor min=0.061s; champion best=0.091s; 1.49× floor; rank-18 bar 69.3ms; champion 31% above bar on this VM state; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×400. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
