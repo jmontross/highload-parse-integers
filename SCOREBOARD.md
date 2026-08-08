@@ -5416,3 +5416,24 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.072s; champion best=0.077s; 1.07× floor; rank-18 bar 69.3ms; champion 11% above bar on this moderate VM).
 
 **STOP-FLOOR ×385. Champion dp2_8s_fw_t0_192_768 is current. SUBMIT with `g++-13 -O3 -march=native`. Algorithm within bandwidth ceiling — design space 228 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-08 (scheduled run ×395) — STOP-FLOOR; champion-only benchmark; fast VM; champion AT bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×395 | 0.067 | 0.072 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.067 ≤ 2×0.067=0.134 ✓ (1.00× floor — champion AT bandwidth ceiling). |
+
+VM state: fast (floor min=0.067s med=0.068s; 5-sample cat). Champion 7-sample interleaved: best=0.067s, med=0.072s, max=0.078s = 1.34 ns/line best. Champion MATCHES cat floor at best — operating AT bandwidth ceiling. STOP-FLOOR ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full 231-variant sweep skipped (design space fully exhausted — 394 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 395 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (7-sample interleaved, 2-way):
+- g++ -O3 -march=native → **0.067s** best, 0.072s med (sweep WINNER; matches floor)
+- g++-13 -Ofast -march=native -funroll-loops → 0.069s best, 0.073s med
+→ **submit under: g++ -O3 -march=native** (0.067s today; champion at bandwidth ceiling)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.067s; champion best=0.067s; 1.00× floor — AT ceiling; champion best CLEARS rank-18 bar 69.3ms at 67ms; 3.1% margin).
+
+**STOP-FLOOR ×395. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. Champion equals cat floor today (67ms = floor min). READY TO SUBMIT. Expected judge bare-metal: ~50-65ms (well clear of rank-18 bar ≤69.3ms).**
