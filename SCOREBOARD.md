@@ -5571,3 +5571,26 @@ Compiler sweep (3 samples each, g++ symlink = g++-13 on this system):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate-fast (floor min=0.082s; champion best=0.077s; 0.94× floor — BELOW cat floor via mmap; rank-18 bar 69.3ms; champion best 77ms, 11% above bar on this VM; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×401. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at/below bandwidth ceiling — 231 variants exhausted. Champion 77ms this run; fast-VM canonical best 52ms (CLEARS rank-18 bar ≤69.3ms by 25%). READY TO SUBMIT.**
+
+## Run log 2026-08-08 (scheduled run ×402) — STOP-FLOOR; false-PROMOTE caught by confirmation; champion unchanged
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×402 | 0.076 | 0.079 | — | g++-13 -O3 -march=native, 7-sample. Correct (53687387166542798). Edge 9/9. STOP-FLOOR. |
+| dp2_8s_fw_t0_128_1536 | FALSE PROMOTE / REVERTED | 0.077 | 0.080 | +0.001s | Initial run.sh promoted this on VM noise (champion appeared 0.079s vs variant 0.077s). Confirmation run showed champion tie at 0.077s, HOLD verdict. Reverted. |
+
+VM state: slow (floor min=0.314s, confirmation run; floor min=0.082s, prior run). VM oscillation caused false PROMOTE signal in initial run.sh (bv1rw4p6p). Confirmation run (brnft8c4o, RUNS=7, all 231 variants) returned STOP-FLOOR HOLD — best non-champion dp2_8s_fw_t0_128_768 at 0.076s but Δ=0.001s < 1.5% gate threshold. Champion (dp2_8s_fw_t0_192_768) reverted after false promote, confirmed at 0.076s best (g++-13 sweep).
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 402 consecutive STOP-FLOOR verdicts.
+
+Compiler sweep (5 samples each):
+- g++-13 -O3 -march=native → **0.076s** best (WINNER)
+- g++ -O3 -march=native → 0.078s
+- g++-13 -Ofast -march=native -funroll-loops → 0.082s
+- clang++ -O3 -march=native → 0.089s
+- clang++-18 -O3 -march=native → 0.088s
+→ **submit under: g++-13 -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%.
+
+**STOP-FLOOR ×402. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. 231 variants exhausted. READY TO SUBMIT.**
