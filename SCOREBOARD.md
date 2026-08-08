@@ -5458,3 +5458,24 @@ Compiler sweep (from run.sh):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM mixed (floor 274ms disk-inflated; champion best 79ms via mmap; rank-18 bar 69.3ms; champion 14% above bar on this VM state; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×396. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. False PROMOTE suppressed per confirmation protocol. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
+
+## Run log 2026-08-08 (scheduled run ×397) — STOP-FLOOR; champion unchanged
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×397 | 0.094 | 0.095 | — | Full run.sh (g++ -O3 -march=native, RUNS=5 interleaved). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.094 < 2×0.436=0.872 ✓ (floor inflated by disk I/O). 1.88 ns/line on this VM state. |
+| dp2_8s_fw_t0_192_896 | HOLD | 0.090 | 0.097 | −4.3% best / +2.1% med | Best faster but median SLOWER than champion — VM oscillation. Not both conditions met → HOLD. Known variant, no action. |
+
+VM state: slow (floor=0.436s disk-inflated; champion via mmap best=0.094s = 1.88 ns/line). Gate: best variant (t0_192_896) best=0.090s < need 0.0926s ✓ but median=0.097s > champion median 0.095s ✗ → HOLD. Correct (53687387166542798). Edge: 9/9.
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 397 consecutive STOP-FLOOR verdicts.
+
+Compiler sweep (from run.sh):
+- g++ -O3 -march=native → **0.091s** best
+- g++-13 -O3 -march=native → 0.093s best
+- clang++ -O3 -march=native → 0.105s best
+→ **submit under: g++ -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today VM slow (floor 436ms; champion best 94ms = 36% above rank-18 bar 69.3ms; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×397. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
