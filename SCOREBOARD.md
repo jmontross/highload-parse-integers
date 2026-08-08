@@ -5437,3 +5437,24 @@ Compiler sweep (7-sample interleaved, 2-way):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.067s; champion best=0.067s; 1.00× floor — AT ceiling; champion best CLEARS rank-18 bar 69.3ms at 67ms; 3.1% margin).
 
 **STOP-FLOOR ×395. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. Champion equals cat floor today (67ms = floor min). READY TO SUBMIT. Expected judge bare-metal: ~50-65ms (well clear of rank-18 bar ≤69.3ms).**
+
+## Run log 2026-08-08 (scheduled run ×396) — STOP-FLOOR; false PROMOTE caught+suppressed; champion unchanged
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_768) | STOP-FLOOR ×396 | 0.079 | 0.086 | — | Full 231-variant run.sh (g++ -O3 -march=native, RUNS=5 interleaved). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.079 < 2×0.274=0.548 ✓ (floor inflated by disk I/O during cat measurement; champion via mmap bypasses). |
+| dp2_8s_fw_t0_192_896 | FALSE PROMOTE | 0.076 | 0.080 | —3.8% best / —7.0% med | run.sh gate: best=0.076 < need=0.0778 ✓, median=0.080 < 0.086 ✓, edge 9/9 → PROMOTE fired. 2-way 9-round interleaved confirmation (g++ -O3): variant wins 5/9 rounds on raw timing but best-margin only 1.3% (0.077 vs 0.078) below 1.5% gate; variant median 0.082s > champion median 0.080s. Both conditions FAIL in confirmation → **FALSE PROMOTE. Champion HELD.** Same pattern as run ×393. VM oscillation inflates champion's median during full 231-variant sweep (cache pressure). |
+
+VM state: mixed (floor min=0.274s — disk I/O; champion via mmap+MAP_POPULATE best=0.079s = 1.58 ns/line; 2-way confirmation champion best=0.078s, med=0.080s). STOP-FLOOR: 0.079 < 2×0.274=0.548 ✓ (anomalous floor; real DRAM floor ~0.060-0.070s). Correct (53687387166542798). Edge: 9/9.
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 396 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (from run.sh):
+- g++ -O3 -march=native → **0.077s** best (run.sh champion sweep)
+- g++-13 -O3 -march=native → 0.078s best
+- clang++ -O3 -march=native → 0.087s best
+→ **submit under: g++ -O3 -march=native** or `g++-13 -O3 -march=native` (consistent historical winners)
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM mixed (floor 274ms disk-inflated; champion best 79ms via mmap; rank-18 bar 69.3ms; champion 14% above bar on this VM state; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×396. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. False PROMOTE suppressed per confirmation protocol. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain.**
