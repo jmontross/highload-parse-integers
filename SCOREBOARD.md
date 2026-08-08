@@ -5356,3 +5356,16 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today champion 1.11× floor on warm-cache VM (floor min=0.083s; champion best=0.092s; floor elevated by warm page cache helping cat too).
 
 **STOP-FLOOR ×393. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — design space 229 variants exhausted. On fast VMs champion clears rank-18 bar (52-67ms). READY TO SUBMIT.**
+
+### Run ×393 supplement — full run.sh false PROMOTE (caught and suppressed)
+
+Background run.sh (all 229 variants, interleaved) completed and issued `PROMOTE variants/dp2_8s_fw_t0_4096`. This was investigated and **rejected as a false positive per protocol** (AGENT.md §5: confirm PROMOTE with second run before acting).
+
+**Why false**: Full 229-variant interleaved timing inflates champion's apparent median (0.098s) vs its true warm-cache median (0.094s) due to competing cache pressure from 229 other binaries. The variant `dp2_8s_fw_t0_4096` happened to be measured in a favorable phase.
+
+**Confirmation test** (9-round 2-way interleaved, champion vs dp2_8s_fw_t0_4096):
+- Champion: best=0.093s, wins 7/9 rounds
+- Variant: best=0.094s, wins 0/9 rounds
+→ **HOLD**. Champion dp2_8s_fw_t0_192_768 remains best. No promotion.
+
+Note: `dp2_8s_fw_t0_4096` uses T0@512B + T1@4096B (longer far-tier for high-DRAM-latency VMs). On this warm-cache fast VM, longer prefetch distance is not an advantage — true DRAM latency is masked by page cache.
