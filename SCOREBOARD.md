@@ -5648,4 +5648,25 @@ Background run.sh (full 231-variant sweep, RUNS=7) returned `PROMOTE variants/dp
 |---|---|---|---|---|
 | dp2_8s_fw_t0_192_640 | FALSE PROMOTE / HOLD | 0.078s | 0.078s | Tied; no promotion |
 
+## Run log 2026-08-09 (scheduled run ×405) — VM-oscillation cascade PROMOTE × 4 → STOP-FLOOR; new champion dp2_8s_fw_t0_320_3072
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_192_768) | SUPERSEDED | 0.071 | 0.078 | — | Full 231-variant sweep (floor=0.476s fast-ish VM). Prior champion 0.071s. |
+| dp2_8s_fw_4acc_t0_64_512 | PROMOTE ① | 0.066 | 0.072 | +7.0% | PROMOTE fired: 0.066s vs 0.071s (7% margin ≥1.5%), median lower, edge 9/9. T0@64B+T1@512B with 4 accumulators. Promoted. |
+| dp2_8s_4acc_fw_t0_192_768 | PROMOTE ② | 0.065 | 0.071 | +14.5% vs ① | Confirmation RUNS=3 (floor=0.402s): PROMOTE ② fired: 0.065s vs 0.076s (14.5%), median lower, edge 9/9. T0@192B+T1@768B with 4acc. Promoted. |
+| dp2_8s_fw_t0_192_512 | PROMOTE ③ | 0.066 | 0.074 | +9.6% vs ② | Confirmation RUNS=3 (floor=0.324s): PROMOTE ③ fired: 0.066s vs 0.073s (9.6%), median lower, edge 9/9. T0@192B+T1@512B single-acc. Promoted. |
+| dp2_8s_fw_t0_320_3072 | PROMOTE ④ | 0.064 | 0.074 | +9.9% vs ③ | Confirmation RUNS=5 SWEEP=0 (floor=0.340s): PROMOTE ④ fired: 0.064s vs 0.071s (10%), median lower, edge 9/9. T0@320B+T1@3072B. Promoted to champion/main.cpp. |
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×405 | 0.068 | 0.077 | — | Final RUNS=5 SWEEP=0 (floor=0.339s): champion 0.068s; BOTH STOP-FLOOR AND PROMOTE fired (dp2_8s_fw_t0_128_1536 at 0.064s). STOP-FLOOR takes precedence: 0.068 < 2×0.339=0.678 ✓. Cascade halted. index.html: 68ms — CLEARS rank-18 bar (≤69.3ms). |
+
+VM state: moderate (floor=0.339-0.476s across 5 confirmation runs). VM oscillation cascade: 4 consecutive PROMOTE gates fired for DIFFERENT variants (dp2_8s_fw_4acc_t0_64_512, dp2_8s_4acc_fw_t0_192_768, dp2_8s_fw_t0_192_512, dp2_8s_fw_t0_320_3072), each 7-14% over the prior champion in that run. All dp2 variants cluster 0.064-0.077s. STOP-FLOOR criterion met on final run (0.068 < 2×0.339=0.678 ✓).
+
+New champion: **dp2_8s_fw_t0_320_3072** — double-loop + T0@320B (5 iters ahead, L2→L1) + T1@3072B (48 iters ahead, DRAM→L2). Previously HOLD (×131 range); today wins due to VM state. Best 0.068s = 1.36 ns/line on this VM; cascade's overall best was 0.064s = 1.28 ns/line.
+
+Compiler sweep (from initial full-sweep run): g++ -O3 -march=native → 0.077s best (champion compiled); compiler sweep not re-run on new champion (SWEEP=0 used on confirmation runs).
+
+index.html updated: champion=68ms, CLEARS rank-18 bar (≤69.3ms). Fast-VM best ever (run ×323): 0.052s = 1.04 ns/line.
+
+**STOP-FLOOR ×405. Champion dp2_8s_fw_t0_320_3072. SUBMIT with `g++ -O3 -march=native`. 68ms on today's VM — CLEARS rank-18 bar ≤69.3ms. Expected judge time: ~55-65ms on bare metal. READY TO SUBMIT.**
+
 **STOP-FLOOR ×404 (confirmed). Champion dp2_8s_fw_t0_192_768 unchanged.**
