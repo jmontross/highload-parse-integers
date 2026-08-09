@@ -5686,3 +5686,27 @@ Background run.sh (RUNS=3, full 231-variant sweep) completed before targeted ben
 STOP-FLOOR ×406 confirmed. All algorithmic angles exhausted (Changes A+B from BREAKTHROUGH DIRECTIVE, 231 cpp variants, all prefetch distances/tiers, stream counts, loop structures, accumulator counts). No new directions remain.
 
 **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best sweep 0.077s). Expected judge time: ~55-65ms. Champion at bandwidth ceiling — 1.03× cat floor on this VM.
+
+## Run log 2026-08-09 (scheduled run ×407) — STOP-FLOOR; champion AT bandwidth ceiling; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×407 | 0.095 | 0.096 | — | g++-13 -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.095 < 2×0.090=0.180 ✓ (1.05× floor — champion AT bandwidth ceiling). |
+
+VM state: moderate (floor min=0.087s, med=0.090-0.097s; 5-sample cat). Champion (g++-13 -O3 -march=native) 7-sample: best=0.095s, med=0.096s = 1.90 ns/line. Champion within 1.05× of cat floor → STOP-FLOOR ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark (RUNS=7 interleaved). Full 231-variant sweep skipped (design space fully exhausted — 406 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 407 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → 0.093s best
+- g++-13 -O3 -march=native → **0.090s** best (WINNER)
+- g++ -Ofast -march=native -funroll-loops → 0.094s
+- g++-13 -Ofast -march=native -funroll-loops → 0.095s
+- clang++-18 -O3 -march=native → 0.104s
+→ **submit under: g++-13 -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.087s; champion best=0.095s; 1.05× floor — AT ceiling; champion best 95ms = 37% above rank-18 bar 69.3ms on this moderate VM; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×407. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
