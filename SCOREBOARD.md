@@ -5670,3 +5670,19 @@ index.html updated: champion=68ms, CLEARS rank-18 bar (≤69.3ms). Fast-VM best 
 **STOP-FLOOR ×405. Champion dp2_8s_fw_t0_320_3072. SUBMIT with `g++ -O3 -march=native`. 68ms on today's VM — CLEARS rank-18 bar ≤69.3ms. Expected judge time: ~55-65ms on bare metal. READY TO SUBMIT.**
 
 **STOP-FLOOR ×404 (confirmed). Champion dp2_8s_fw_t0_192_768 unchanged.**
+
+## Run log 2026-08-09 (scheduled run ×406)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion dp2_8s_fw_t0_320_3072 | STOP-FLOOR ×406 | 0.077 | 0.079 | — | Edge: 9/9. STOP-FLOOR ×406. Floor min=0.075s (medium VM). Champion 1.03× floor = at bandwidth ceiling. |
+| dp2_8s_fw_4acc_t0_64_448 | FALSE PROMOTE / HOLD | 0.077 | 0.079 | 0.0% | Background sweep (RUNS=3) fired PROMOTE: 0.075s vs champion 0.080s (6.25% margin). Confirmation head-to-head (7 rounds): champion 0.077/0.079, variant 0.077/0.079 — TIED. Classic VM-oscillation false PROMOTE: champion happened to be measured in slow VM state during sweep (0.080s), variant in faster state (0.075s). HOLD. |
+| dp2_8s_fw_4acc_t0_320_3072 | DEAD | 0.079 | 0.086 | -3.6% SLOWER | NEW 2026-08-09. 4 independent accumulators + T0@320B + T1@3072B (champion's exact prefetch distances, but 4acc instead of single acc). Theory: breaks serial acc_u16 dependency chain (4 parallel accumulates vs 4 serial). Practice: 7-round interleaved: champion med=0.083s, variant med=0.086s = 3.6% SLOWER. DEAD. Root cause: OOO hardware already hides the single-acc serial chain behind DRAM-latency-hidden compute; the 4acc structure adds register pressure without benefit. Confirms STOP-FLOOR. |
+
+VM state: medium (floor min=0.075s, med=0.077-0.100s). Champion best=0.077s = 1.54 ns/line. All dp2 variants cluster 0.077-0.087s within noise. Fast-VM best ever (run ×323): 0.052s = 1.04 ns/line.
+
+Background run.sh (RUNS=3, full 231-variant sweep) completed before targeted benchmarks: champion measured at 0.080s (slow VM moment), dp2_8s_fw_4acc_t0_64_448 at 0.075s → PROMOTE fired. Confirmation benchmark showed HOLD (tied). Same false-PROMOTE pattern as runs ×402, ×404.
+
+STOP-FLOOR ×406 confirmed. All algorithmic angles exhausted (Changes A+B from BREAKTHROUGH DIRECTIVE, 231 cpp variants, all prefetch distances/tiers, stream counts, loop structures, accumulator counts). No new directions remain.
+
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (best sweep 0.077s). Expected judge time: ~55-65ms. Champion at bandwidth ceiling — 1.03× cat floor on this VM.
