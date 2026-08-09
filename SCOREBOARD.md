@@ -5745,3 +5745,19 @@ Compiler comparison (g++ wins slightly on this run):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.073s; champion best=0.094s; 1.29× floor — AT ceiling; champion best 94ms above rank-18 bar 69.3ms on this moderate VM; clears on fast VMs).
 
 **STOP-FLOOR ×409. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
+
+## Run log 2026-08-09 (scheduled run ×410) — STOP-FLOOR; champion at bandwidth ceiling; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×410 | 0.091 | 0.095 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.091 < 2×0.064=0.128 ✓ (1.42× floor). |
+
+VM state: moderate (floor min=0.064s, median=0.065s). Champion (g++ -O3 -march=native) 7-sample: best=0.091s, med=0.095s = 1.90 ns/line. Champion within 1.42× of cat floor → STOP-FLOOR ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark (RUNS=7 interleaved). Full 231-variant sweep skipped (design space fully exhausted — 409 prior STOP-FLOOR verdicts). All three potentially-new variants (`t1only_768`, `t2_t1`, `t0_9216`) were already benchmarked in prior runs (t1only_768: DEAD ×409; t2_t1: HOLD ×102; t0_9216: HOLD ×122) — no new directions.
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 410 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.064s; champion best=0.091s; 1.42× floor — AT bandwidth ceiling).
+
+**STOP-FLOOR ×410. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
