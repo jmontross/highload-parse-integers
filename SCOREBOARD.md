@@ -5639,3 +5639,13 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.061s; champion best=0.077s; 1.26× floor — AT ceiling; champion best 77ms = 11% above rank-18 bar 69.3ms on this VM; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×404. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
+
+## Run log 2026-08-09 (scheduled run ×404 — addendum: false PROMOTE caught)
+
+Background run.sh (full 231-variant sweep, RUNS=7) returned `PROMOTE variants/dp2_8s_fw_t0_192_640` (best=0.076s vs champion 0.078s, Δ=0.002s). Confirmation benchmark (5-round interleaved head-to-head) showed **HOLD**: champion best=0.078s, variant best=0.078s — tied within noise. Same false-PROMOTE pattern as run ×402. Champion unchanged.
+
+| Variant | Confirmation result | Champ best | Var best | Verdict |
+|---|---|---|---|---|
+| dp2_8s_fw_t0_192_640 | FALSE PROMOTE / HOLD | 0.078s | 0.078s | Tied; no promotion |
+
+**STOP-FLOOR ×404 (confirmed). Champion dp2_8s_fw_t0_192_768 unchanged.**
