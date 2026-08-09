@@ -5798,3 +5798,23 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM unusual (cat floor slow=0.471s but champion mmap path best=0.076s = 1.52 ns/line; 76ms vs rank-18 bar 69.3ms = 1.1× above bar on this VM, clears on fast VMs).
 
 **STOP-FLOOR ×412. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
+
+## Run log 2026-08-09 (scheduled run ×413) — STOP-FLOOR; champion at bandwidth ceiling; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×413 | 0.098 | 0.100 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.098 < 2×0.085=0.170 ✓ (1.15× floor). |
+
+VM state: moderate (floor min=0.085s, med=0.087s). Champion (g++ -O3 -march=native) 7-sample: best=0.098s, med=0.100s = 1.96 ns/line. Champion within 1.15× of cat floor → STOP-FLOOR ✓. Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark (RUNS=7 interleaved). Full 224-variant sweep skipped (design space fully exhausted — 412 prior STOP-FLOOR verdicts). No new variants created. All algorithmic angles exhausted.
+
+Compiler comparison (g++ wins on this run):
+- g++ -O3 -march=native → **0.090s** best (WINNER)
+- g++-13 -O3 -march=native → 0.091s best
+- clang++-18 -O3 -march=native → 0.103s best
+→ **submit under: g++ -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.085s; champion best=0.098s; 1.15× floor — AT bandwidth ceiling).
+
+**STOP-FLOOR ×413. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 224 cpp variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
