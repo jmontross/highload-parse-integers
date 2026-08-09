@@ -5710,3 +5710,18 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.087s; champion best=0.095s; 1.05× floor — AT ceiling; champion best 95ms = 37% above rank-18 bar 69.3ms on this moderate VM; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×407. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
+
+## Run log 2026-08-09 (scheduled run ×408) — FALSE PROMOTE caught by confirmation; STOP-FLOOR; champion unchanged
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×408 | 0.092 | 0.094 | — | 7-sample interleaved, moderate VM (floor min=0.084s). Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.092 < 2×0.084=0.168 ✓ (1.10× floor — AT bandwidth ceiling). |
+| dp2_8s_fw_2560_32 | FALSE PROMOTE / HOLD | 0.093 | 0.093 | -1.1% (SLOWER best) | Full 231-variant sweep (bg run) fired PROMOTE: 0.090s vs champion's anomalous 0.098s → 8.2% margin. Confirmation 7-round interleaved: champion best=0.092s, variant best=0.093s (SLOWER), variant median=0.093s < champ 0.094s → HOLD (best condition fails). Classic VM oscillation: champion had a bad sample during sweep; confirmation shows HOLD. NOT PROMOTED. Variant same as always — within noise cluster. |
+
+VM state: moderate (floor min=0.084s; champion best=0.092s; 1.10× floor — AT bandwidth ceiling). Full 231-variant sweep ran on faster-VM state (floor=0.574s) → champion measured 0.098s (anomalous) triggering false PROMOTE for dp2_8s_fw_2560_32. Confirmation head-to-head restored true ranking: tied within noise.
+
+False PROMOTE pattern: identical to runs ×402, ×404, ×406 — sweep champion sample in slow-VM moment; variant in fast-VM moment → apparent large margin; confirmation shows HOLD. dp2_8s_fw_2560_32 has been champion multiple times (×102, ×219) and HOLD multiple times; it is within the dp2 noise cluster.
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 408 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented.
+
+**STOP-FLOOR ×408. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native` (or g++-13). 231 variants exhausted. READY TO SUBMIT.**
