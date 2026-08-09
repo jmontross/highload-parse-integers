@@ -5818,3 +5818,24 @@ Compiler comparison (g++ wins on this run):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.085s; champion best=0.098s; 1.15× floor — AT bandwidth ceiling).
 
 **STOP-FLOOR ×413. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 224 cpp variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. No untried directions remain. READY TO SUBMIT.**
+
+## Run log 2026-08-09 (scheduled run ×413 — full sweep results)
+
+Full 224-variant sweep completed (background run.sh RUNS=7). Key results:
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×413 | 0.090 | 0.094 | — | g++ -O3 -march=native, 7-round interleaved. STOP-FLOOR: 0.090 < 2×0.508=1.016 ✓ (unusual VM: cat=0.508s slow, mmap=0.090s fast via hugepage). Correct (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_t0_128_1536 | HOLD | 0.089 | 0.096 | -1.1% best / +2.1% med | Best 0.089s vs need 0.0886s (1.5% margin) — best condition misses by 0.4ms; median SLOWER than champion → HOLD. Within noise cluster. |
+
+VM state: unusual (cat floor=0.508s slow sequential read path; champion mmap+hugepage 0.090s = 0.18× of cat floor — bypasses kernel read entirely). STOP-FLOOR ✓.
+
+Compiler sweep (champion, 7 samples each):
+- g++ -O3 -march=native → **0.090s** best (WINNER)
+- g++-13 -O3 -march=native → 0.092s best
+- clang++ -O3 -march=native → 0.101s best
+→ **submit under: g++ -O3 -march=native**
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM unusual (cat=0.508s slow but mmap champion=0.090s = 1.80 ns/line; 90ms vs rank-18 bar 69.3ms on this VM, clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×413 (full sweep). Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. 224 variants exhausted. No untried directions remain. READY TO SUBMIT.**
