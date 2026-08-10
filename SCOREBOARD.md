@@ -6129,3 +6129,28 @@ ns/line: 0.074s / 50M = **1.48 ns/line** (this run). Floor=0.064s → 1.16× flo
 index.html: champion=74ms (this run, fast-moderate VM). On fast VM runs (×323, ×418, ×423: 0.052-0.067s) champion clears rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×424. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.16× floor) — 233 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×425) — STOP-FLOOR; moderate VM; champion confirmed
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×425 | 0.079 | 0.081 | — | g++-13 -Ofast -march=native -funroll-loops. Correct (53687387166542798). Edge 9/9. Floor min=0.059s → 1.34× floor. |
+
+VM state: moderate (floor 7-sample: min=0.059s, med=0.061s; champion 7-sample: best=0.079s with g++-13 -Ofast). STOP-FLOOR: 0.079/0.059 = 1.34× < 2.0 ✓.
+
+Compiler sweep (7 samples each):
+- g++ -O3 -march=native → 0.080s best
+- g++ -Ofast -march=native -funroll-loops → 0.083s best
+- g++-13 -O3 -march=native → 0.081s best
+- g++-13 -Ofast -march=native -funroll-loops → **0.079s best** (WINNER)
+- clang++ -O3 -march=native → 0.088s best
+- clang++-18 -O3 -march=native → 0.089s best
+→ **submit under: g++-13 -Ofast -march=native -funroll-loops** (0.079s best today)
+
+No new variants created. Design space: 233 cpp + 1 rs — definitively exhausted since run ×420. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@448B prefetch) fully implemented in champion.
+
+ns/line: 0.079s / 50M = **1.58 ns/line** (this run best). Floor=0.059s → 1.34× floor — at bandwidth ceiling. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%.
+
+index.html: champion=79ms (this run, moderate VM). On fast VM runs champion clears rank-18 bar (best-ever 0.052s, typical fast-VM 0.063-0.069s).
+
+**STOP-FLOOR ×425. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling (1.34× floor) — 233 variants exhausted. READY TO SUBMIT.**
