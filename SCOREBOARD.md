@@ -5909,3 +5909,23 @@ Champion-only benchmark. Full variant sweep skipped (design space fully exhauste
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM fast (floor min=0.080s; champion best=0.077s faster than floor; 1.54 ns/line; 77ms vs rank-18 bar 69.3ms = 1.11× above bar on this VM; expected clears bar on best VMs ≤67ms).
 
 **STOP-FLOOR ×416. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. READY TO SUBMIT.**
+
+### Full 231-variant sweep (run ×416, same VM — slow floor due to compile load)
+
+floor (cat > /dev/null) = 0.209s min / 0.381s median (heavy compile load during sweep)
+
+Top 5 by best time:
+| Rank | Variant | Best(s) | Med(s) |
+|---|---|---|---|
+| 1 | dp2_8s_fw_t0_192_3072 | 0.076 | 0.082 |
+| 2 | dp2_8s_fw_t0_320_3072 (champion code as variant) | 0.076 | 0.078 |
+| 3 | champion | 0.077 | 0.078 |
+| 4 | dp2_8s_fw_2560_32 | 0.077 | 0.080 |
+| 5 | dp2_8s_fw_2w_4096 | 0.077 | 0.080 |
+
+Promotion gate: dp2_8s_fw_t0_192_3072 best=0.076s (need ≤0.0758s = 1.5% below champ 0.077s) — misses margin AND median=0.082s > champ 0.078s → HOLD. No promotion.
+
+Compiler sweep (full run): g++ -O3 -march=native and g++-13 -O3 -march=native both 0.077s best.
+→ **submit under: g++ -O3 -march=native** (consistent with recent history)
+
+**Full 231-variant sweep confirms STOP-FLOOR ×416. No untried directions. Champion ready to submit.**
