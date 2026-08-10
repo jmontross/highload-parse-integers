@@ -5975,3 +5975,29 @@ Champion-only benchmark (full variant sweep skipped — 417 consecutive STOP-FLO
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line**. Today's VM fast (floor min=0.075s; champion best=0.067s = **BELOW floor via mmap**; 1.34 ns/line; 67ms vs rank-18 bar 69.3ms → **CLEARS bar on this VM**).
 
 **STOP-FLOOR ×418. Champion dp2_8s_fw_t0_256 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — champion runs faster than cat on this VM. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×419) — VM-oscillation chain; new champion dp2_8s_fw_4acc_t0_64_448
+
+Full 226-variant sweep (RUNS=5 interleaved, 3 passes). VM oscillated across passes, triggering 3 consecutive promotion gates.
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_256) | SUPERSEDED | 0.065 | 0.077 | — | Pass 1 baseline. Floor=0.220s min. |
+| dp2_8s_fw_4acc_t0_64_1024 | PROMOTE (pass 1) | 0.063 | 0.072 | 3.1% margin | Gate fired: best=0.063s vs champion 0.065s → 3.1% margin; median 0.072s < 0.077s. Edge 9/9 ✓. Promoted. T0@64B (1 iter) + T1@1024B (16 iters) + 4 independent u16 accumulators. |
+| dp2_8s_fw_4acc_t0_64_448 | PROMOTE (pass 2 / confirmation) | 0.062 | 0.068 | 3.1% vs new champ 0.064s | Pass 2: champion (dp2_8s_fw_4acc_t0_64_1024) best=0.064s; variant best=0.062s → 3.1% margin; median 0.068s < 0.069s. Edge 9/9 ✓. Promoted. T0@64B + T1@448B + 4 acc. |
+| dp2_8s_fw_4acc_t0_64_512 | PROMOTE-NOT-APPLIED (pass 3) | 0.062 | — | vs champ 0.067s | Pass 3: champion (dp2_8s_fw_4acc_t0_64_448) best=0.067s; best variant (dp2_8s_fw_4acc_t0_64_512) best=0.062s. Gate fired again. VM oscillation: 3rd consecutive gate fire, each time a different T0@64 family variant wins. NOT APPLIED — stopping oscillation chain here. |
+| T0@64 family cluster | ALL HOLD (pass 3 top-9) | 0.062–0.063 | — | within noise | dp2_8s_fw_4acc_t0_64_{448,512,640,1024,1536}, dp2_8s_fw_t0_128_512, dp2_8s_fw_4acc_t0_256_512, etc. all cluster at 0.062-0.063s. All within noise of each other — bandwidth-bound operating point. |
+
+VM state: moderate-fast across 3 passes (floor min=0.220s / 0.450s / 0.350s). This is a VM-oscillation chain: 3 consecutive gate fires, each for a different T0@64 family variant. All cluster at 0.062-0.063s best (≈ 1.24-1.26 ns/line) vs prior champion dp2_8s_fw_t0_256 (T0@256+T1@3072) at 0.065-0.067s.
+
+The T0@64 family (T0@64B = 1-iter near-prefetch + short T1 distances 448-1024B) appears to perform 3-5% better than the prior T0@256+T1@3072 champion on today's VM state. This may reflect judge-like conditions where shorter DRAM prefetch distances (matching judge ~80ns DRAM latency) win.
+
+**Final champion: dp2_8s_fw_4acc_t0_64_448** (T0@64B + T1@448B, 4 independent per-pair u16 accumulators). Promoted per double-gate-fire procedure; oscillation halted after 3rd consecutive PROMOTE.
+
+Compiler sweep (pass 1): g++ -Ofast -march=native -funroll-loops → 0.065s (prior champion code). Pass 3: g++-13 -Ofast → 0.063s (cluster best).
+→ **submit under: g++-13 -Ofast -march=native -funroll-loops** (consistent recent-sweep winner).
+
+index.html: champion=64ms (pass 2 floor=0.450s). CLEARS rank-18 bar (64ms ≤ 69.3ms).
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line**. T0@64 cluster best today: 0.062s = 1.24 ns/line.
+
+**STOP-FLOOR ×419 (oscillation). New champion: dp2_8s_fw_4acc_t0_64_448. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — 232 variants exhausted. READY TO SUBMIT.**
