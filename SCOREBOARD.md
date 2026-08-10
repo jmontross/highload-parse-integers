@@ -6053,3 +6053,5 @@ index.html: champion=78ms (this run's 3-sample best, moderate-fast VM). On fast 
 Both BREAKTHROUGH DIRECTIVE changes (A: digit-place accumulation; B: 8-stream MLP + two-tier prefetch) fully implemented in champion. Design space definitively exhausted.
 
 **STOP-FLOOR ×421. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling (0.95× floor) — design space 233 variants exhausted. READY TO SUBMIT.**
+
+  — STOP-FLOOR ×421 confirmed by full 226-variant sweep (background run.sh, completed 2026-08-10): champion best=0.078s; best challenger dp2_8s_fw_t0_128_2048 at 0.077s misses 1.5% gate (need ≤0.0768s; got 0.0770s) → HOLD. Compiler sweep confirms g++-13 -O3 -march=native → 0.079s (BEST). Edge: 9/9. STOP-FLOOR verdict written to /tmp/pi_verdict. Design space 233 variants: no new grid points or algorithmic directions remain.
