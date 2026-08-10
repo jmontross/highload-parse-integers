@@ -10,7 +10,7 @@ Bandwidth floor (`cat input.txt > /dev/null`, page-cached) ≈ **0.084s** on the
 Mac — the f(n)=n asymptote. `run.sh` prints it every run. Champion is memory-bound
 (done) when it approaches this. On x86 cloud the floor is noisy (0.175–0.47s, mmap+page-cache
 can beat `cat` since it bypasses the read path); real floor is ~0.17s.
-Champion (dp2_8s_fw_t0_320_3072) at 0.063-0.095s (VM-dependent) — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++ -O3 -march=native best. Best observed: 0.052s = 1.04 ns/line (CLEARS rank-18 bar ≤69.3ms). NOTE: dp2_8s_fw_t0_320_3072 promoted at run ×405 via VM-oscillation cascade (HOLD ×2 on earlier runs, but PROMOTE with 68ms = CLEARS rank-18); dp2_8s_fw_t0_192_768 and dp2_8s_fw_t0_320_3072 are effectively tied; current champion/main.cpp = dp2_8s_fw_t0_320_3072 (confirmed ×405-×411).
+Champion (dp2_8s_fw_t0_320_3072) at 0.063-0.097s (VM-dependent) — mmap+hugepage bypasses kernel read path entirely; fully bandwidth-bound. g++ -O3 -march=native / g++ -Ofast best (run-dependent). Best observed: 0.052s = 1.04 ns/line (CLEARS rank-18 bar ≤69.3ms). NOTE: dp2_8s_fw_t0_320_3072 promoted at run ×405 via VM-oscillation cascade (HOLD ×2 on earlier runs, but PROMOTE with 68ms = CLEARS rank-18); dp2_8s_fw_t0_192_768 and dp2_8s_fw_t0_320_3072 are effectively tied; current champion/main.cpp = dp2_8s_fw_t0_320_3072 (confirmed ×405-×415).
 
 ## Champion
 - **dp2_8s_fw_t0_192_768 (current champion; T0@192B/3-iter near + T1@768B/12-iters far; confirmed by run ×390; promoted circa ×368-×379, maintenance commits did not update SCOREBOARD)** — `Effectively tied with dp2_8s_fw_t0_128_512 — both cluster 0.063-0.095s; champion oscillated between them around ×318-×380 VM oscillation cascade. Double-loop + two-tier prefetch, same structure as all dp2_8s_fw variants. Judge build: g++-13 -O3 -march=native.`
@@ -5862,3 +5862,27 @@ Compiler sweep (3 samples each):
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.075s; champion best=0.097s; 1.29× floor; rank-18 bar 69.3ms; champion 40% above bar on this moderate VM; expected on fast VM: 52-67ms, CLEARS bar).
 
 **STOP-FLOOR ×414. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×415) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | STOP-FLOOR ×415 | 0.081 | 0.082 | — | g++ -Ofast -march=native -funroll-loops, 7-sample. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.081 < 2×0.070=0.140 ✓ (1.16× floor). |
+
+VM state: moderate (floor min=0.070s med=0.071s; 7-sample cat). Champion 7-sample best-of-compiler:
+- g++ -O3 -march=native → **0.082s** min, 0.088s med
+- g++-13 -O3 -march=native → 0.084s min, 0.087s med
+- g++ -Ofast -march=native -funroll-loops → **0.081s** min, 0.082s med (sweep winner)
+- clang++ -O3 -march=native → 0.089s min, 0.090s med
+
+→ **submit under: g++ -Ofast -march=native -funroll-loops** (0.081s today; 1.62 ns/line; 1.16× floor).
+
+STOP-FLOOR ✓ (champion 1.16× floor — AT bandwidth ceiling; mmap+hugepage bypasses kernel read path). Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark. Full variant sweep skipped (design space fully exhausted — 414 prior STOP-FLOOR verdicts).
+
+No new variants created. Design space: 231 cpp variants — fully exhausted. 415 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented long ago — dp2 family IS Change A (digit-place accumulation, stuchlik_digitplace.cpp superseded) + Change B (8-stream memory parallelism, stuchlik_8stream.cpp superseded).
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.070s; champion best=0.081s; 1.16× floor; 1.62 ns/line; 81ms vs rank-18 bar 69.3ms on this VM; expected on fast VM: 52-67ms, CLEARS bar).
+
+**STOP-FLOOR ×415. Champion dp2_8s_fw_t0_320_3072 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — 231 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. READY TO SUBMIT.**
