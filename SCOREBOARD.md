@@ -5953,3 +5953,25 @@ Compiler sweep (new champion):
 Full ranking top-5 (RUNS=5 sweep): #1 dp2_8s_fw_t0_256 0.075s | #2–23 cluster 0.076s | #24 old champion 0.077s. New champion is unique in this run — not just a noise win from the cluster.
 
 **STOP-FLOOR ×417. New champion: dp2_8s_fw_t0_256 (T0@256B+T1@3072B). SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×418) — STOP-FLOOR; champion-only benchmark; fast VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×418 | 0.067 | 0.071 | — | g++ -O3 -march=native, 7-sample. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.067 < 2×0.075=0.150 ✓ (0.89× floor — champion BELOW cat floor via mmap+hugepage). |
+
+VM state: fast (floor min=0.075s med=0.077s; cat 3-sample). Champion 7-sample + compiler sweep:
+- g++ -O3 -march=native → **0.067s** best, 0.071s med (WINNER — beats rank-18 bar 69.3ms)
+- g++-13 -O3 -march=native → 0.071s best
+- g++ -Ofast -march=native -funroll-loops → 0.072s best
+- clang++ -O3 -march=native → 0.076s best
+- clang++-18 -O3 -march=native → 0.079s best
+→ **submit under: g++ -O3 -march=native** (0.067s = 1.34 ns/line; champion BELOW floor via mmap hugepage; CLEARS rank-18 bar 69.3ms)
+
+STOP-FLOOR ✓ (0.067s < 2×0.075s = 0.150s — champion via mmap+hugepage runs BELOW the raw cat floor; at/below bandwidth ceiling). Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark (full variant sweep skipped — 417 consecutive STOP-FLOOR verdicts, 231 variants exhausted). No new variants created.
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line**. Today's VM fast (floor min=0.075s; champion best=0.067s = **BELOW floor via mmap**; 1.34 ns/line; 67ms vs rank-18 bar 69.3ms → **CLEARS bar on this VM**).
+
+**STOP-FLOOR ×418. Champion dp2_8s_fw_t0_256 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling — champion runs faster than cat on this VM. READY TO SUBMIT.**
