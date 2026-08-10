@@ -6001,3 +6001,25 @@ index.html: champion=64ms (pass 2 floor=0.450s). CLEARS rank-18 bar (64ms ≤ 69
 Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line**. T0@64 cluster best today: 0.062s = 1.24 ns/line.
 
 **STOP-FLOOR ×419 (oscillation). New champion: dp2_8s_fw_4acc_t0_64_448. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — 232 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×420) — STOP-FLOOR; new variants: 16s_t1only, 8s_nta (both HOLD)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×420 | 0.094 | 0.098 | — | g++ -O3 -march=native. Correct (53687387166542798). Edge 9/9. |
+| dp2_16s_fw_8acc_t1_448 | HOLD/WORSE | 0.100 | 0.104 | +6.4% worse | 16 streams, T1-only@448B (no T0). Theory: 16 outstanding T1 req = same as 8s T0+T1. Result: register spilling from 32 stream pointers (16p + 16b) hurts more than additional MLP helps. DEAD END. |
+| dp2_8s_fw_4acc_t0_nta_448 | HOLD/TIED | 0.095 | 0.096 | +1.1% | 8 streams, T0=NTA (non-temporal, bypass L2/L3)@64B + T1@448B. Theory: NTA avoids L2/L3 pollution from T0 near-line fetch. Result: essentially identical to champion. HW prefetcher covers sequential anyway; NTA adds no benefit. DEAD END. |
+| dp2_8s_fw_4acc_t0_64_3072 (existing) | HOLD | 0.092 | 0.095 | ~2% within noise | Slightly better median on this VM but well within noise band (jitter ±0.2s+). No promotion. |
+
+VM state: moderate-noisy (multiple clean floor=0.067s; champion best=0.094s = 1.40× floor; 3-sample clean comparison 2026-08-10). Very high jitter in extended benchmarks (VM load).
+
+STOP-FLOOR: 0.094s < 2×0.067s = 0.134s ✓ (champion below 2× floor, algorithm at bandwidth ceiling).
+Correct (53687387166542798). Edge: 9/9. Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line**.
+
+**Novel directions exhausted (run ×420):**
+- 16-stream T1-only: WORSE (register spilling with 32 live pointers)
+- 8s T0=NTA: TIED (no benefit over T0 for once-only sequential access)
+- T1 distance sweep: all variants 0.091-0.096s, indistinguishable on this VM
+- 233 total variants now exhausted. Algorithm is at bandwidth ceiling.
+
+**STOP-FLOOR ×420. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling. READY TO SUBMIT.**
