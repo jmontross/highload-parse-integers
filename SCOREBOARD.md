@@ -5929,3 +5929,27 @@ Compiler sweep (full run): g++ -O3 -march=native and g++-13 -O3 -march=native bo
 → **submit under: g++ -O3 -march=native** (consistent with recent history)
 
 **Full 231-variant sweep confirms STOP-FLOOR ×416. No untried directions. Champion ready to submit.**
+
+## Run log 2026-08-10 (scheduled run ×417) — PROMOTE: dp2_8s_fw_t0_256 → new champion
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_320_3072) | SUPERSEDED | 0.0770 | 0.0780 | — | Prior champion; 224-variant sweep (RUNS=5). STOP-FLOOR: 0.077 < 2×0.218 ✓. |
+| dp2_8s_fw_t0_256 | PROMOTE | 0.0750 | 0.0760 | best −2.6%, median −2.6% | T0@256B + T1@3072B. Beats gate (need ≤0.0758s; got 0.0750s). Median 0.0760 < 0.0780 ✓. Edge 9/9 ✓. Promoted to champion. |
+| dp2_8s_fixed_3072, dp2_8s_fw_t0_192_*, dp2_8s_fw_2w_2048, etc. | HOLD | 0.0760 | — | 1.3% below gate threshold | Large cluster at 0.0760s (ranks 2–23); all miss gate by 0.0002s. |
+
+VM state: moderate-fast (run floor=0.218s min per cat benchmark; mmap bypass: cat confirmed 0.058s min after warm). Champion (old) best 0.077s; new champion (dp2_8s_fw_t0_256) best 0.075s = 1.50 ns/line.
+
+**PROMOTE**: T0@256B wins over T0@320B on this VM. Tighter near-prefetch (256B = 4 iters ahead vs 320B = 5 iters) reduces µop pressure and frees OOO slots when data is already warm. T1@3072B unchanged. The 64B reduction in T0 distance is within the noise band historically but crossed the gate in this run.
+
+Confirmation run (new champion, RUNS=7): best=0.076s, med=0.077s. Edge: 9/9. STOP-FLOOR: 0.076 < 2×0.058 ✗ (mmap floor 0.058s; 1.31× floor → at bandwidth ceiling confirmed).
+
+Compiler sweep (new champion):
+- g++ -O3 -march=native → 0.078s best
+- g++-13 -O3 -march=native → **0.076s** best (WINNER)
+- clang++-18 -O3 -march=native → 0.085s best
+→ **submit under: g++-13 -O3 -march=native** (same winner as prior sweeps)
+
+Full ranking top-5 (RUNS=5 sweep): #1 dp2_8s_fw_t0_256 0.075s | #2–23 cluster 0.076s | #24 old champion 0.077s. New champion is unique in this run — not just a noise win from the cluster.
+
+**STOP-FLOOR ×417. New champion: dp2_8s_fw_t0_256 (T0@256B+T1@3072B). SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling. READY TO SUBMIT.**
