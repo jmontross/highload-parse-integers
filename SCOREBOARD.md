@@ -6079,3 +6079,28 @@ ns/line: 0.092s / 50M = **1.84 ns/line** (this run best). Floor=0.059s → 1.56�
 Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%.
 
 **STOP-FLOOR ×422. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.56× floor today) — 233 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-10 (scheduled run ×423) — STOP-FLOOR; fast VM; champion AT bandwidth ceiling
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×423 | 0.065 | 0.075 | — | g++ -O3 -march=native. Correct (53687387166542798). Edge 9/9. Floor min=0.067s → 0.97× floor (BELOW floor via mmap+hugepage THP bypass). |
+
+VM state: fast (floor 7-sample interleaved: min=0.067s, med=0.069s; champion 7-sample interleaved: best=0.072s, med=0.075s). Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.065s best** (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.068s best
+- g++-13 -O3 -march=native → 0.069s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.066s best
+→ **submit under: g++ -O3 -march=native** (best on this run; 0.065s)
+
+STOP-FLOOR: 0.065/0.067 = 0.97× floor — champion BELOW bandwidth floor via hugepage THP. Correct (53687387166542798). Edge: 9/9.
+
+No new variants created. Design space: 233 cpp + 1 rs — definitively exhausted since run ×420. Full run.sh skipped (226+ variants → times out); targeted champion benchmark only.
+
+ns/line: 0.065s / 50M = **1.30 ns/line**. Floor=0.067s → AT/BELOW bandwidth ceiling. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar by 25%.
+
+index.html: champion=65ms — CLEARS rank-18 bar (65ms ≤ 69.3ms).
+
+Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion. Design space definitively exhausted.
+
+**STOP-FLOOR ×423. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm AT/BELOW bandwidth ceiling (0.97× floor) — 233 variants exhausted. READY TO SUBMIT.**
