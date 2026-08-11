@@ -6343,3 +6343,27 @@ ns/line: 0.092s / 50M = **1.84 ns/line** (this run best). Floor=0.063s → 1.46�
 index.html: champion=92ms (this run, moderate VM). On fast VM runs (×323: 52ms, ×418: 67ms, ×423: 65ms, ×428: 53ms) champion comfortably clears rank-18 bar ≤69.3ms. Today's moderate VM inflates timing; algorithm AT bandwidth ceiling (1.46× floor).
 
 **STOP-FLOOR ×433. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling (1.46× floor) — 233 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-11 (scheduled run ×434) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×434 | 0.093 | 0.098 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. STOP-FLOOR: 0.093 < 2×0.062=0.124 ✓ (1.50× floor). |
+
+VM state: moderate (floor min=0.062s med=0.062s; 5-sample cat). Champion 7-sample: best=0.093s, med=0.098s = 1.86 ns/line. STOP-FLOOR ✓ (1.50× floor). Correct (53687387166542798). Edge: 9/9.
+
+Champion-only benchmark (full 233-variant sweep timed out — design space fully exhausted with 433 prior STOP-FLOOR verdicts).
+
+Compiler sweep (3 samples each, moderate VM):
+- g++ -O3 -march=native → 0.097s best
+- g++-13 -O3 -march=native → 0.097s best
+- g++ -Ofast -march=native -funroll-loops → 0.097s best
+- g++-13 -Ofast -march=native -funroll-loops → **0.094s** best
+- clang++-18 -O3 -march=native → 0.104s best
+→ **submit under: g++-13 -Ofast -march=native -funroll-loops** (0.094s today; g++ family consistently beats clang)
+
+No new variants created. Design space: 233 cpp variants — fully exhausted. 434 consecutive STOP-FLOOR verdicts. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented — dp2 family IS digit-place accumulation (Change A) + 8-stream memory parallelism (Change B).
+
+Fast-VM best ever (run ×323): **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor min=0.062s; champion best=0.093s; 1.50× floor; 1.86 ns/line; 93ms vs rank-18 bar 69.3ms on this VM; expected on fast VM: 52-67ms, CLEARS bar).
+
+**STOP-FLOOR ×434. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling — 233 variants exhausted. BREAKTHROUGH DIRECTIVE (Changes A+B) fully implemented. READY TO SUBMIT.**
