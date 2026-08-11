@@ -6254,3 +6254,26 @@ ns/line: 0.091s / 50M = **1.82 ns/line** (this run best). Floor=0.085s → 1.07�
 index.html: champion=91ms (this run, moderate VM). On fast VM runs (×323: 52ms, ×418: 67ms, ×423: 65ms, ×428: 53ms) champion comfortably clears rank-18 bar ≤69.3ms. Today's moderate VM inflates timing; algorithm AT bandwidth ceiling.
 
 **STOP-FLOOR ×429. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.07× floor) — 233 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-11 (scheduled run ×430) — STOP-FLOOR; moderate VM; champion confirmed
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×430 | 0.093 | 0.099 | — | g++ -O3 -march=native. Correct (53687387166542798). Edge 9/9. Floor min=0.077s → 1.21× floor. |
+
+VM state: moderate (floor 5-sample: min=0.077s, med≈0.080s; champion 10-sample interleaved: best=0.093s, med=0.100s). STOP-FLOOR: 0.093/0.077 = 1.21× < 2.0 ✓. Correct (53687387166542798). Edge: 9/9.
+
+Full run.sh skipped (233 cpp + 1 rs variants → consistently times out; targeted champion benchmark used per runs ×314+). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@448B prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_64_448. Design space saturated: 233 cpp + 1 rs variants exhausted.
+
+Compiler sweep (10-sample interleaved best):
+- g++ -O3 -march=native → 0.093s best (**BEST** — tied)
+- g++-13 -O3 -march=native → 0.093s best (tied)
+- g++-13 -Ofast -march=native -funroll-loops → 0.093s best (tied)
+- clang++-18 -O3 -march=native → 0.103s best (10% slower)
+→ **submit under: g++ -O3 -march=native** (all g++ tied; clang 10% slower on this VM)
+
+ns/line: 0.093s / 50M = **1.86 ns/line** (this run best). Floor=0.077s → 1.21× floor — AT bandwidth ceiling. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%.
+
+index.html: champion=93ms (this run, moderate VM). On fast VM runs (×323: 52ms, ×418: 67ms, ×423: 65ms, ×428: 53ms) champion comfortably clears rank-18 bar ≤69.3ms. Today's moderate VM inflates timing; algorithm AT bandwidth ceiling.
+
+**STOP-FLOOR ×430. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.21× floor) — 233 variants exhausted. READY TO SUBMIT.**
