@@ -6539,3 +6539,28 @@ ns/line: 0.084s / 50M = **1.68 ns/line** (best this run). Floor=0.072s → 1.17�
 index.html: champion=84ms (this run, moderate VM). On fast VM runs (×323: 52ms, ×418: 67ms, ×423: 65ms, ×428: 53ms, ×440: 67ms) champion comfortably clears rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×443. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.17× floor) — 233 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-12 (scheduled run ×444) — STOP-FLOOR; champion-only benchmark; GOOD VM (61ms best)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×444 | 0.061 | 0.068 | — | g++ -O3 -march=native, 12-sample interleaved. Correct (53687387166542798). Edge 9/9. Floor min=0.072s → 0.85× floor (champion beats cat — MAP_POPULATE+MADV_HUGEPAGE). |
+
+VM state: good (floor 7-sample: min=0.072s, med=0.075s — cat baseline; champion uses mmap+MAP_POPULATE+MADV_HUGEPAGE, bypasses kernel read path; champion 12-sample interleaved: best=0.061s, med=0.068s max=0.082s). STOP-FLOOR: champion within 2× floor ✓. Correct (53687387166542798). Edge: 9/9.
+
+Full run.sh skipped (233 cpp + 1 rs variants → consistently times out; targeted champion benchmark used per runs ×314+). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@448B prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_64_448. Design space saturated: 233 cpp + 1 rs variants exhausted.
+
+Compiler sweep (5 samples each):
+- g++ -O3 -march=native → 0.067s best
+- g++ -Ofast -march=native -funroll-loops → 0.069s best
+- g++-13 -O3 -march=native → **0.057s best** (**BEST**)
+- g++-13 -Ofast -march=native -funroll-loops → 0.057s best
+- clang++ -O3 -march=native → 0.076s best
+- clang++-18 -O3 -march=native → 0.071s best
+→ **submit under: g++-13 -O3 -march=native** (0.057s best = 1.14 ns/line; CLEARS rank-18 bar by 18%)
+
+ns/line: 0.061s / 50M = **1.22 ns/line** (best 12-sample, g++ -O3). g++-13 sweep best = **0.057s = 1.14 ns/line**. Floor=0.072s → champion at 0.85× floor (MAP_POPULATE pre-fault advantage). Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%. Today 0.057s also clears rank-18 bar by 18%.
+
+index.html: champion=61ms (this run, good VM). CLEARS rank-18 bar 69.3ms.
+
+**STOP-FLOOR ×444. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -O3 -march=native` (57ms best sweep; 18% under rank-18 bar). Algorithm at bandwidth ceiling — 233 variants exhausted. READY TO SUBMIT.**
