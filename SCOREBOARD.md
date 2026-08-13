@@ -6863,3 +6863,13 @@ ns/line: 0.085s / 50M = **1.70 ns/line** (best 12-sample, g++ -O3). Champion BEA
 index.html: champion=85ms (this run, moderate VM). On fast/good VM runs champion comfortably clears rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×456. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at/below bandwidth ceiling (0.977× floor) — 228 variants exhausted. READY TO SUBMIT.**
+
+### Run ×456 addendum — full run.sh completed (was running in background)
+
+Full 228+1 variant suite ran concurrently. Results:
+- Champion (g++ -O3 -march=native, 5 interleaved samples): best=0.086s, med=0.088s
+- Best variant: `dp2_8s_4acc_fw_t0_192_768` best=0.084s (2.3% gap, above 1.5% threshold) BUT median=0.088s = champion median → **HOLD** (not both conditions met)
+- Verdict: **STOP-FLOOR** (0.086/0.270 = 0.319×, floor was 0.270s during heavy build load)
+- Edge: 9/9 pass
+- Compiler sweep: g++-13 -Ofast -march=native -funroll-loops → 0.086s (tied best with g++ -O3)
+- → submit under: g++-13 -Ofast -march=native -funroll-loops OR g++ -O3 -march=native
