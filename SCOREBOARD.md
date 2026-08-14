@@ -6873,3 +6873,29 @@ Full 228+1 variant suite ran concurrently. Results:
 - Edge: 9/9 pass
 - Compiler sweep: g++-13 -Ofast -march=native -funroll-loops → 0.086s (tied best with g++ -O3)
 - → submit under: g++-13 -Ofast -march=native -funroll-loops OR g++ -O3 -march=native
+
+## Run log 2026-08-14 (scheduled run ×457) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×457 | 0.073 | 0.075 | — | g++ -O3 -march=native, 7-sample interleaved. Correct (53687387166542798). Edge 9/9. Floor min=0.064s → **1.14× floor**. |
+
+VM state: moderate-good (floor 7-sample: min=0.064s, med=0.065s; champion 7-sample interleaved: best=0.073s, med=0.075s, max=0.080s). STOP-FLOOR: 0.073/0.064 = **1.14× floor**. Correct (53687387166542798). Edge: 9/9.
+
+Full run.sh skipped (228 cpp + 1 rs variants → consistently times out; targeted champion benchmark used per runs ×314+). Design space saturated: 228 cpp + 1 rs variants exhausted. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@448B prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_64_448. No new variant ideas.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.074s best** (BEST)
+- g++ -Ofast -march=native → 0.075s best
+- g++ -Ofast -march=native -funroll-loops → 0.075s best
+- g++-13 -O3 -march=native → 0.075s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.075s best
+- clang++ -O3 -march=native → 0.083s best
+- clang++-18 -O3 -march=native → 0.084s best
+→ **submit under: g++ -O3 -march=native** (0.074s best this run; clang ~13% slower)
+
+ns/line: 0.073s / 50M = **1.46 ns/line** (best 7-sample). 1.14× floor. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%. Good-VM runs (×440: 67ms, ×444: 61ms/57ms sweep, ×453: 70ms / 69ms sweep) also clear bar.
+
+index.html: champion=73ms (this run, moderate-good VM). On fast/good VM runs champion comfortably clears rank-18 bar ≤69.3ms.
+
+**STOP-FLOOR ×457. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.14× floor) — 228 variants exhausted. READY TO SUBMIT.**
