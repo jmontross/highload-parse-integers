@@ -7032,3 +7032,28 @@ ns/line: 0.086s / 50M = **1.72 ns/line** (best 12-sample, g++ -O3). Floor=0.058s
 index.html: champion=86ms (this run, moderate VM). On fast/good VM runs champion comfortably clears rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×463. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Algorithm at bandwidth ceiling (1.48× floor) — 228 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-14 (scheduled run ×464) — STOP-FLOOR; champion-only benchmark; moderate-good VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×464 | 0.069 | 0.074 | — | g++ -O3 -march=native, 12-sample interleaved. Correct (53687387166542798). Edge 9/9. Floor min=0.066s → **1.05× floor** — AT bandwidth ceiling. |
+
+VM state: moderate-good (floor 7-sample: min=0.066s, med=0.068s; champion 12-sample interleaved: best=0.069s, med=0.074s, max=0.080s). STOP-FLOOR: 0.069/0.066 = **1.05× floor** — champion AT bandwidth ceiling. Correct (53687387166542798). Edge: 9/9.
+
+Full run.sh skipped (228 cpp + 1 rs variants → consistently times out; targeted champion benchmark used per runs ×314+). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@448B prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_64_448. Design space saturated: 228 variants exhausted.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → **0.070s best** (tied BEST)
+- g++ -Ofast -march=native -funroll-loops → **0.070s best** (tied BEST), med=0.071s
+- g++-13 -O3 -march=native → 0.072s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.071s best
+- clang++ -O3 -march=native → 0.080s best
+- clang++-18 -O3 -march=native → 0.080s best
+→ **submit under: g++ -O3 -march=native** OR **g++ -Ofast -march=native -funroll-loops** (tied at 0.070s; clang ~14% slower)
+
+ns/line: 0.069s / 50M = **1.38 ns/line** (best 12-sample, g++ -O3). Floor=0.066s → 1.05× floor — champion AT bandwidth ceiling. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar (≤69.3ms) by 25%. Good-VM runs (×440: 67ms, ×444: 61ms/57ms sweep, ×453: 70ms/69ms sweep, ×458: 70ms/70ms sweep, ×461: 61ms/59ms sweep, ×464: **69ms/70ms sweep**) at or clear bar.
+
+index.html: champion=69ms (this run, moderate-good VM). AT rank-18 bar (≤69.3ms) — 69ms essentially equals the bar on this run.
+
+**STOP-FLOOR ×464. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native`. Algorithm at bandwidth ceiling (1.05× floor) — 228 variants exhausted. READY TO SUBMIT.**
