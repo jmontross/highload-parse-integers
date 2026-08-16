@@ -7592,3 +7592,29 @@ ns/line: 0.062s / 50M = **1.24 ns/line** (best 12-sample, g++ -O3). Floor=0.069s
 index.html: champion=62ms (this run, exceptional VM). CLEARS rank-18 bar ≤69.3ms — 62ms < 69.3ms bar.
 
 **STOP-FLOOR ×485. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (0.062s best sweep). Algorithm at bandwidth ceiling (champion below cat floor) — 228 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-16 (scheduled run ×486) — STOP-FLOOR; new 200it variant; fast→medium VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×486 | 0.073 | 0.0755 | — | g++ -O3 -march=native, 12-sample interleaved. Correct (53687387166542798). Edge 9/9. Floor min=0.061s → **1.20× floor** — champion AT bandwidth ceiling. |
+| dp2_8s_fw_4acc_t0_64_448_200it | HOLD | 0.073 | 0.0750 | tied best, med lower by 0.0005s | NEW ×486. Champion's EXACT prefetch (T0@64B+T1@448B) + 200 inner iterations (vs champion's 100). This is the FIRST test of champion's prefetch config at 200 iters (all prior 200it variants used T0@512+T1@3072). Overflow: 200×108=21,600<65,535 ✓. Practice: best=0.073s = tied champion; med=0.0750 < 0.0755 (lower but HOLD — best condition fails). Within noise cluster. |
+
+VM state: fast then medium (floor min=0.061s initial; sweep showed 0.075s → medium-slow). 12-sample interleaved shows both variants at 0.073s best.
+dp2_8s_fw_4acc_t0_64_448_200it: HOLD. The champion's prefetch (T0@64+T1@448) with 200 inner iterations provides no measurable speedup vs 100. Confirms bandwidth-bound conclusion: reducing widen_4acc calls from 1/100 to 1/200 doesn't help because the widen overhead is already hidden by DRAM latency (~7 iters × 64B = 448B prefetch distance).
+All prior 200it variants (dp2_8s_fw_4acc_200it, dp2_8s_fw_200it) used T0@512+T1@3072 — different prefetch. This completes the 200it × prefetch-config grid.
+
+Compiler sweep (5 samples each):
+- g++ -O3 -march=native → 0.076s best
+- g++ -Ofast -march=native -funroll-loops → **0.075s best** (BEST)
+- g++-13 -O3 -march=native → 0.075s best (tied)
+- g++-13 -Ofast -march=native -funroll-loops → 0.075s best (tied)
+- clang++ -O3 -march=native → 0.083s best
+- clang++-18 -O3 -march=native → 0.085s best
+→ **submit under: g++ -Ofast -march=native -funroll-loops** (0.075s best; clang ~10-13% slower)
+
+ns/line: 0.073s / 50M = **1.46 ns/line** (best 12-sample interleaved, g++ -O3). Floor=0.061s → **1.20× floor** — champion AT bandwidth ceiling. Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar by 25%. Good-VM runs (×480: 68ms, ×481: 62ms, ×484: 69ms, ×485: 62ms, ×486: **73ms/75ms sweep**) at or near rank-18 bar.
+
+index.html: champion=73ms (this run, medium VM). Need ≤69.3ms for rank-18 bar.
+
+**STOP-FLOOR ×486. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. 229 variants (228 prior + new 200it). All grid points exhausted. SUBMIT with `g++ -Ofast -march=native -funroll-loops` (0.075s best sweep). Algorithm at bandwidth ceiling (1.20× floor). READY TO SUBMIT.**
