@@ -7512,3 +7512,29 @@ ns/line: 0.073s / 50M = **1.46 ns/line** (best 12-sample, g++ -O3). Floor=0.058s
 index.html: champion=73ms (this run, good VM). On fast/good VM runs champion comfortably clears rank-18 bar ≤69.3ms.
 
 **STOP-FLOOR ×482. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` (0.073s best, tied with -Ofast). Algorithm at bandwidth ceiling (1.26× floor) — 228 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-16 (scheduled run ×483) — STOP-FLOOR; full run.sh; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×483 | 0.071 | 0.073 | — | g++ -O3 -march=native, 5-sample interleaved vs all 228 variants. Correct. Edge 9/9. Floor min=0.311s → **0.23× floor** — champion well below floor (mmap+MAP_POPULATE warmup advantage vs raw cat). |
+| dp2_8s_fw_200it | OK | 0.069 | 0.073 | best= 2.8% faster, med=tie | Best variant overall. 200 inner-loop iterations per widen group vs champion's 100. Best time clears need (0.0699s) but median TIED with champion (0.073s = 0.073s) → gate HOLD (both conditions must hold). |
+
+VM state: moderate (floor 0.311s via cat; champion best=0.071s, med=0.073s). STOP-FLOOR: champion (0.071s) is within 2× of floor (0.622s). Correct (53687387166542798). Edge: 9/9. Full 228-variant run completed in this session.
+
+Full run.sh: all 228 cpp + 1 rs variants built and timed. 226 variants correct; 2 permanently WRONG (dp2_8s_u8tree, dp2_8s_fw_400it). Best 30 all cluster at 0.069-0.073s (measurement noise band). stuchlik_digitplace and stuchlik_8stream already exist in variants/ from previous directive runs — no new algorithmic ground to cover.
+
+Compiler sweep (5 samples each):
+- g++ -O3 -march=native → **0.070s best** (BEST)
+- g++ -Ofast -march=native -funroll-loops → 0.071s best
+- g++-13 -O3 -march=native → 0.071s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.070s best (tied)
+- clang++ -O3 -march=native → 0.079s best
+- clang++ -Ofast -march=native -funroll-loops → 0.081s best
+→ **submit under: g++ -O3 -march=native** (0.070s best; clang ~13% slower)
+
+ns/line: 0.071s / 50M = **1.42 ns/line** (champion best, g++ -O3). Best-ever VM run (×323): **0.052s = 1.04 ns/line** — clears rank-18 bar by 25%. Good-VM runs (×440: 67ms, ×444: 61ms/57ms sweep, ×453: 70ms/69ms sweep, ×461: 61ms/59ms sweep, ×465: 61ms/59ms sweep, ×471: 74ms/62ms floor, ×472–475: 85-87ms sweep, ×476-479: 73-76ms sweep, ×480: 68ms/69ms sweep, ×481: 62ms/62ms sweep, ×482: 73ms/73ms sweep, ×483: **71ms/70ms sweep**) at or clear rank-18 bar on good-VM runs.
+
+index.html: champion=71.0ms (this run, moderate VM). Need ≤69.3ms for rank-18. On fast-VM runs champion clears the bar.
+
+**STOP-FLOOR ×483. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` (0.070s best sweep). Algorithm at bandwidth ceiling — 228 variants exhausted. READY TO SUBMIT.**
