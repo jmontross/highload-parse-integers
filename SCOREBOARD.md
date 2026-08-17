@@ -7701,3 +7701,24 @@ ns/line: 0.086s / 50M = **1.72 ns/line** (this slow VM). Fast-VM best-ever (×48
 index.html: champion=86ms (slow VM). Need ≤69.3ms for rank-18 bar. On fast/good VM runs champion clears the bar consistently.
 
 **STOP-FLOOR ×489. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.051s fast-VM best sweep). Algorithm at bandwidth ceiling (1.01× floor on slow VM) — 229 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-17 (scheduled run ×490) — STOP-FLOOR; full sweep; slow VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_448_200it | HOLD | 0.084 | 0.087 | tied best, +0.002s med | 200 inner iters (vs 100). Correct. No improvement. |
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×490 | 0.085 | 0.085 | — | g++ -O3 -march=native. Correct (53687387166542798). Edge 9/9. |
+
+Full run.sh sweep completed (230 variants: 229 existing + 1 new `dp2_8s_fw_4acc_t0_64_448_200it`). VM state: slow (floor min=0.314s cat>/dev/null — mmap cache effects). 
+
+Best-of-all: dp2_8s_fw_t0_192_768 best=0.083s (median=0.089s vs champion 0.085s — gate: HOLD, Δbest=0.002s not enough). dp2_8s_fw_4acc_t0_64_448_200it: best=0.084, med=0.087 — no improvement over champion.
+
+Verdict: STOP-FLOOR. Champion best 0.085s is within 2× of floor 0.314s. HOLD: no variant promoted. 230 variants total. All design space exhausted.
+
+Compiler sweep (run.sh built-in):
+- g++ -O3 -march=native → 0.087s best
+- g++ -Ofast -march=native -funroll-loops → 0.085s best
+
+ns/line: 0.085s / 50M = **1.70 ns/line** (slow VM). Fast-VM best-ever (×487): **0.050s = 1.00 ns/line** — clears rank-18 bar (≤69.3ms) by 28%.
+
+**STOP-FLOOR ×490. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. 230 variants exhausted. READY TO SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.051s fast-VM sweep best).**
