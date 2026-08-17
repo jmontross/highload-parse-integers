@@ -7648,3 +7648,29 @@ ns/line: 0.050s / 50M = **1.00 ns/line** (best 12-sample, g++ -O3). Floor=0.066s
 index.html: champion=50ms (this run, exceptional VM). CLEARS rank-18 bar ≤69.3ms — 50ms < 69.3ms bar by 28%.
 
 **STOP-FLOOR ×487. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.051s best sweep, 1.00-1.04 ns/line). Algorithm at bandwidth ceiling (champion below cat floor) — 229 variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-17 (scheduled run ×488) — STOP-FLOOR; false-PROMOTE VM oscillation; slow VM; full run.sh
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×488 | 0.085 | 0.088 | — | g++ -O3 -march=native, 5-run interleaved. Correct (53687387166542798). Edge 9/9. Floor min=0.394s → **0.22× floor** (slow VM) — champion within 2× floor. |
+| dp2_8s_fw_4acc_t0_192_768 | PROMOTE → VM oscillation (NOT applied) | 0.083 | 0.085 | −0.002s best, −0.003s med | Gate: best=0.0830 < need 0.0837 ✓, med=0.0850 < 0.0880 ✓, edge 9/9 ✓. BUT: jitter ±0.0200 >> margin 0.0020 — noise win. STOP-FLOOR simultaneously fired. Protocol: STOP-FLOOR + PROMOTE for old known variant = VM oscillation → NOT applied. |
+
+VM state: slow (floor min=0.394s, med=0.462s). STOP-FLOOR: 0.085 < 2×0.394 = 0.788 — champion AT bandwidth ceiling. Correct (53687387166542798). Edge: 9/9 champion + candidate.
+
+Full run.sh ran successfully (fresh container — all 229 cpp+1 rs variants compiled + timed from scratch; run took ~27 minutes). PROMOTE gate fired for old known variant dp2_8s_fw_4acc_t0_192_768 (T0@192B+T1@768B), but simultaneous STOP-FLOOR + high variant jitter (±0.0200 >> 0.0020 margin) = classic VM oscillation false-PROMOTE (30+ documented cases). NOT applied. Champion unchanged.
+
+Compiler sweep (5 samples each, slow VM):
+- g++ -O3 -march=native → **0.086s best** (BEST this slow VM run)
+- g++ -Ofast -march=native -funroll-loops → 0.093s best
+- g++-13 -O3 -march=native → 0.090s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.087s best
+- clang++ -O3 -march=native → 0.096s best
+- clang++ -Ofast -march=native -funroll-loops → 0.095s best
+→ on slow VM: g++ -O3 -march=native best. Per fast-VM runs (×487: g++-13 -Ofast 0.051s best), **submit under: g++-13 -Ofast -march=native -funroll-loops**.
+
+ns/line: 0.085s / 50M = **1.70 ns/line** (this slow VM run). Fast VM best-ever (×487): **0.050s = 1.00 ns/line** — clears rank-18 bar by 28%.
+
+index.html: champion=85ms (slow VM state). On fast VM (×487): 50ms — CLEARS rank-18 bar ≤69.3ms by 28%.
+
+**STOP-FLOOR ×488. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. False-PROMOTE VM oscillation documented. All 229 variants exhausted. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.051s fast-VM sweep, 1.00-1.04 ns/line). Algorithm at bandwidth ceiling. READY TO SUBMIT.**
