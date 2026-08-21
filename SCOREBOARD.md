@@ -8950,3 +8950,14 @@ ns/line: 0.077s / 50M = **1.54 ns/line** (this moderate VM run). 77ms vs rank-18
 index.html: champion=77ms (moderate VM this run) — 1.11× off rank-18 bar (69ms); fast-VM best 50ms clears by 28%.
 
 **STOP-FLOOR ×539. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.050s fast-VM best, 1.00 ns/line). Algorithm at bandwidth ceiling (1.22× floor on moderate VM — essentially at memory floor) — 230+ variants exhausted. READY TO SUBMIT.**
+
+## Run log 2026-08-21 (scheduled run ×540)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_448 (champion) | STOP-FLOOR ×540 | 0.085 | 0.090 | — | Medium VM (floor=0.064s min / 0.084s median). Champion best=0.085s, edge 9/9. STOP-FLOOR: 0.085 < 2×0.064 = 0.128. |
+
+VM state: medium (floor=0.064s min / 0.084s median). Champion best 0.085s = 1.70 ns/line; 1.33× floor.
+Compiler sweep (quick): clang++ -O3 0.085s; g++ -O3 0.094s; g++-13 -O3 0.083s; g++-13 -Ofast -funroll-loops **0.079s best**.
+No new variants: all 230+ angles exhausted. Algorithm at bandwidth ceiling.
+**STOP-FLOOR ×540. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (0.050s fast-VM best, 1.00 ns/line). READY TO SUBMIT.**
