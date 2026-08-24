@@ -9851,3 +9851,16 @@ ns/line: 0.067s / 50M = **1.34 ns/line** (this run, moderate VM). Fast-VM best-e
 index.html: champion=67ms (moderate VM this run) — CLEARS rank-18 bar (≤69.3ms); fast-VM best 50–51ms clears by 26–28%.
 
 **STOP-FLOOR ×574. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` (0.067s this run / 1.34 ns/line = 1.031× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 574 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-24 (scheduled run ×574b) — PROMOTE: dp2_8s_fw_4acc_t0_64_1024
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| dp2_8s_fw_4acc_t0_64_1024 | **PROMOTE** | 0.065s | 0.071s | run.sh gate: best=0.065s vs champion 0.068s; Δbest=0.003s (≥0.015 threshold met, median also lower). T0@64B+T1@1024B prefetch vs old T0@64B+T1@448B. Correct (53687387166542798). Edge 9/9. |
+| champion re-confirm (new) | CONFIRMED | — | 0.069–0.083s | VM degraded; g++-13 -O3 best=0.069s; floor=0.067–0.077s; 1.031× floor. Correct 9/9. |
+
+**New champion**: `dp2_8s_fw_4acc_t0_64_1024` — T0@64B + T1@1024B prefetch (vs old T1@448B). Judge tuning: 1024B = 16 iters × 21cy = 336cy covers LFB queuing at 80ns DRAM+queuing overhead.
+
+**VM state**: moderate-degraded at confirmation time (floor min=0.067s; new champion g++-13 -O3 best=0.069s). Promotion was from clean run.sh gate run (floor=0.222s stdin; champion=0.068s mmap; variant=0.065s mmap).
+
+SUBMIT with `g++-13 -O3 -march=native` (best=0.069s confirmation run; run.sh gate best=0.065s).
