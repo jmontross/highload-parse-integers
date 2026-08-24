@@ -9709,3 +9709,28 @@ ns/line: 0.070s / 50M = **1.40 ns/line** (this run, moderate-fast VM). Fast-VM b
 index.html: champion=70ms (moderate-fast VM this run) — 1.01× off rank-18 bar (69ms); fast-VM best 50–51ms clears by 26–28%.
 
 **STOP-FLOOR ×569. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` (0.070s this run / 1.40 ns/line = 0.972× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 569 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-24 (scheduled run ×570) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_4acc_t0_64_448) | STOP-FLOOR ×570 | 0.062s | 0.065s | g++ -O3 best=0.062s (BEST); g++-13 -O3 best=0.063s; g++ -Ofast best=0.063s; g++-13 -Ofast best=0.063s; clang++ -O3 best=0.068s; clang++-18 -O3 best=0.071s. Correct (53687387166542798). Edge 9/9. Floor min=0.069s med=0.074s → 0.062/0.069=0.90× floor (champion FASTER than cat via mmap+hugepage). |
+
+### Compiler sweep (×570)
+
+| Compiler | Best(s) | Med(s) |
+|----------|---------|--------|
+| g++ -O3 -march=native | **0.062s** | 0.065s |
+| g++-13 -O3 -march=native | 0.063s | 0.064s |
+| g++ -Ofast -march=native -funroll-loops | 0.063s | 0.064s |
+| g++-13 -Ofast -march=native -funroll-loops | 0.063s | 0.064s |
+| clang++ -O3 -march=native | 0.068s | 0.071s |
+| clang++-18 -O3 -march=native | 0.071s | 0.072s |
+
+→ **submit under: `g++ -O3 -march=native`** (0.062s this run = 1.24 ns/line = 0.90× floor).
+
+ns/line: 0.062s / 50M = **1.24 ns/line** (this run, moderate VM). Fast-VM best-ever (×487,×550,×555,×566): **0.050–0.051s = 1.00–1.02 ns/line** — clears rank-18 bar by 26–28%.
+
+index.html: champion=62ms (moderate VM this run) — CLEARS rank-18 bar (≤69.3ms); fast-VM best 50–51ms clears by 26–28%.
+
+**STOP-FLOOR ×570. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. SUBMIT with `g++ -O3 -march=native` (0.062s this run / 1.24 ns/line = 0.90× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 570 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
