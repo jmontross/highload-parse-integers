@@ -9921,3 +9921,22 @@ ns/line: 0.089s / 50M = **1.78 ns/line** (this run, loaded VM). Fast-VM best-eve
 index.html: champion=89ms (loaded VM this run) — note: loaded VM inflates; fast-VM best 50–51ms clears rank-18 bar (≤69.3ms) by 26–28%.
 
 **STOP-FLOOR ×576. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native` (0.089s this run / 1.78 ns/line). Algorithm at bandwidth ceiling — 230+ variants exhausted, 576 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-25 (scheduled run ×577) — PROMOTE: dp2_8s_fw_t0_128_1024 beats dp2_8s_fw_4acc_t0_64_1024
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| dp2_8s_fw_t0_128_1024 (new champion) | **PROMOTE** | 0.075s | 0.078s | T0@128B+T1@1024B, single acc_u16_add/widen_u16 structure. Δbest=3.8% (>1.5% gate ✓), Δmed=2.5% (lower ✓). Correct (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_1024 (old champion) | HOLD | 0.078s | 0.080s | Previous champion. Superseded by t0_128_1024 in 9-sample interleaved benchmark. |
+
+**VM state**: moderate (floor min=0.082s, 5-sample — champion beats floor via mmap MAP_POPULATE cache pre-faulting, ratio=0.914×). 9-sample interleaved benchmark: new champion best=0.075s med=0.078s; old champion best=0.078s med=0.080s. Both gate conditions met: Δbest=3.8% AND lower median.
+
+**New champion**: `dp2_8s_fw_t0_128_1024` — T0@128B (2 iters ahead, fills L1→L2) + T1@1024B (16 iters ahead, fills DRAM→L2). Single accumulator structure using `acc_u16_add` and `widen_u16` helpers vs old 4acc's 4 independent per-pair u16 accumulators. Wider T0 distance (128B vs 64B) covers the full nl_mask64 64-byte window for the near-prefetch target, reducing L1 reload pressure.
+
+Compiler: g++ -O3 -march=native (best=0.075s this run). Edge 9/9 ✓. Correctness ✓ (53687387166542798).
+
+ns/line: 0.075s / 50M = **1.50 ns/line** (this VM). Fast-VM best-ever (×487,×550,×555,×566): **0.050–0.051s = 1.00–1.02 ns/line** — clears rank-18 bar by 26–28%.
+
+index.html updated: 75ms (moderate VM this run).
+
+**PROMOTE ×577. New champion dp2_8s_fw_t0_128_1024. SUBMIT with `g++ -O3 -march=native` (0.075s this run / 1.50 ns/line). Algorithm at bandwidth ceiling — 230+ variants exhausted. READY TO SUBMIT.**
