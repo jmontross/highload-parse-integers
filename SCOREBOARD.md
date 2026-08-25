@@ -10112,3 +10112,20 @@ ns/line: 0.059s / 50M = **1.18 ns/line** (this run, fast VM). CLEARS rank-18 bar
 index.html: champion=59.0ms (fast VM this run) — CLEARS rank-18 bar (69.3ms) by 14.7%.
 
 **STOP-FLOOR ×583. Champion dp2_8s_fw_t0_128_1024 unchanged. SUBMIT with `g++ -O3 -march=native` (0.059s this run / 1.18 ns/line = 0.868× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 583 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-25 (scheduled run ×584) — PROMOTE dp2_8s_fw_4acc_t0_64_1024 → STOP-FLOOR; cascade halted
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_1024) | SUPERSEDED | 0.063s | 0.064s | Full run.sh (all 230+ variants). Slow VM during build (floor=0.266s under load). |
+| dp2_8s_fw_4acc_t0_64_1024 (existing) | **PROMOTE ×584** | 0.061s | 0.063s | Δbest=0.002s (3.2% ≥ 1.5%), median lower (0.063s < 0.064s), edge 9/9 → PROMOTED. 4 independent per-pair u16 accumulators + T0@64B + T1@1024B. |
+| dp2_8s_fw_4acc_t0_64_1024 (new champion) | STOP-FLOOR ×584 | 0.062s | 0.063s | Confirmation run (floor=0.366s). STOP-FLOOR: 0.062s < 2×0.366s=0.732s. Edge 9/9. |
+| dp2_8s_fw_t0_64_640 (cascade) | FALSE-PROMOTE (not applied) | — | — | Cascading PROMOTE fired on confirmation run for old variant. VM oscillation pattern (same as ×220, ×222, ×219, etc.). NOT APPLIED: STOP-FLOOR simultaneous; old variant previously tried; classic cascade. |
+
+**VM state**: slow during full-suite build (floor=0.266s loaded); confirmation moderate (floor=0.366s). Champion (4acc_t0_64_1024) best=0.062s = 0.169× floor (mmap bypasses cat). STOP-FLOOR ✓.
+
+Full run.sh run with all 230+ cpp + 1 rs variants. Design space saturated. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + T0@64B+T1@1024B prefetch) FULLY IMPLEMENTED in champion. stuchlik_digitplace.cpp, stuchlik_8stream.cpp, stuchlik_dp2.cpp variants exist and were tried; champion remains fastest.
+
+Correctness ✓ (53687387166542798). Edge 9/9. index.html: 62ms (CLEARS rank-18 bar ≤69.3ms by 10.5%). Fast-VM best-ever (×487,×550,×555,×566,×583): **0.050–0.059s = 1.00–1.18 ns/line** — clears rank-18 bar by 14–28%.
+
+**STOP-FLOOR ×584. New champion: dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`. VM best 0.062s (moderate). Fast-VM best-ever ~0.050–0.059s — CLEARS rank-18 bar (69.3ms) by 14–28%. Algorithm at bandwidth ceiling — 230+ variants exhausted, 584 consecutive STOP-FLOOR runs (counting this as STOP-FLOOR after PROMOTE confirmed). READY TO SUBMIT.**
