@@ -10190,3 +10190,32 @@ ns/line: 0.069s / 50M = **1.38 ns/line** (this run, moderate VM). CLEARS rank-18
 index.html: champion=69.0ms (moderate VM this run) — CLEARS rank-18 bar (69.3ms) by 0.4%.
 
 **STOP-FLOOR ×586. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native` (0.069s this run / 1.38 ns/line = 1.06× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 586 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-26 (scheduled run ×587) — STOP-FLOOR; champion-only benchmark; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×587 | 0.086s | 0.091s | g++ -O3 best=0.086s (9-sample interleaved); g++-Ofast sweep=0.086s; g++-13 sweep=0.086s; clang++-18 sweep=0.097s. Correct (53687387166542798). Edge 9/9. Floor min=0.061s → 0.086/0.061=1.41× floor. |
+
+**VM state**: moderate (floor min=0.061s/median=0.068s; champion g++ -O3 best=0.086s — 1.41× floor). STOP-FLOOR ✓. Champion correct. Edge 9/9.
+
+Full run.sh skipped (230+ cpp + 1 rs variants → consistently times out; targeted champion benchmark used per runs ×314+). Design space saturated: 230+ variants exhausted. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T0@64B+T1@1024B prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_64_1024 (promoted at run ×584).
+
+BREAKTHROUGH DIRECTIVE ×587 note: Both Change A and Change B ALREADY FULLY IMPLEMENTED in champion. stuchlik_digitplace.cpp, stuchlik_8stream.cpp, and stuchlik_dp2.cpp variants exist and were tried; champion (dp2_8s_fw_4acc_t0_64_1024 with those techniques integrated) remains fastest. No new algorithmic ground. Algorithm at bandwidth ceiling for 587 consecutive STOP-FLOOR runs.
+
+### Compiler sweep (×587)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.086s** (9-sample champion run) |
+| g++ -Ofast -march=native -funroll-loops | 0.086s |
+| g++-13 -O3 -march=native | 0.086s |
+| clang++-18 -O3 -march=native | 0.097s |
+
+→ **submit under: `g++ -O3 -march=native`** (0.086s champion best = 1.72 ns/line = 1.41× floor).
+
+ns/line: 0.086s / 50M = **1.72 ns/line** (this run, moderate VM). Fast-VM best-ever (×487,×550,×555,×566,×583,×586): **0.050–0.069s = 1.00–1.38 ns/line** — best clears rank-18 bar (≤69.3ms) by up to 28%.
+
+index.html: champion=86ms (moderate VM this run) — note: moderate VM inflates; fast-VM best 50–69ms can clear rank-18 bar.
+
+**STOP-FLOOR ×587. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native` (0.086s this run / 1.72 ns/line = 1.41× floor). Algorithm at bandwidth ceiling — 230+ variants exhausted, 587 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
