@@ -10455,3 +10455,24 @@ ns/line: 0.080s / 50M = **1.60 ns/line** median; **1.52 ns/line** best (this run
 index.html: champion=76ms (moderate VM this run, g++ -Ofast best=0.076s) — note: moderate VM inflates; fast-VM best 50–69ms clears rank-18 bar (≤69.3ms).
 
 **STOP-FLOOR ×595. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` or `g++-13 -O3 -march=native` (0.076s moderate VM / fast-VM best ~0.064s). Algorithm at bandwidth ceiling — 230+ variants exhausted, 595 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
+
+## Run log 2026-08-26 (scheduled run ×596) — STOP-FLOOR; maintenance benchmark
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×596 | 0.089s | 0.092s | g++ -O3: best=0.090s/med=0.092s; g++-13 -O3: best=0.089s/med=0.092s. Correct (53687387166542798). Edge 9/9. Floor min=0.063s median=0.065s → 0.090/0.063=1.43× floor → STOP-FLOOR. |
+
+**VM state**: moderate (floor min=0.063s/med=0.065s; champion best=0.089-0.090s — 1.41-1.43× floor). STOP-FLOOR ✓. Champion correct. Edge 9/9.
+
+Fresh input.txt generated this session (cold read). No new variants — design space saturated at 230+ cpp + 1 rs variants. Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@64B+T1@1024B) fully implemented in champion. Algorithm at bandwidth ceiling for 596 consecutive STOP-FLOOR runs.
+
+Compiler sweep (×596, moderate VM):
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | 0.090s |
+| g++-13 -O3 -march=native | **0.089s** ← best this run |
+
+ns/line: 0.092s / 50M = **1.84 ns/line** median; **1.78 ns/line** best (moderate VM). Fast-VM best-ever (×487-×595): **0.050–0.069s** — clears rank-18 bar (≤69.3ms) by up to 28%.
+
+**STOP-FLOOR ×596. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -Ofast -march=native -funroll-loops` or `g++-13 -O3 -march=native`. Algorithm at bandwidth ceiling — 596 consecutive STOP-FLOOR runs. READY TO SUBMIT.**
