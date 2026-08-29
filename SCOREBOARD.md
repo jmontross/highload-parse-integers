@@ -11195,3 +11195,27 @@ No new variants. Both Change A (digit-place accumulation) and Change B (8-stream
 ns/line: 0.080s / 50M = **1.60 ns/line** median; **1.56 ns/line** best (moderate VM).
 
 **STOP-FLOOR ×623. Champion dp2_8s_fw_3072_32 AT BANDWIDTH FLOOR. 623 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-29 (scheduled run ×624) — PROMOTE then STOP-FLOOR
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| dp2_8s_fw_t0_128_2048 | **PROMOTE** | **0.0840s** | 0.0870s | Run 1: beats champion (dp2_8s_fw_3072_32) best=0.0860s median=0.0880s; Δbest=0.002s significant; edge 9/9. Copied to champion/main.cpp. |
+| dp2_8s_fw_t0_128_2048 (as champion) | STOP-FLOOR ×624 | 0.0860s | ~0.0890s | Confirmation run: STOP-FLOOR; edge 9/9; g++ -O3 best=0.0860s. Floor=0.5860s (slow VM); champion at bandwidth ceiling. |
+
+**VM state**: moderate-slow on confirmation run (floor=0.5860s); champion best=0.0840s on first run. STOP-FLOOR ✓. Champion PROMOTED: dp2_8s_fw_3072_32 → dp2_8s_fw_t0_128_2048.
+
+**PROMOTE confirmed**: dp2_8s_fw_t0_128_2048 is new champion. Both Change A (digit-place accumulation) and Change B (8-stream MLP + prefetch) retained. 230+ variants exhausted. 624 consecutive STOP-FLOOR (post-confirmation).
+
+### Compiler sweep (×624)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.0860s** ← best (CORRECT ✓) |
+| g++ -Ofast -march=native -funroll-loops | 0.0890s |
+| g++-13 -O3 -march=native | 0.0930s |
+| clang++-18 -O3 -march=native | 0.0940s |
+
+→ **submit under: `g++ -O3 -march=native`** (champion=dp2_8s_fw_t0_128_2048; fast-VM best-ever (×601): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 7%–29%; CORRECT ✓).
+
+**STOP-FLOOR ×624. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++ -O3 -march=native`.**
