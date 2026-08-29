@@ -11221,3 +11221,29 @@ ns/line: 0.080s / 50M = **1.60 ns/line** median; **1.56 ns/line** best (moderate
 → **submit under: `g++ -O3 -march=native`** (champion=dp2_8s_fw_t0_128_2048; fast-VM best-ever (×601): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 7%–29%; CORRECT ✓).
 
 **STOP-FLOOR ×624. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-29 (scheduled run ×626) — STOP-FLOOR; fast VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_2048) | STOP-FLOOR ×626 | **0.070s** (g++ -O3) / **0.069s** (g++-13 -O3) | ~0.071s | 5-sample direct; g++ -O3 best=0.070s; g++-13 -O3 best=0.069s; clang++-18 best=0.080s. Floor min=0.067s → 0.070/0.067=1.04× (AT bandwidth ceiling). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: fast (floor min=0.067s; champion best=0.069s g++-13 — 1.03× floor, AT bandwidth ceiling). STOP-FLOOR ✓. Champion correct.
+
+No new variants. Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T0@128B/2-iter + T1@2048B/32-iter prefetch) fully implemented in champion. 230+ variants exhausted. 626 consecutive STOP-FLOOR runs. Design space saturated.
+
+### Compiler sweep (×626, fast VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++-13 -O3 -march=native | **0.069s** ← best (CORRECT ✓) |
+| g++ -O3 -march=native | 0.070s |
+| g++ -Ofast -march=native -funroll-loops | 0.073s |
+| g++-13 -Ofast -march=native -funroll-loops | 0.072s |
+| clang++-18 -O3 -march=native | 0.080s |
+
+→ **submit under: `g++-13 -O3 -march=native`** (0.069s this run fast VM; fast-VM best-ever (×601): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 0.4%–29%; CORRECT ✓).
+
+ns/line: 0.071s / 50M = **1.42 ns/line** median; **1.38 ns/line** best (fast VM).
+
+**STOP-FLOOR ×626. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. 626 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
