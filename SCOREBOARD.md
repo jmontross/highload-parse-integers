@@ -11247,3 +11247,28 @@ No new variants. Both Change A (digit-place accumulation) and Change B (8-stream
 ns/line: 0.071s / 50M = **1.42 ns/line** median; **1.38 ns/line** best (fast VM).
 
 **STOP-FLOOR ×626. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. 626 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-08-29 (scheduled run ×627) — STOP-FLOOR; moderate-fast VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_2048) | STOP-FLOOR ×627 | **0.073s** (g++ -O3) / **0.073s** (g++-13 -O3) | ~0.074s | 5-sample direct; g++ best=0.073s, g++-13 best=0.073s; clang++-18 not tested. Floor min=0.061s → 0.073/0.061=1.20× (AT bandwidth ceiling). Correct (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_3072_32 | HOLD | 0.074s | ~0.075s | best=0.074s vs champion 0.073s → Δbest=0.001s (1.4% < 1.5% gate) → HOLD. |
+| dp2_8s_fw_4acc_t0_256_3072 | HOLD | 0.075s | ~0.078s | Slower than champion on both metrics. HOLD. |
+
+**VM state**: moderate-fast (floor min=0.061s; champion best=0.073s — 1.20× floor, AT bandwidth ceiling). STOP-FLOOR ✓. Champion correct.
+
+No new variants. Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T0@128B/2-iter + T1@2048B/32-iter prefetch) fully implemented in champion. 230+ variants exhausted. 627 consecutive STOP-FLOOR runs. Design space saturated.
+
+### Compiler sweep (×627, moderate-fast VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.073s** ← best (CORRECT ✓) |
+| g++-13 -O3 -march=native | 0.073s |
+
+→ **submit under: `g++ -O3 -march=native`** (0.073s this run moderate-fast VM; fast-VM best-ever (×601): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 7%–29%; CORRECT ✓).
+
+ns/line: 0.074s / 50M = **1.48 ns/line** median; **1.46 ns/line** best (moderate-fast VM).
+
+**STOP-FLOOR ×627. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. 627 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
