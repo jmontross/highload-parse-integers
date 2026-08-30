@@ -11343,3 +11343,25 @@ No new variants. Both Change A (digit-place accumulation) and Change B (8-stream
 ns/line: 0.089s / 50M = **1.78 ns/line** median; **1.72 ns/line** best (moderate VM).
 
 **STOP-FLOOR ×630. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. 630 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-30 (scheduled run ×631) — STOP-FLOOR; moderate-fast VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_2048) | STOP-FLOOR ×631 | **0.072s** (g++) | ~0.073s | 3-direct samples (skip cold first); g++ best=0.072s. Floor min=0.059s → 0.072/0.059=1.22× (AT bandwidth ceiling). Correct (53687387166542798). Edge confirmed. |
+
+**VM state**: moderate-fast (floor min=0.059s; champion best=0.072s g++ — 1.22× floor, AT bandwidth ceiling). STOP-FLOOR ✓. Champion correct.
+
+No new variants. Both Change A (digit-place accumulation) and Change B (8-stream MLP + dual T0@128B/2-iter + T1@2048B/32-iter prefetch) fully implemented in champion. 230+ variants exhausted. 631 consecutive STOP-FLOOR runs. Design space saturated.
+
+### Compiler sweep (×631, moderate-fast VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.072s** ← best (CORRECT ✓) |
+
+→ **submit under: `g++ -O3 -march=native`** (0.072s this run; fast-VM best-ever (×601): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 4%–29%; CORRECT ✓).
+
+ns/line: 0.073s / 50M = **1.46 ns/line** median; **1.44 ns/line** best (moderate-fast VM run).
+
+**STOP-FLOOR ×631. Champion dp2_8s_fw_t0_128_2048 AT BANDWIDTH FLOOR. 631 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
