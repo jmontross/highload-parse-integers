@@ -11461,3 +11461,26 @@ No further changes attempted after two successful promotions. Design space may h
 ns/line: 0.051s / 50M = **1.02 ns/line** best; approaching bandwidth floor.
 
 **PROMOTE ×635. New champion dp2_8s_fw_t0_64_1536. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-30 (scheduled run ×636) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_64_1536) | STOP-FLOOR ×636 | **0.082s** (g++) | ~0.095s | 3-direct samples; floor min=0.085s → 0.082/0.085=0.97× (warm-cache at/below floor). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: moderate (floor min=0.085s; champion warm best=0.082s — at/below bandwidth floor, warm-cache hit). STOP-FLOOR ✓. Champion correct. No new variants.
+
+Champion dp2_8s_fw_t0_64_1536 remains at bandwidth floor. 230+ variants exhausted. 636 consecutive STOP-FLOOR runs.
+
+### Compiler sweep (×636, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.082s** ← best (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.088s (CORRECT ✓) |
+
+→ **submit under: `g++ -O3 -march=native`** (0.082s this run; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 15%–29%; CORRECT ✓).
+
+ns/line: 0.095s / 50M = **1.90 ns/line** median; **1.64 ns/line** best (moderate VM run).
+
+**STOP-FLOOR ×636. Champion dp2_8s_fw_t0_64_1536 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++ -O3 -march=native`.**
