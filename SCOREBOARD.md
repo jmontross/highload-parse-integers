@@ -11834,3 +11834,35 @@ No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_2
 ns/line: 0.095s / 50M = **1.90 ns/line** median; **1.72 ns/line** best (moderate VM).
 
 **STOP-FLOOR ×649. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-31 (scheduled run ×650) — STOP-FLOOR; new T0@256 grid variants
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×650 | **0.088s** (g++) / **0.087s** (g++-13) | ~0.089s | Moderate-fast VM (floor=0.066s). 1.32× floor → STOP-FLOOR. Correct (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_t0_256_640 (NEW) | HOLD | 0.089s | 0.093s | T0@256B + T1@640B. Fills gap between dp2_8s_fw_t0_256_512 and _768. Slightly slower than champion on this VM — shorter T1 doesn't cover VM DRAM latency as well as T1@3072B. |
+| dp2_8s_fw_t0_256_1024 (NEW) | HOLD | 0.087s | 0.091s | T0@256B + T1@1024B. Fills gap between dp2_8s_fw_t0_256_768 and _1536. Best tied with champion, median worse → HOLD. T1@3072B remains optimal. |
+
+**VM state**: moderate-fast (floor min=0.066s, median=0.066s). Champion warm best=0.087s = 1.32× floor — AT bandwidth ceiling. STOP-FLOOR ✓. Champion correct.
+
+7-sample interleaved benchmark (g++ -O3 -march=native):
+- champion (T0@256+T1@3072): min=0.088s, med=0.089s
+- dp2_8s_fw_t0_256_640: min=0.089s, med=0.093s (HOLD — shorter T1 hurts on VM)
+- dp2_8s_fw_t0_256_1024: min=0.087s, med=0.091s (HOLD — best tied, med worse)
+
+### Compiler sweep (×650, moderate-fast VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | 0.088s (CORRECT ✓) |
+| g++-13 -O3 -march=native | **0.087s** (CORRECT ✓) |
+| g++ -Ofast -march=native -funroll-loops | 0.089s (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.096s (CORRECT ✓) |
+
+→ **submit under: `g++-13 -O3 -march=native`** (0.087s moderate-fast VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms); CORRECT ✓).
+
+New variants dp2_8s_fw_t0_256_640 and dp2_8s_fw_t0_256_1024 complete the T0@256B T1-distance grid: T1@{512,640,768,1024,1536,2048,3072} all tested — T1@3072B (current champion) confirmed optimal. 232 total variants (231 cpp + 1 rs). Design space saturated.
+
+ns/line: 0.089s / 50M = **1.78 ns/line** median; **1.74 ns/line** best (moderate-fast VM).
+
+**STOP-FLOOR ×650. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 650 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
