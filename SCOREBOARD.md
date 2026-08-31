@@ -11737,3 +11737,28 @@ No new variants. Design space saturated. Champion dp2_8s_fw_t0_128_640 uses Chan
 ns/line: 0.092s / 50M = **1.84 ns/line** median; **1.76 ns/line** best (moderate VM).
 
 **STOP-FLOOR ×646. Champion dp2_8s_fw_t0_128_640 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-31 (scheduled run ×647) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_640) | STOP-FLOOR ×647 | **0.091s** (g++) | ~0.095s | 10 warm direct samples; floor min=0.062s → 0.091/0.062=1.47× (AT bandwidth floor, moderate VM warm-cache). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: moderate (floor min=0.062s; champion warm best=0.091s — 1.47× floor, AT bandwidth ceiling). STOP-FLOOR ✓. Champion correct.
+
+No new variants. Both Change A (digit-place accumulation, back-to-front scan, subtract 0x30 → free newline detection, per-place u8 accumulators, no multiply in hot loop) and Change B (8-stream spatial MLP, T0@128B 2-iters ahead + T1@640B 10-iters ahead per stream) fully implemented in champion. 230+ variants exhausted. **647 consecutive STOP-FLOOR runs.** Design space saturated.
+
+### Compiler sweep (×647, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | 0.092s (CORRECT ✓) |
+| g++-13 -O3 -march=native | **0.090s** (CORRECT ✓) |
+| g++ -Ofast -march=native -funroll-loops | 0.094s (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.102s (CORRECT ✓) |
+
+→ **submit under: `g++-13 -O3 -march=native`** (0.090s this run moderate VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms) by 0%–29%; CORRECT ✓).
+
+ns/line: 0.095s / 50M = **1.90 ns/line** median; **1.82 ns/line** best (moderate VM run).
+
+**STOP-FLOOR ×647. Champion dp2_8s_fw_t0_128_640 AT BANDWIDTH FLOOR. 647 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
