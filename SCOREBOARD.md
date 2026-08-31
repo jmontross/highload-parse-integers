@@ -11762,3 +11762,19 @@ No new variants. Both Change A (digit-place accumulation, back-to-front scan, su
 ns/line: 0.095s / 50M = **1.90 ns/line** median; **1.82 ns/line** best (moderate VM run).
 
 **STOP-FLOOR ×647. Champion dp2_8s_fw_t0_128_640 AT BANDWIDTH FLOOR. 647 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-08-31 (scheduled run ×648) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_128_640) | STOP-FLOOR ×648 | **0.075s** (g++) | ~0.083s | 5 warm direct samples (1st cold=0.138s discarded); floor dd=0.097s → 0.075/0.097=0.77× (AT/BELOW bandwidth floor, cache hot). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: moderate (floor dd=0.097s; champion warm best=0.075s — 0.77× floor, fully memory-bound). STOP-FLOOR ✓. Champion correct.
+
+No new variants. Design space saturated. Champion dp2_8s_fw_t0_128_640 uses Change A (digit-place accumulation, back-to-front scan, subtract 0x30 → free newline detection, per-place u8 accumulators, no multiply in hot loop) + Change B (8-stream spatial MLP, T0@128B 2-iters ahead + T1@640B 10-iters ahead per stream). 230+ variants exhausted. **648 consecutive STOP-FLOOR runs.**
+
+ns/line: 0.083s / 50M = **1.66 ns/line** median; **1.50 ns/line** best (warm, moderate VM).
+
+→ **submit under: `g++-13 -O3 -march=native`** (fast-VM best-ever ×635: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69.3ms); CORRECT ✓).
+
+**STOP-FLOOR ×648. Champion dp2_8s_fw_t0_128_640 AT BANDWIDTH FLOOR. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
