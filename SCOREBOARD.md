@@ -11693,3 +11693,31 @@ No new variants. Both Change A (digit-place accumulation, back-to-front scan, su
 ns/line: 0.091s / 50M = **1.82 ns/line** median; **1.80 ns/line** best (moderate VM run).
 
 **STOP-FLOOR ×645. Champion dp2_8s_fw_t0_64_1536 AT BANDWIDTH FLOOR. 645 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-08-31 (scheduled run ×645-PROMOTE) — PROMOTE dp2_8s_fw_t0_128_640
+
+**run.sh verdict: PROMOTE variants/dp2_8s_fw_t0_128_640**
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| dp2_8s_fw_t0_128_640 (NEW CHAMPION) | PROMOTE | **0.084s** (run.sh interleaved) | 0.086s | T0@128B (2 iters ahead) + T1@640B (10 iters ahead); beats old T0@64+T1@1536 by 6ms best / 5ms median. Edge 9/9. Correct. |
+| dp2_8s_fw_t0_64_1536 (old champion) | retired | 0.090s | 0.091s | Dethroned by dp2_8s_fw_t0_128_640. |
+
+**Change**: T0 distance 64B→128B (1→2 iters ahead); T1 distance 1536B→640B (24→10 iters ahead). The shorter T1 still covers judge DRAM latency (~80ns at 3GHz) while reducing far-prefetch µop pressure.
+
+Confirmation timing (10 interleaved rounds on moderate VM):
+- New champion best: 0.085s, median: ~0.090s
+- Old champion best: 0.086s, median: ~0.093s
+- Winner: new champion (marginally faster on this VM, significant in run.sh 5-sample test)
+
+### Compiler sweep (promoted champion, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | 0.095s (CORRECT ✓) |
+| g++-13 -O3 -march=native | **0.090s** (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.098s (CORRECT ✓) |
+
+→ **submit under: `g++-13 -O3 -march=native`** (0.090s moderate VM; CORRECT ✓).
+
+**PROMOTED to champion: dp2_8s_fw_t0_128_640. New champion best (moderate VM): ~0.085s. Ready to submit under g++-13 -O3 -march=native.**
