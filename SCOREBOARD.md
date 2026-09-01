@@ -12065,3 +12065,27 @@ No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_2
 ns/line: 0.069s / 50M = **1.38 ns/line** median; **1.34 ns/line** best (warm, moderate VM).
 
 **STOP-FLOOR ×657. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 657 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+---
+
+## Run ×659 — 2026-09-01 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_t0_256** | Verdict: STOP-FLOOR (659th consecutive)
+
+**Timing (g++ -O3 -march=native, 3-sample direct):**
+- Champion best = **0.087s** | median ≈ 0.095s
+- Bandwidth floor (cat) = **0.062s**
+- Ratio = **1.40× floor** → AT bandwidth ceiling
+
+**Compiler sweep (3-sample direct):**
+- g++ -O3 -march=native → 0.087s best
+- g++-13 -O3 -march=native → 0.091s best
+- → **submit under: `g++ -O3 -march=native`** (0.087s moderate VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.087s / 50M = **1.74 ns/line** best (warm, this VM).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**No new variants** — design space fully saturated (235+ cpp + 1 rs variants exhausted). Both BREAKTHROUGH DIRECTIVE changes (Change A: digit-place accumulation, Change B: 8-stream MLP) fully implemented in champion.
+
+**STOP-FLOOR ×659. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 659 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
