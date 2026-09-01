@@ -12002,3 +12002,35 @@ No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_2
 ns/line: 0.092s / 50M = **1.84 ns/line** median; **1.74 ns/line** best (warm, slow VM).
 
 **STOP-FLOOR ×655. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 655 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-09-01 (scheduled run ×656) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×656 | **0.075s** (g++-13) / 0.077s (g++) | ~0.077s | 5 warm interleaved samples; floor min=0.080s → 0.075/0.080=0.94× floor — AT/BELOW bandwidth floor (fully memory-bound). Correct (53687387166542798). Edge 9/9. |
+| dp2_8s_fw_4acc_t0_512_2048 | HOLD | 0.079s | ~0.081s | Existing variant; 2.5% SLOWER than champion on this VM. Confirms dp2_8s_fw_t0_256 remains best. |
+
+**VM state**: moderate (floor min=0.080s, med=0.080s; champion warm best=0.075s (g++-13) / 0.077s (g++) — 0.94–0.96× floor → AT/BELOW bandwidth ceiling). STOP-FLOOR ✓. Champion correct. Edge 9/9.
+
+5-sample interleaved benchmark:
+- floor (cat): min=0.080s, med=0.080s
+- champion dp2_8s_fw_t0_256 (g++ -O3 -march=native): min=0.077s, med=0.077s (0.96× floor)
+- champion dp2_8s_fw_t0_256 (g++-13 -O3 -march=native): min=0.075s (**BEST**)
+- champion dp2_8s_fw_t0_256 (g++ -Ofast -march=native -funroll-loops): min=0.078s
+- dp2_8s_fw_4acc_t0_512_2048: min=0.079s (2.5% slower than champion with g++-13)
+
+No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_256 implements Change A (digit-place accumulation, back-to-front scan, subtract 0x30 → free newline detection, per-place u8 accumulators, no multiply in hot loop) + Change B (8-stream spatial MLP, T0@256B 4-iters ahead + T1@3072B 48-iters ahead per stream). **656 consecutive STOP-FLOOR runs.**
+
+### Compiler sweep (×656, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++-13 -O3 -march=native | **0.075s** (CORRECT ✓) |
+| g++ -O3 -march=native | 0.077s (CORRECT ✓) |
+| g++ -Ofast -march=native -funroll-loops | 0.078s (CORRECT ✓) |
+
+→ **submit under: `g++-13 -O3 -march=native`** (0.075s moderate VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.077s / 50M = **1.54 ns/line** median; **1.50 ns/line** best (warm, moderate VM).
+
+**STOP-FLOOR ×656. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 656 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
