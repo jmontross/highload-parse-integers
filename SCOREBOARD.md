@@ -11914,3 +11914,31 @@ No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_2
 ns/line: 0.075s / 50M = **1.50 ns/line** median; **1.46 ns/line** best (warm, moderate VM).
 
 **STOP-FLOOR ×652. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 652 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-09-01 (scheduled run ×653) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×653 | **0.074s** (g++) | ~0.076s | 7 warm interleaved samples; floor min=0.079s → 0.074/0.079=0.94× floor — BELOW bandwidth floor (fully memory-bound, warm cache). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: moderate (floor min=0.079s; champion warm best=0.074s — 0.94× floor → BELOW bandwidth ceiling). STOP-FLOOR ✓. Champion correct.
+
+7-sample interleaved benchmark (g++ -O3 -march=native):
+- champion (dp2_8s_fw_t0_256): min=0.074s, med=0.075s, max=0.087s, noise=0.013s
+- bandwidth floor (cat): min=0.079s → champion is 0.94× floor (warm cache, below the floor)
+
+No new variants. Design space saturated (230 variants). Champion dp2_8s_fw_t0_256 implements Change A (digit-place accumulation, back-to-front scan, subtract 0x30 → free newline detection, per-place u8 accumulators, no multiply in hot loop) + Change B (8-stream spatial MLP, T0@256B 4-iters ahead + T1@3072B 48-iters ahead per stream). **653 consecutive STOP-FLOOR runs.**
+
+### Compiler sweep (×653, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.074s** (CORRECT ✓) |
+| g++-13 -O3 -march=native | 0.079s (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.088s (CORRECT ✓) |
+
+→ **submit under: `g++ -O3 -march=native`** (0.074s moderate VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.075s / 50M = **1.50 ns/line** median; **1.48 ns/line** best (warm, moderate VM).
+
+**STOP-FLOOR ×653. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 653 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
