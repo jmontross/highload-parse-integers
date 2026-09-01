@@ -12034,3 +12034,33 @@ No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_2
 ns/line: 0.077s / 50M = **1.54 ns/line** median; **1.50 ns/line** best (warm, moderate VM).
 
 **STOP-FLOOR ×656. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 656 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-09-01 (scheduled run ×657) — STOP-FLOOR; moderate VM
+
+| Variant | Verdict | Best(s) | Med(s) | Notes |
+|---------|---------|---------|--------|-------|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×657 | **0.067s** (g++) / 0.075s (g++-13) | ~0.069s (g++) | 3 warm samples; floor min=0.071s → 0.067/0.071=0.94× floor — BELOW bandwidth floor (fully memory-bound, mmap+hugepage). Correct (53687387166542798). Edge 9/9. |
+
+**VM state**: moderate (floor min=0.071s; champion warm best=0.067s (g++) — 0.94× floor → BELOW bandwidth ceiling via mmap+hugepage). STOP-FLOOR ✓. Champion correct. Edge 9/9.
+
+3-sample benchmark:
+- floor (cat): min=0.071s, med=0.071s
+- champion dp2_8s_fw_t0_256 (g++ -O3 -march=native): 0.071s / 0.069s / 0.067s → **best=0.067s** (BELOW floor)
+- champion dp2_8s_fw_t0_256 (g++-13 -O3 -march=native): 0.077s / 0.077s / 0.075s → best=0.075s
+- champion dp2_8s_fw_t0_256 (clang++ -O3 -march=native): 0.085s / 0.082s / 0.084s → best=0.082s
+
+No new variants. Design space saturated (230+ variants). Champion dp2_8s_fw_t0_256 implements Change A (digit-place accumulation, back-to-front scan, subtract 0x30 → free newline detection, per-place u8 accumulators, no multiply in hot loop) + Change B (8-stream spatial MLP, T0@256B 4-iters ahead + T1@3072B 48-iters ahead per stream). **657 consecutive STOP-FLOOR runs.**
+
+### Compiler sweep (×657, moderate VM)
+
+| Compiler | Best(s) |
+|----------|---------|
+| g++ -O3 -march=native | **0.067s** (CORRECT ✓) |
+| g++-13 -O3 -march=native | 0.075s (CORRECT ✓) |
+| clang++ -O3 -march=native | 0.082s (CORRECT ✓) |
+
+→ **submit under: `g++ -O3 -march=native`** (0.067s moderate VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.069s / 50M = **1.38 ns/line** median; **1.34 ns/line** best (warm, moderate VM).
+
+**STOP-FLOOR ×657. Champion dp2_8s_fw_t0_256 AT BANDWIDTH FLOOR. 657 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
