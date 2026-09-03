@@ -12346,3 +12346,19 @@ ns/line: 0.087s / 50M = **1.74 ns/line** best (warm, g++, this VM).
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion (dp2=digit-place Change A; 8s=8-stream Change B). **674 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run log 2026-09-03 (scheduled run ×675) — STOP-FLOOR; maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256) | STOP-FLOOR ×675 | 0.0630 | 0.0660 | — | Moderate VM (floor=0.362s min / 0.422s median). STOP-FLOOR: 0.063 < 2×0.362=0.724. Edge 9/9. index.html: 63ms CLEARS rank-18 bar (≤69.3ms). |
+| dp2_8s_fw_4acc_t0_64_1536 | HOLD | 0.0590 | 0.0670 | +6.3% best, WORSE median | Best=0.059s vs champion 0.063s (6.3% margin on best) BUT median=0.067s > champion 0.066s → HOLD (median condition not met). VM oscillation: single lucky sample. |
+
+STOP-FLOOR ×675. Moderate VM (floor=0.362s, champion=0.063s = 5.74× faster than cat). All 230 variants benchmarked (228 correct, 2 WRONG: dp2_8s_u8tree, dp2_8s_fw_400it). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented — dp2 champion supersedes both. Algorithm definitively converged at bandwidth ceiling for 675 consecutive STOP-FLOOR runs.
+
+Top 9 variants by best time (all 0.059s, within noise of champion 0.063s): dp2_8s_fw_4acc_t0_64_1536, dp2_8s_fw_4acc_t0_64_448_200it, dp2_8s_fw_4acc_t0_64_512, dp2_8s_fw_4acc_t1only_640, dp2_8s_fw_t0_128_1024, dp2_8s_fw_t0_128_1536, dp2_8s_fw_t0_128_2048, dp2_8s_fw_t0_192_768, dp2_8s_fw_t0_256. All within measurement noise of champion.
+
+Champion dp2_8s_fw_t0_256: single-acc + T0@256B (4 iters) + T1@3072B (48 iters). 0.063s = 1.26 ns/line.
+index.html: 63.0ms (BELOW rank-18 bar of 69.3ms). No new variants — 230 files exhausted, design space fully saturated.
+
+**STOP-FLOOR ×675. Champion dp2_8s_fw_t0_256. SUBMIT with `g++ -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal.**
