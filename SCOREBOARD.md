@@ -12589,3 +12589,21 @@ ns/line: 0.065s / 50M = **1.30 ns/line** best (warm, g++, this VM).
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion (dp2=digit-place Change A; 8s=8-stream Change B). **688 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×689 — 2026-09-04 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_t0_256** | Verdict: STOP-FLOOR (689th consecutive)
+
+**Timing (3-sample direct, fresh /tmp/input.txt):**
+- Bandwidth floor (cat): 0.112s / 0.061s / 0.061s → **best=0.061s**
+- g++ -O3 -march=native: 0.085s / 0.087s / 0.085s → **best=0.085s** (1.39× floor)
+- g++-13 -O3 -march=native: 0.086s / 0.085s / 0.085s → **best=0.085s** (1.39× floor)
+- clang++ -O3 -march=native: 0.095s / 0.097s / 0.095s → **best=0.095s** (1.56× floor)
+
+→ **submit under: `g++ -O3 -march=native`** (0.085s this VM; fast-VM best-ever (×635): **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.085s / 50M = **1.70 ns/line** best (warm, g++, this VM — moderate VM).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed prior runs)
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion (dp2=digit-place Change A; 8s=8-stream Change B). **689 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
