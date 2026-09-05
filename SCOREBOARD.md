@@ -12716,3 +12716,24 @@ ns/line: 0.059s / 50M = **1.18 ns/line** best (warm, g++, this VM).
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion (dp2=digit-place Change A; 8s=8-stream Change B). **695 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×696 — 2026-09-05 (PROMOTE → dp2_8s_fw_4acc_t0_64_1024, then STOP-FLOOR confirmed)
+
+**Champion promoted: dp2_8s_fw_4acc_t0_64_1024** (was: dp2_8s_fw_t0_256)
+
+**Promotion run verdict:** PROMOTE — dp2_8s_fw_4acc_t0_64_1024 beat champion best (0.058s vs 0.061s, Δ=4.9%) AND median (0.062s vs 0.065s); edge 9/9 ✓
+
+**Confirmation run verdict:** STOP-FLOOR (no variant within 1.5% of new champion)
+
+**Timing (confirmation run, RUNS=5 interleaved):**
+- Bandwidth floor (cat): 0.316s min / 0.381s median
+- Champion (dp2_8s_fw_4acc_t0_64_1024): best=0.060s, median=0.062s (0.19× floor — AT wall)
+- Compiler sweep best: g++ -Ofast -march=native -funroll-loops → 0.059s
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`** (0.059s this VM; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.059s / 50M = **1.18 ns/line** best (warm, g++ -Ofast, this VM).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). New champion uses 4-accumulator structure + T0@64B. **696 runs total, STOP-FLOOR confirmed. READY TO SUBMIT with `g++ -Ofast -march=native -funroll-loops`.**
