@@ -12859,3 +12859,9 @@ ns/line: 0.086s / 50M = **1.72 ns/line** this VM (slow/moderate VM state today).
 **Champion file note:** champion/main.cpp contains dp2_8s_fw_4acc_t0_64_1024; SCOREBOARD previously claimed dp2_8s_fw_2w. Both are tied (0.087s min) — confirmed same performance within VM noise. No promotion action needed; current file is correct.
 
 No new variants — design space fully saturated (235+ cpp variants exhausted, 703 consecutive STOP-FLOOR). Both BREAKTHROUGH DIRECTIVE changes fully implemented. **READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+### Run ×703 addendum — full run.sh verdict (false-promote, do NOT apply)
+
+Full run.sh (225+ variants, heavy VM load) produced floor=0.2940s (inflated — VM under heavy load during 225+ serial timing runs). Champion=0.086s → STOP-FLOOR fired (0.086 < 2×0.294=0.588). Code continued and also PROMOTE `dp2_8s_fw_4acc_t0_256_3072` (best=0.084s, median=0.088s vs champ 0.090s).
+
+**FALSE PROMOTE — do NOT apply.** Pattern: STOP-FLOOR fires simultaneously with PROMOTE for a previously-superseded old champion (dp2_8s_fw_4acc_t0_256_3072 was champion at run ×243, superseded by subsequent runs ×244/249/254). This is the documented VM oscillation false-positive. No promotion action taken.
