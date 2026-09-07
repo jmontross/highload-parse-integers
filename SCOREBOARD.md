@@ -13056,3 +13056,19 @@ ns/line: 0.088s / 50M = **1.76 ns/line** (moderate VM state; ratio to floor 1.06
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **715 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×715 (full sweep) — PROMOTE → REVERTED (VM oscillation)
+
+Full 235-variant RUNS=3 sweep completed. Gate fired PROMOTE for `dp2_8s_fw_t0_192_768` (T0@192B + T1@768B, judge-tuned shorter distances):
+- Run best: 0.083s vs old champion 0.087s → 4.6% margin ✓, lower median (0.084 < 0.090) ✓
+
+**Confirmation (5 direct samples, interleaved head-to-head):**
+- dp2_8s_fw_t0_192_768 (new): best=0.085s, median=0.089s
+- dp2_8s_fw_4acc_t0_64_1024 (old): best=0.087s, median=0.088s
+- Old champion wins on MEDIAN (0.088 < 0.089) → REVERT. Classic VM oscillation: initial sweep had champion anomalously slow (0.090s median) causing false gate.
+
+**REVERTED to dp2_8s_fw_4acc_t0_64_1024.** Both variants cluster at 0.085-0.090s within noise.
+
+42. dp2_8s_fw_t0_192_768 (HOLD ×715) — T0@192B + T1@768B (judge-tuned). 0.085s/0.089s on confirmation. Ties old champion; worse median. VM oscillation artifact in initial sweep.
+
+**STOP-FLOOR ×715 (full sweep confirmed). Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native`.**
