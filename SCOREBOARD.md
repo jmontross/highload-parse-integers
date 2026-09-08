@@ -13454,3 +13454,33 @@ ns/line: 0.071s / 50M = **1.42 ns/line** (good VM state; ratio to floor 1.00× �
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **736 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×737 — 2026-09-08 (FALSE-PROMOTE cascade → STOP-FLOOR; champion unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: STOP-FLOOR (737th consecutive; cascade not applied)
+
+**Full run.sh timing (RUNS=3, very noisy VM — floor=440ms; note floor unusually slow due to OS load):**
+
+Run 1 (initial):
+- Bandwidth floor (cat): 440ms (ANOMALOUS — ~6× slower than usual, OS load issue)
+- champion (dp2_8s_fw_4acc_t0_64_448_200it): **best=61ms**, median=69ms
+- Variant dp2_8s_fw_t0_128_512: best=59ms, median=61ms → PROMOTE gate fired (3.3% best, 13% median)
+- STOP-FLOOR also fired: 0.061 < 2×0.440 = 0.880 (floor slow/noisy)
+- Both STOP-FLOOR + PROMOTE fired simultaneously.
+
+Run 2 (confirmation after applying PROMOTE → dp2_8s_fw_t0_128_512 as new champion):
+- Bandwidth floor (cat): 458ms (still anomalously slow)
+- New champion (dp2_8s_fw_t0_128_512): **best=62ms**, median=62ms
+- Variant dp2_8s_fw_3072_32: best=59ms, median=60ms → PROMOTE fires AGAIN
+- STOP-FLOOR also fires again.
+
+**Cascade analysis:** VM oscillation cascade (same pattern as ×219-×224, ×220, ×131-×132, ×223-×224):
+- Floor is 440-458ms (6-7× slower than usual 70ms) — VM extremely loaded, all timing unreliable
+- Each confirmation run shows a DIFFERENT variant winning → all dp2 variants within noise of each other
+- Neither run confirms a real performance regression or improvement
+
+**Action taken:** REVERTED champion/main.cpp to dp2_8s_fw_4acc_t0_64_448_200it (the ×733-committed champion). CASCADE NOT APPLIED. All dp2 variants cluster 59-62ms on this VM; which wins is pure VM noise.
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented. **737 consecutive STOP-FLOOR runs (cascade rejected). Champion dp2_8s_fw_4acc_t0_64_448_200it unchanged. READY TO SUBMIT with `g++ -O3 -march=native`.**
