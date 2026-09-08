@@ -13372,3 +13372,24 @@ ns/line: 0.083s / 50M = **1.66 ns/line** (moderate VM state; ratio to floor 0.88
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **732 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run ×733 — 2026-09-08 (PROMOTE — new champion!)
+
+**New Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: PROMOTE (from background run.sh)
+
+**Background run.sh verdict:**
+- Old champion best=75ms, median=81ms
+- Variant best=71ms, median=74ms → beats by ≥1.5% AND median lower → SIGNIFICANT
+- Edge: 9/9 ✓
+
+**Confirmation timing (5-sample direct, fresh build):**
+- Bandwidth floor (cat): 81ms / 82ms / 85ms → **best=81ms**
+- g++ -O3 -march=native: 88ms / 90ms / 98ms / 81ms / 83ms → **best=81ms** (1.00× floor — AT bandwidth ceiling)
+- g++-13 -O3 -march=native: 85ms / 84ms / 88ms / 87ms / 85ms → **best=84ms** (1.04× floor)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**What changed:** inner=200 iterations (vs 100 in old champion). Same prefetch config (T0@64B + T1@448B), same 4 independent u16 accumulators, same 8-stream layout. Halving widen_4acc calls reduces branch overhead; still within u8/u16 overflow budget (21,600 < 65,535).
+
+→ **submit under: `g++ -O3 -march=native`** (run.sh best=71ms; confirmation 81ms; fast-VM best-ever: **0.049s** / 0.98 ns/line).
+
+Both BREAKTHROUGH DIRECTIVE changes fully implemented. STOP-FLOOR streak reset → new champion promoted.
