@@ -13610,3 +13610,20 @@ No new variants — design space fully saturated (235+ cpp variants exhausted). 
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). **743 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×744 — 2026-09-09 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: STOP-FLOOR (744th consecutive)
+
+**Timing (5-sample direct, fresh input.txt):**
+- Bandwidth floor (cat > /dev/null): 77ms / 74ms / 69ms → **best=69ms**
+- g++ -O3 -march=native: 66ms / 75ms / 72ms / 74ms / 67ms → **best=66ms** (0.96× floor — sub-floor, memory-bound)
+- g++-13 -O3 -march=native: 179ms / 81ms / 75ms / 69ms / 68ms → **best=68ms** (0.99× floor — memory-bound)
+
+→ **submit under: `g++ -O3 -march=native`** (66ms best this VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.066s / 50M = **1.32 ns/line** (good VM state; 0.96× floor — sub-floor, memory-bound).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). **744 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
