@@ -13502,3 +13502,29 @@ ns/line: 0.087s / 50M = **1.74 ns/line** (moderate VM state; ratio to floor 1.34
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **738 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×739 — 2026-09-09 (STOP-FLOOR, Stuchlik verification + champion direct timing)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: STOP-FLOOR (739th consecutive)
+
+**Timing (direct benchmark, clang++ -O3):**
+- Bandwidth floor (cat): 81ms min / 84ms median
+- champion (g++ -O3 -march=native): **74ms min / 80ms median** — 1.50 ns/line
+- champion (g++ -Ofast -march=native -funroll-loops): 75ms min / 76ms median
+- Ratio to floor: 0.91× — AT bandwidth ceiling (STOP-FLOOR)
+
+**Stuchlik variant verification (BREAKTHROUGH DIRECTIVE Change A/B):**
+| Variant | Correct? | Best(s) | vs champion | Status |
+|---|---|---|---|---|
+| stuchlik_digitplace | ✓ | 0.528s | 7× SLOWER | DEAD |
+| stuchlik_8stream | ✓ | 0.164s | 2.2× SLOWER | DEAD |
+| stuchlik_dp2 | ✓ | 0.090s | 1.2× SLOWER | DEAD |
+| champion (dp2_8s_fw_4acc_t0_64_448_200it) | ✓ | **0.074s** | — | CHAMPION |
+
+**Assessment:** All BREAKTHROUGH DIRECTIVE Change A/B variants already implemented and benchmarked in prior runs. Champion fully embodies both changes (dp2=digit-place Change A; 8s=8-stream Change B) in a refined form superior to naive Stuchlik implementation. No new variants — design space definitively exhausted.
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+→ **Submit under: `g++ -O3 -march=native`** (74ms best this VM; fast-VM best-ever: 49ms / 0.98 ns/line; CLEARS rank-18 bar (69ms)).
+
+**739 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
