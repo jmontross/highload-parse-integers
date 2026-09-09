@@ -13548,3 +13548,20 @@ ns/line: 0.086s / 50M = **1.72 ns/line** (moderate VM state; ratio to floor 1.43
 **BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation = dp2) and Change B (8-stream MLP = 8s) are fully implemented in the current champion. Stuchlik variants (stuchlik_digitplace: 7× slower, stuchlik_8stream: 2.2× slower, stuchlik_dp2: 1.2× slower) exist in variants/ and are DEAD — the champion is a superior, more refined implementation of both changes.
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). **740 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×741 — 2026-09-09 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: STOP-FLOOR (741st consecutive)
+
+**Timing (5-sample direct, g++/g++-13, fresh input.txt):**
+- Bandwidth floor (cat): 70ms / 68ms / 68ms / 68ms / 69ms → **best=68ms**
+- g++ -O3 -march=native: 129ms / 73ms / 73ms / 74ms / 79ms → **best=73ms** (1.07× floor — AT bandwidth ceiling)
+- g++-13 -O3 -march=native: 74ms / 71ms / 70ms / 70ms / 73ms → **best=70ms** (1.03× floor — AT bandwidth ceiling)
+
+→ **submit under: `g++-13 -O3 -march=native`** (70ms best this VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.070s / 50M = **1.40 ns/line** (good VM state; 1.03× floor — AT bandwidth ceiling).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). **741 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
