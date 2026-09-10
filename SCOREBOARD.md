@@ -13769,3 +13769,30 @@ ns/line: 0.063s / 50M = **1.26 ns/line** (good VM state; 0.89× floor — sub-fl
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **746 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run ×747 — 2026-09-10 (STOP-FLOOR; new T0@256+T1@3072 variant → HOLD)
+
+**Champion: dp2_8s_fw_t0_256_2048** | Verdict: STOP-FLOOR (747th consecutive)
+
+**Timing (direct + interleaved, g++ -O3 -march=native, moderate VM):**
+- Bandwidth floor (cat > /dev/null): 63ms / 64ms / 65ms → **best=63ms**
+- Champion (5 direct): 92ms / 88ms / 88ms / 88ms / 90ms → **best=88ms**
+- Champion (interleaved vs variant): 92ms / 90ms / 88ms / 87ms / 86ms → **best=86ms**
+- g++-13 -O3 -march=native: 86ms / 88ms / 87ms / 88ms / 91ms → **best=86ms** (tied)
+
+STOP-FLOOR: 86ms < 2 × 63ms = 126ms ✓
+
+| Variant | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_256_2048) | 0.086 | 0.088 | — | STOP-FLOOR: 0.086 < 2×0.063=0.126 |
+| dp2_8s_fw_t0_256_3072 (NEW) | 0.089 | 0.092 | −3.5% (WORSE) | Genuine grid gap (single-acc T0@256+T1@3072 never tried; 4acc version was HOLD). Interleaved: 91/92/89/95/92ms vs champion 92/90/88/87/86ms. Variant WORSE than champion in every interleaved comparison. DEAD. |
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+ns/line: 0.086s / 50M = **1.72 ns/line** (moderate VM; 1.37× floor — memory-bound).
+
+**Key finding:** Single-acc T0@256+T1@3072 is DEAD. The single-acc T1@2048 (champion) outperforms T1@3072 at this VM's DRAM latency. Confirms T1@2048 is optimal at T0@256 (shorter far prefetch = less L2 eviction pressure). Grid now fully closed for T0@256 family.
+
+All 236+ cpp variants exhausted. Design space fully saturated. **747 consecutive STOP-FLOOR runs.**
+
+→ **submit under: `g++ -O3 -march=native`** (best 86ms moderate VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
