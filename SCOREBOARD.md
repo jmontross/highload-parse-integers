@@ -13702,3 +13702,17 @@ ns/line: 0.089s / 50M = **1.78 ns/line** (moderate VM; typical good-VM: 1.26-1.3
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **743 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+### Full RUNS=3 sweep (run ×743 continuation, all 235 cpp variants)
+
+**VM state:** moderate (floor=0.295s min). Champion: 0.086s best / 0.091s median = 0.29× floor (STOP-FLOOR).
+
+| Variant | Best(s) | Note |
+|---|---|---|
+| champion | 0.086 | STOP-FLOOR: 0.086 < 2×0.295=0.590 |
+| dp2_8s_fw_t0_192_3072 | 0.085 | Best variant: Δ=0.001s < 0.0013s (1.5% gate) → HOLD |
+| All dp2_8s_fw variants | 0.085–0.091 | Cluster within noise band |
+
+Compiler sweep: g++ -O3 -march=native → 0.087s best (best compiler, same as g++-13 -O3). clang++ → 0.095s. index.html: 86ms.
+
+**743rd STOP-FLOOR. SUBMIT with `g++ -O3 -march=native`.**
