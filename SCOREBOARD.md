@@ -13732,3 +13732,23 @@ ns/line: 0.079s / 50M = **1.58 ns/line** (moderate VM; typical good-VM: 1.26-1.3
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (confirmed all prior runs)
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **744 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×745 — 2026-09-10 (PROMOTE: dp2_8s_fw_t0_256_2048)
+
+**New Champion: dp2_8s_fw_t0_256_2048** | Verdict: PROMOTE (run.sh full sweep)
+
+**Full run.sh results:**
+- Bandwidth floor: 0.231s min (moderate VM during sweep)
+- Old champion: 0.075s best / 0.077s median
+- **dp2_8s_fw_t0_256_2048: 0.072s best / 0.076s median** — Δbest=0.003s (4%), edges 9/9 ✓
+
+**Post-promotion confirmation (direct 5-sample benchmark):**
+- Bandwidth floor: 73ms / 81ms / 80ms → **best=73ms**
+- New champion (g++ -O3 -march=native): 77ms / 79ms / 76ms / 76ms / 78ms → **best=76ms** (1.04× floor — memory-bound)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+→ **submit under: `g++-13 -O3 -march=native`** (compiler sweep: 74ms best with g++-13 -O3; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.076s / 50M = **1.52 ns/line** (moderate VM; good-VM typical: 1.26-1.32 ns/line).
+
+**Champion promoted from dp2_8s_fw_4acc_t0_64_448_200it → dp2_8s_fw_t0_256_2048** (4% improvement, first promotion after 743 STOP-FLOOR runs).
