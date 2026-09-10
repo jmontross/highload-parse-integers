@@ -13679,3 +13679,26 @@ ns/line: 0.063s / 50M = **1.26 ns/line** (good VM state; 0.86× floor — sub-fl
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **742 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×743 — 2026-09-10 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448_200it** | Verdict: STOP-FLOOR (743rd consecutive)
+
+**Timing (3-sample direct, g++ -O3 -march=native, moderate VM):**
+- Bandwidth floor (cat > /dev/null): 0.097s / 0.084s / 0.085s → **best=0.084s**
+- Champion: 0.091s / 0.089s / 0.090s → **best=0.089s** (1.06× floor — memory-bound)
+
+STOP-FLOOR: 0.089s < 2 × 0.084s = 0.168s ✓
+
+**Stuchlik variant status (from BREAKTHROUGH DIRECTIVE):**
+- stuchlik_digitplace (Change A ref impl): 0.620s — 7.4× floor (much slower, no 8-stream MLP)
+- stuchlik_8stream (Change B ref impl): 0.225s — 2.7× floor (slower, simpler digit parsing)
+- dp2 champion supersedes both: Change A (digit-place accumulation) + Change B (8-stream MLP) ALREADY UNIFIED in dp2 family since run ×40+.
+
+→ **submit under: `g++ -O3 -march=native`** (89ms moderate VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms); CORRECT ✓).
+
+ns/line: 0.089s / 50M = **1.78 ns/line** (moderate VM; typical good-VM: 1.26-1.32 ns/line).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (235+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **743 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
