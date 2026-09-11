@@ -1,11 +1,6 @@
-// dp2_8s_fw_t0_256_2048.cpp — T0@256B + T1@2048B (single accumulator).
-// Grid gap: champion=T0@256+T1@3072; this tests T1@2048 (33% tighter far prefetch).
-// 4acc version with T0@256+T1@2048 was tried (dp2_8s_fw_4acc_t0_256_2048, HOLD),
-// but single-acc at this exact distance has NOT been benchmarked. Filling the gap.
-// Rationale: T1@2048 = 32 iters ahead. At 2.8GHz × 1 iter/~20cy = ~7ns/iter;
-// 32 × 7ns = ~224ns. Typical DRAM ~80ns -> 2.8× headroom. May flush prefetch too
-// early vs T1@3072 (3072B=48 iters=~336ns); optimal is somewhere between 1536-3072B.
-
+// dp2_8s_fw_t0_256_3072.cpp — T0@256B + T1@3072B (single accumulator).
+// Fills gap: champion=T0@256+T1@2048; 4acc version T0@256+T1@3072 was HOLD.
+// Single-acc T1@3072 at T0@256 has NOT been benchmarked — genuine grid gap.
 #include <cstdio>
 #include <cstdint>
 #include <cinttypes>
@@ -333,12 +328,12 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(256, 2048)
+                ITER_BODY(256, 3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(256, 2048)
+            ITER_BODY(256, 3072)
         }
         widen_u16(acc_u16, wide_acc);
 
