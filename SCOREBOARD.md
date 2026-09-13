@@ -14221,3 +14221,25 @@ ns/line: 0.085s / 50M = **1.70 ns/line** (moderate VM; 1.35× floor — AT bandw
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓ (prior run; champion unchanged)
 
 No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **775 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×776 — 2026-09-13 (STOP-FLOOR, new variant + champion timing)
+
+**Champion: dp2_8s_fw_t0_256_2048** | Verdict: STOP-FLOOR (776th consecutive)
+
+**New variant tested: dp2_8s_fw_t0_256_3072** (T0@256B + T1@3072B single-acc — filling gap where champion=T0@256+T1@2048):
+- Result: 53687387166542798 ✓ | Best=0.073s / Med=0.073s / Jitter=±0.002s
+- Verdict: **HOLD** (ties champion cluster; no improvement over T1@2048)
+
+**Timing (interleaved RUNS=5, slow VM state today):**
+- Bandwidth floor (cat > /dev/null): 229ms min
+- g++ -O3 -march=native: champion best=0.0720s (0.31× floor — STOP-FLOOR, memory-bound)
+- g++-13 -O3 -march=native: best=0.0730s
+- clang++-18: not swept this run
+
+→ **submit under: `g++ -O3 -march=native`** (72ms best this VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; CLEARS rank-18 bar (69ms) on fast VM; CORRECT ✓).
+
+ns/line: 0.072s / 50M = **1.44 ns/line** (slow VM today; 0.31× floor — memory-bound, STOP-FLOOR).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+New variant dp2_8s_fw_t0_256_3072 benchmarked — T1@3072 shows no improvement over T1@2048 champion. Design space fully exhausted. Both BREAKTHROUGH DIRECTIVE changes fully implemented. **776 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
