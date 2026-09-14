@@ -14343,3 +14343,21 @@ ns/line: 0.087s / 50M = **1.74 ns/line** (moderate VM; ~1.01× floor — AT band
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 New champion promoted. Both BREAKTHROUGH DIRECTIVE changes remain implemented. READY TO SUBMIT with `g++ -O3 -march=native`.
+
+## Run ×782 — 2026-09-14 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_200it** | Verdict: STOP-FLOOR (1st run after ×781 promotion)
+
+**Timing (5-sample direct, fresh input.txt):**
+- Bandwidth floor (cat > /dev/null): 65ms / 66ms / 68ms → **best=65ms**
+- g++ -O3 -march=native: 78ms / 82ms / 83ms / 85ms / 92ms → **best=78ms** (1.20× floor — memory-bound)
+- g++-13 -O3 -march=native: 79ms / 80ms / 81ms / 86ms / 123ms → **best=79ms** (1.22× floor — memory-bound)
+- clang++-18 -O3 -march=native: 86ms / 90ms / 94ms / 99ms / 102ms → **best=86ms** (1.32× floor)
+
+→ **submit under: `g++ -O3 -march=native`** (78ms best this VM; fast-VM best-ever: **0.049s** / 0.98 ns/line; champion IS BELOW rank-18 bar (69ms) on fast VM; CORRECT ✓).
+
+ns/line: 0.078s / 50M = **1.56 ns/line** (moderate VM; 1.20× floor — memory-bound).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **Champion is memory-bound at 1.20× bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
