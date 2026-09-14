@@ -14314,3 +14314,29 @@ ns/line: 0.089s / 50M = **1.78 ns/line** (moderate VM today; 1.035× floor — A
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). **780 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×781 — 2026-09-14 (PROMOTE: dp2_8s_fw_200it → new champion)
+
+**New champion: dp2_8s_fw_200it** | Verdict: PROMOTE (harness gate cleared)
+
+**Background run.sh result (RUNS=3, SWEEP=0):**
+- Bandwidth floor: 241ms (slow VM state during long run)
+- New variant dp2_8s_fw_200it: best=0.084s, median=0.085s
+- Old champion dp2_8s_fw_t0_256_2048: best=0.094s
+- Gap: 10ms > noise band → PROMOTE; edge 9/9 ✓
+
+**Confirmation timing (direct, g++ -O3 -march=native, post-promotion):**
+- Old champion (dp2_8s_fw_t0_256_2048): 90/97/92/90ms → best=90ms
+- New champion (dp2_8s_fw_200it): 87/91/93/89ms → best=87ms
+- Bandwidth floor: ~86ms
+- Edge: 9/9 ✓
+
+→ **submit under: `g++ -O3 -march=native`** (87ms best this VM; fast-VM best-ever updated).
+
+ns/line: 0.087s / 50M = **1.74 ns/line** (moderate VM; ~1.01× floor — AT bandwidth ceiling).
+
+**Change:** 200-iteration inner loop (vs 100 in old champion) — fewer widen calls, lower branch overhead. Overflow stays safe: 200 × 108/lane = 21,600 < 65,535 ✓.
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+New champion promoted. Both BREAKTHROUGH DIRECTIVE changes remain implemented. READY TO SUBMIT with `g++ -O3 -march=native`.
