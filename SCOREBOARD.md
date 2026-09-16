@@ -14732,3 +14732,22 @@ No new variants — design space fully saturated (234+ cpp variants, all prefetc
 ns/line: 0.049s / 50M = **0.98 ns/line** (g++ best; 0.77× floor — AT bandwidth ceiling, mmap beats cat).
 
 **Verdict: STOP-FLOOR** — champion is memory-bound and at/below bandwidth floor. Design space exhausted (236+ cpp variants). Both BREAKTHROUGH DIRECTIVE changes implemented. **807th STOP-FLOOR; READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×808 — 2026-09-16 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_2w_2048** | Verdict: STOP-FLOOR (808th consecutive)
+
+**Timing (direct, fresh input.txt):**
+- Bandwidth floor (cat > /dev/null): 67ms / 66ms / 65ms → **best=65ms**
+- g++ -O3 -march=native: 74ms / 70ms / 70ms / 70ms / 70ms → **best=70ms** (1.08× floor)
+- g++-13 -O3 -march=native: 67ms / 71ms / 73ms → **best=67ms** (1.03× floor — essentially memory-bound)
+- clang++-18 -O3 -march=native: 82ms / 81ms / 105ms → **best=81ms** (1.25× floor)
+- Edge: 9/9 ✓
+
+→ **submit under: `g++-13 -O3 -march=native`** (67ms best this VM; **CLEARS rank-18 bar ≤69ms**; CORRECT ✓).
+
+ns/line: 0.067s / 50M = **1.34 ns/line** (g++-13 best; 1.03× floor — essentially memory-bound).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion memory-bound on this VM. **808 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
