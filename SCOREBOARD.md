@@ -14574,3 +14574,28 @@ ns/line: 0.066s / 50M = **1.32 ns/line** (g++-13 best; 1.03× floor — sub-floo
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion at 1.03× bandwidth floor on this VM — effectively AT the memory bandwidth ceiling. **798 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×799 — 2026-09-16 (FALSE-PROMOTE reverted, STOP-FLOOR ×799)
+
+**Champion: dp2_8s_fw_200it (restored)** | Verdict: STOP-FLOOR (799th consecutive)
+
+Full run.sh (RUNS=3, all 232 variants) fired a PROMOTE gate for `dp2_8s_fw_4acc_pg_align`:
+- Initial (RUNS=3): variant 0.065s vs champion 0.067s → 3.0% margin, median 0.066 < 0.069 → gate PROMOTE, edge 9/9 ✓ → APPLIED to champion/main.cpp
+
+**Confirmation timing (5-sample interleaved direct, fresh run):**
+- New champion (`dp2_8s_fw_4acc_pg_align`): 0.075/0.065/0.067/0.071/0.071 → best=0.065s, median=0.071s
+- Old champion (`dp2_8s_fw_200it`): 0.066/0.067/0.067/0.068/0.066 → best=0.066s, median=0.067s
+- Floor: 0.064/0.063/0.064 → best=0.063s
+
+**Verdict: FALSE-PROMOTE. Reverted to dp2_8s_fw_200it.**
+- Median condition FAILS: new champion median 0.071s > old champion median 0.067s (VM state changed between initial and confirmation runs)
+- New variant has higher jitter (0.010s range vs 0.002s old champion) — less consistent
+- VM oscillation: initial RUNS=3 caught new variant on a fast sample + old champion on a slow sample
+
+`dp2_8s_fw_4acc_pg_align`: page-aligned 4KB block starts + 4acc structure (different from dp2_8s_fw_200it which uses double-loop 200-iter inner + 4acc + T0@512+T1@3072). **HOLD — not a genuine improvement, higher jitter than champion.**
+
+**Timing this run (old champion dp2_8s_fw_200it restored):**
+- g++ -O3 -march=native: best=0.066s, median=0.067s, floor=0.063s → 1.05× floor — AT bandwidth ceiling
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+No new variants — design space fully saturated. **799 consecutive STOP-FLOOR runs. SUBMIT with `g++ -O3 -march=native`.**
