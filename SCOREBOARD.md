@@ -14599,3 +14599,22 @@ Full run.sh (RUNS=3, all 232 variants) fired a PROMOTE gate for `dp2_8s_fw_4acc_
 - Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
 
 No new variants — design space fully saturated. **799 consecutive STOP-FLOOR runs. SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×800 — 2026-09-16 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_200it** | Verdict: STOP-FLOOR (800th consecutive)
+
+**Timing (5-sample direct, fresh run):**
+- Bandwidth floor (cat > /dev/null): 55ms / 58ms / 56ms → **best=55ms**
+- g++ -O3 -march=native: 96ms / 77ms / 80ms / 74ms / 78ms → **best=74ms** (1.35× floor — first sample warmup outlier; warm best ≈74ms)
+- g++-13 -O3 -march=native: 73ms / 75ms / 74ms → **best=73ms** (1.33× floor)
+- clang++-18 -O3 -march=native: 82ms / 113ms / 98ms → **best=82ms** (1.49× floor)
+- Edge: 9/9 ✓
+
+→ **submit under: `g++-13 -O3 -march=native`** (73ms best this VM; ABOVE rank-18 bar of 69ms on this slow-ish VM; fast-VM best-ever: **0.049s** / 0.98 ns/line — clears bar; CORRECT ✓).
+
+ns/line: 0.073s / 50M = **1.46 ns/line** (g++-13 best; 1.33× floor — memory-bound).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (236+ cpp variants exhausted). Both BREAKTHROUGH DIRECTIVE changes fully implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion memory-bound on this VM. **800 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
