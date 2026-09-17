@@ -14789,3 +14789,21 @@ ns/line: 0.075s / 50M = **1.50 ns/line** (this run; best-ever 0.98 ns/line — 0
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants exhausted, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented. Champion at 0.96× bandwidth floor (memory-bound). **810 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×810b — 2026-09-17 (false PROMOTE reverted; STOP-FLOOR confirmed)
+
+**Champion: dp2_8s_fw_2w_2048** (unchanged) | Verdict: STOP-FLOOR
+
+**What happened:**
+- Background run.sh (RUNS=3, all 234 variants) issued PROMOTE for `dp2_8s_fw_t0_128_1024` (71ms vs champion 73ms)
+- BUT floor during that sweep was 137ms (extremely heavy VM load) — same cache-bias false-positive as run ×807
+- Direct interleaved comparison (floor=58-60ms, calm VM):
+  - Champion: 74ms / 78ms / 74ms / 77ms → best=74ms
+  - dp2_8s_fw_t0_128_1024: 86ms / 85ms / 104ms / 84ms → best=84ms
+- Candidate is clearly SLOWER — PROMOTE reverted, champion unchanged
+
+**Champion confirmed timing (floor=58-60ms):**
+- g++ -O3 -march=native: 74-78ms → best=74ms (1.27× floor)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**No genuine improvement possible.** STOP-FLOOR (811th consecutive). READY TO SUBMIT with `g++ -O3 -march=native`.
