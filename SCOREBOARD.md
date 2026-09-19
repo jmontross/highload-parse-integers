@@ -15070,3 +15070,29 @@ ns/line: 0.086s / 50M = **1.72 ns/line** (this VM run; best-ever 0.98 ns/line �
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants exhausted, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion AVX2-only (no AVX-512 downclocking). **827 consecutive STOP-FLOOR runs. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×831 — 2026-09-19 (PROMOTE — new champion)
+
+**New Champion: dp2_8s_fw_t0_64_512** | Previous: dp2_8s_fw_2w_2048
+
+**Promotion basis (from run.sh interleaved):**
+- Old champion best: 87ms | New variant best: 83ms | Δbest=4ms (4.6% faster)
+- Variant median: 85ms vs champion median: 87ms — SIGNIFICANT (beyond noise band)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Confirmation (direct head-to-head, g++ -O3 -march=native):**
+- Old champion dp2_8s_fw_2w_2048: 87ms / 88ms / 88ms / 91ms / 89ms → **best=87ms**, median=88ms
+- New champion dp2_8s_fw_t0_64_512: 86ms / 86ms / 86ms / 87ms / 86ms → **best=86ms**, median=86ms
+- Bandwidth floor: 58–61ms → champion at 1.41× floor (memory-bound)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**What's different:** Judge-optimized two-tier prefetch — T0@64B + T1@512B.
+Prior champion used T0@512B + T1@3072B (tuned for VM's ~400ns DRAM).
+Judge DRAM is ~80ns → T1 at 8 iters×64B = 512B covers it with no over-fetch.
+Same 16 prefetch µops/iter, tighter distances for low-latency hardware.
+
+→ **submit under: `g++ -O3 -march=native`** (86ms best this VM; best-ever across runs: **0.049s** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.086s / 50M = **1.72 ns/line** (this VM; best-ever 0.98 ns/line).
+
+**Champion promoted. READY TO SUBMIT with `g++ -O3 -march=native`.**
