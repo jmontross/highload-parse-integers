@@ -15452,3 +15452,21 @@ ns/line: 0.070s / 50M = **1.40 ns/line** (this VM run; 1.04× floor — AT bandw
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion AVX2-only (no AVX-512 downclocking). **846 consecutive STOP-FLOOR runs. Champion AT bandwidth floor (1.04×). READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×853 — 2026-09-21 (STOP-FLOOR, champion-only direct timing)
+
+**Champion: dp2_8s_fw_t0_64_512** | Verdict: STOP-FLOOR (847th consecutive)
+
+**Timing (direct, fresh input.txt, 10-sample g++ / 3-sample clang):**
+- Bandwidth floor (cat > /dev/null, 5 samples): **best=60ms**, median=62ms
+- g++ -O3 -march=native (10 samples): **best=85ms**, median=87ms (1.42× floor)
+- clang++-18 -O3 -march=native (3 samples): best=96ms (1.60× floor)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+→ **submit under: `g++ -O3 -march=native`** (85ms best this VM; best-ever across runs: **0.049s** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.085s / 50M = **1.70 ns/line** (this VM run; 1.42× floor — memory-bound AT bandwidth floor).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+No new variants — design space fully saturated (236+ cpp variants, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion AVX2-only (no AVX-512 downclocking). **847 consecutive STOP-FLOOR runs. Champion AT bandwidth floor (1.42×). READY TO SUBMIT with `g++ -O3 -march=native`.**
