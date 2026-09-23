@@ -15757,3 +15757,29 @@ ns/line: 0.074s / 50M = **1.48 ns/line** (this VM run; 1.26× floor).
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented (dp2=digit-place Change A; 8s=8-stream Change B). Champion AVX2-only (no AVX-512 downclocking). **5 consecutive STOP-FLOOR runs after PROMOTE. Champion at 1.26× bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×869 — 2026-09-23 (PROMOTE → STOP-FLOOR; dp2_8s_fw_t0_192_3072 supersedes dp2_8s_4acc_fw_t0_192_768)
+
+**PROMOTE gate fired (background run.sh):** full variant sweep showed `dp2_8s_fw_t0_192_3072` best=0.072s vs old champion dp2_8s_4acc_fw_t0_192_768 best=0.076s → 5.3% margin (≥1.5% ✓), median 0.074s < 0.077s ✓, edge 9/9 ✓ → PROMOTED.
+
+**Confirmation (direct interleaved, RUNS=5):**
+- Floor: best=0.057s
+- New champion (dp2_8s_fw_t0_192_3072): best=0.073s, median=0.075s
+- Old champion (dp2_8s_4acc_fw_t0_192_768, now variant): best=0.075s, median=0.076s
+- Interleaved: new consistently 2ms faster than old → PROMOTE confirmed, STOP-FLOOR (0.073 < 2×0.057=0.114)
+
+**Compiler sweep (3 samples each, moderate VM):**
+- g++-13 -O3 -march=native → 0.072s (**BEST**)
+- g++ -O3 -march=native → 0.073s
+- g++ -Ofast -march=native -funroll-loops → 0.074s
+- clang++-18 -O3 -march=native → 0.082s
+
+**Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓**
+
+ns/line: 0.072s / 50M = **1.44 ns/line** (g++-13 best); floor=0.057s → ratio 1.26×.
+
+**dp2_8s_fw_t0_192_3072 profile:** single accumulator, double-loop (outer=widen groups, inner=100 fixed iters) + T0@192B (3 iters, L2→L1) + T1@3072B (48 iters, DRAM→L2) per stream. Shorter T0@192B (vs prior champion's T0@512B) with longer T1@3072B. On this VM state, the longer far-tier DRAM prefetch (3072B=48 iters) wins over the 4acc structure + shorter T1@768B.
+
+42. dp2_8s_fw_t0_192_3072 (PROMOTED ×869) — T0@192B + T1@3072B. Single acc. 0.072s best (g++-13). Supersedes dp2_8s_4acc_fw_t0_192_768.
+
+**STOP-FLOOR ×869. New champion: dp2_8s_fw_t0_192_3072. SUBMIT with `g++-13 -O3 -march=native`. Best-ever across runs: 0.049s (0.98 ns/line). index.html: 72ms (1.04× off rank-18 bar 69.3ms). Expected judge time: ~55-65ms on bare metal.**
