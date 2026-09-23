@@ -15832,3 +15832,37 @@ ns/line: 0.074s / 50M = **1.48 ns/line** (this VM run; 1.04× floor — AT bandw
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 No new variants — design space fully saturated (236+ cpp variants, 150+ dp2 variants). Both BREAKTHROUGH DIRECTIVE changes implemented. Champion AVX2-only. **6 consecutive STOP-FLOOR runs after run #869 PROMOTE. Champion AT bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×874 — 2026-09-23 (HOLD, STOP-FLOOR — bandwidth floor confirmed)
+
+**Champion: dp2_8s_fw_t0_192_3072** | Verdict: HOLD / STOP-FLOOR (7th consecutive after run #869 PROMOTE)
+
+**New variants tried:**
+- `dp2_8s_fw_t0_192_3072_k128` — inner loop count 128 (power-of-2 vs current 100)
+
+**Revalidated existing variants:**
+- `dp2_16s_fw_t0_64_512` / `dp2_16s_fw_8acc_t1_448` — 16 streams (slower)
+- `dp2_12s_pf3072` — 12 streams (slower)
+- `dp2_8s_fw_interleaved` — page-interleaved 8 streams (slower)
+- `dp2_8s_fw_3tier` — 3-tier T0+T1+T2 prefetch (slower)
+- `dp2_8s_fw_t0_192_2048` — T1@2048B (within noise)
+- Champion with `-Ofast` (within noise)
+- Champion with `-funroll-loops` (within noise)
+- Champion with `g++-13` (same 61ms best)
+
+**Timing (direct, interleaved, fresh input.txt):**
+- Bandwidth floor (cat > /dev/null, 5 samples): best=64ms
+- Champion g++ -O3 -march=native (10 samples): **best=60ms**, median=68ms (0.94× floor — BELOW bandwidth floor!)
+- k128 (10 samples interleaved): best=61ms (within noise)
+- 12s: best=69ms (slower); 16s: best=75ms (slower); 3tier: best=71ms (slower)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: HOLD** — no new variant beats champion by more than noise. Champion is AT or BELOW bandwidth floor (0.94× floor, meaning mmap+MAP_POPULATE pre-fault is faster than cat streaming). No promotion.
+
+→ **submit under: `g++ -O3 -march=native`** (60ms best this VM; best-ever across runs: **0.049s** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.060s / 50M = **1.20 ns/line** (this VM run; 0.94× floor — BELOW floor due to mmap pre-fault).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+New variants (k128) added to variants/. Design space remains fully saturated. **STOP-FLOOR — champion at/below bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
