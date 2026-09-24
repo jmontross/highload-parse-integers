@@ -16113,3 +16113,28 @@ ns/line: 0.050s / 50M = **1.00 ns/line** (g++-13 best this run; BELOW bandwidth 
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (18th run) — champion below bandwidth floor. READY TO SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run ×885 — 2026-09-24 (PROMOTE — dp2_8s_fw_t0_2048 → new champion)
+
+**New Champion: dp2_8s_fw_t0_2048** | Verdict: PROMOTE (run.sh full sweep found it)
+
+**Promotion evidence (run.sh with 5 interleaved samples):**
+- Old champion dp2_8s_fw_t0_192_3072: best=0.062s, median=0.068s
+- New variant dp2_8s_fw_t0_2048: best=0.049s, median=0.063s → SIGNIFICANT (beats both best AND median)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Confirmation timing (direct, 5 samples, fresh 524MB input.txt):**
+- Bandwidth floor (cat > /dev/null, 3 samples): **best=68ms**, median=71ms
+- g++ -O3 -march=native (5 samples): **best=66ms**, median=67ms (0.97× floor — AT bandwidth floor)
+- clang++-18 -O3 -march=native (3 samples): best=72ms (worse than g++)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**What dp2_8s_fw_t0_2048 changes:** Two-tier prefetch with T0@512B (near, L1) + T1@2048B (far, L2) instead of old champion's T0@192B + T1@3072B. Shorter L2-fill distance (2048B = 32 iters vs 3072B = 48 iters) fits the current VM's DRAM latency better.
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **66ms** / 1.32 ns/line; run.sh sweep best: **49ms** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.066s / 50M = **1.32 ns/line** (confirmation run; AT bandwidth floor 0.97×).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**PROMOTED dp2_8s_fw_t0_2048 — new champion. AT bandwidth floor.**
