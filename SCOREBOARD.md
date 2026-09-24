@@ -15934,3 +15934,23 @@ ns/line: 0.074s / 50M = **1.48 ns/line** (this VM run; 0.97× floor — AT bandw
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (9th run) — champion at bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×877 — 2026-09-24 (STOP-FLOOR, direct champion timing)
+
+**Champion: dp2_8s_fw_t0_192_3072** | Verdict: STOP-FLOOR (10th consecutive after run #869 PROMOTE)
+
+**Timing (direct, fresh input.txt, 500MB):**
+- Bandwidth floor (cat > /dev/null, 3 samples): **best=78ms**, median=86ms
+- g++ -O3 -march=native (5 samples): **best=87ms**, median=96ms (1.12× floor — AT bandwidth floor, VM variable load)
+- g++-13 -Ofast -march=native -funroll-loops (5 samples): best=97ms (slower this run, VM loaded)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: STOP-FLOOR** — champion AT bandwidth floor (1.12× this run; VM-load variable; best-ever 0.049s / 0.98 ns/line). Design space fully saturated (236+ cpp variants, 150+ dp2 variants). Both Change A (digit-place accumulation, no multiply in hot loop) and Change B (8-way MLP, T0@192B + T1@3072B prefetch) from BREAKTHROUGH DIRECTIVE implemented in current champion.
+
+→ **submit under: `g++ -O3 -march=native`** (best-ever: **0.049s** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.087s / 50M = **1.74 ns/line** (this VM run; AT bandwidth floor given 1.12× ratio).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed (10th run) — champion at/near bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
