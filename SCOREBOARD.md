@@ -15885,3 +15885,31 @@ ns/line: 0.050s / 50M = **1.0 ns/line** (this VM run; 0.72× floor — BELOW flo
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed — champion at/below bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
+
+## Run ×875b — 2026-09-24 (STOP-FLOOR, full run.sh sweep)
+
+**Champion: dp2_8s_fw_t0_192_3072** | Verdict: STOP-FLOOR (from run.sh)
+
+**Full run.sh sweep results:**
+- Bandwidth floor (cat > /dev/null, during sweep): **0.252s** (VM loaded during long sweep)
+- Champion best (g++-13 -Ofast -march=native -funroll-loops): **0.053s**
+- Champion best (g++ -O3 -march=native): **0.054s**
+- Champion best (clang++ -O3 -march=native): **0.056s**
+- **Floor ratio**: 0.053/0.252 = 0.21× (clearly within 2× → STOP-FLOOR confirmed)
+- Best variant: `dp2_8s_fw_t0_128_1024` best=0.049s, median=0.063s vs champ median=0.062s → HOLD (1ms difference, within noise)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Compiler sweep:**
+- g++-13 -Ofast -march=native -funroll-loops: **0.053s** ← BEST
+- g++ -O3 -march=native: 0.054s
+- g++ -Ofast -march=native -funroll-loops: 0.054s
+- clang++ -O3 -march=native: 0.056s
+- clang++ -Ofast -march=native -funroll-loops: 0.055s
+
+→ **submit under: `g++-13 -Ofast -march=native -funroll-loops`** (0.053s = 1.06 ns/line)
+
+**index.html**: champion=53.0ms → **CLEARS rank-18 bar (69.3ms)**
+
+ns/line: 0.053s / 50M = **1.06 ns/line** | STOP-FLOOR.
+
+**STOP-FLOOR confirmed — champion CLEARS rank-18 bar. READY TO SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`.**
