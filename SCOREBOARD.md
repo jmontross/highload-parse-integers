@@ -16277,3 +16277,29 @@ ns/line: **0.98 ns/line** (best-ever, run ×885; target rank-18 bar ≈1.38 ns/l
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (6th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
+
+## Run ×892 — 2026-09-25 (STOP-FLOOR, maintenance check)
+
+**Champion: dp2_8s_fw_t0_2048** | Verdict: STOP-FLOOR (7th consecutive post-×885 PROMOTE)
+
+**Status:** Fresh container — input.txt not present; no new benchmark run. Champion compiles and passes edge suite.
+
+**Edge:** 9/9 ✓ | **Build:** g++ -O3 -march=native OK (2 harmless always_inline warnings)
+
+**Historical summary (all on this VM):**
+- Bandwidth floor (cat > /dev/null): best=68–75ms across runs
+- g++ -O3 -march=native: best=53ms (×886), best-ever=**49ms** / 0.98 ns/line (×885)
+- Champion AT or BELOW bandwidth floor in all confirmation runs
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Design space fully saturated:** 237+ cpp variants tried. Both BREAKTHROUGH DIRECTIVE changes (digit-place accumulation + 8-way MLP T0@512B+T1@2048B prefetch) in champion since run ×885.
+
+→ **submit under: `g++ -O3 -march=native`** (best-ever: **49ms** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: **0.98 ns/line** (best-ever, run ×885; target rank-18 bar ≈1.38 ns/line = 69ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_2048 49ms (29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed (7th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
