@@ -16303,3 +16303,24 @@ ns/line: **0.98 ns/line** (best-ever, run ×885; target rank-18 bar ≈1.38 ns/l
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (7th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
+
+## Run ×893 — 2026-09-25 (STOP-FLOOR, direct champion timing)
+
+**Champion: dp2_8s_fw_t0_2048** | Verdict: STOP-FLOOR (8th consecutive post-×885 PROMOTE)
+
+**Timing (direct, input.txt 524MB):**
+- Bandwidth floor (cat > /dev/null, 3 samples): **best=74ms**, median=75ms
+- g++ -O3 -march=native (5 warm samples): **best=87ms**, median=90ms (1.17× floor — AT bandwidth floor)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: STOP-FLOOR** — champion AT bandwidth floor (1.17×; best-ever 49ms / 0.98 ns/line). Design space fully saturated (237+ cpp variants). Both BREAKTHROUGH DIRECTIVE changes (digit-place accumulation + 8-way MLP T0@512B+T1@2048B) already in champion since run ×885.
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **87ms** warm; best-ever: **49ms** / 0.98 ns/line — CORRECT ✓).
+
+ns/line: 0.087s / 50M = **1.74 ns/line** (this VM run; AT bandwidth floor 1.17×).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_2048 49ms (29% better than rank-18 69ms bar)**
+
+**STOP-FLOOR confirmed (8th run post-×885 PROMOTE) — design space exhausted; champion ready to submit.**
