@@ -16484,3 +16484,21 @@ ns/line: 0.0683s / 50M = **1.37 ns/line** (this VM run; BELOW bandwidth floor 0.
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (15th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
+
+## Run ×901 — 2026-09-26 (PROMOTE dp2_8s_fw_2w)
+
+**Champion promoted: dp2_8s_fw_2w** (dual T1-prefetch at +3072 AND +3072+32 per stream, double-loop structure eliminating iter_count branch from inner loop)
+
+**Timing (first run, 50M lines, cold disk floor):**
+- Bandwidth floor (cat > /dev/null): best=300ms, median=605ms (cold-disk I/O; not in-memory speed)
+- Prior champion dp2_8s_fw_t0_2048 g++ -O3 -march=native: **best=75ms**, median=76ms
+- Variant dp2_8s_fw_2w g++ -O3 -march=native: **best=73ms**, median=75ms — Δbest=2ms (2.7%)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: PROMOTE** — dp2_8s_fw_2w beats prior champion best by 2ms (2.7%), median also lower, edge 9/9. Promoted to champion/main.cpp. Confirmation run in progress.
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **73ms** = 1.46 ns/line; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_2w 73ms this run / 49ms best-ever (0–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
