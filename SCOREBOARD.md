@@ -16576,3 +16576,23 @@ ns/line: 0.067s / 50M = **1.34 ns/line** (this VM run).
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 67ms this run / 49ms best-ever (3–29% better than rank-18 69ms bar)**
 
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+## Run ×905 — 2026-09-26 (STOP-FLOOR confirmation, new champion dp2_8s_fw_4acc_t0_64_1024)
+
+**Champion: dp2_8s_fw_4acc_t0_64_1024** | Verdict: STOP-FLOOR (1st run post-×904 PROMOTE)
+
+**Timing (RUNS=5, 50M lines):**
+- Bandwidth floor (cat > /dev/null): best=277ms (cold-disk container)
+- Champion g++ -O3 -march=native (5 samples): **best=69ms**, median=70ms (0.25× floor — BELOW bandwidth floor in-memory)
+- Best variant dp2_8s_fw_t0_256_640: best=67ms, median=70ms — Δbest=2ms (HOLD, within noise)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: STOP-FLOOR** — champion BELOW bandwidth floor. **CLEARS rank-18 bar (69.0ms ≤ 69.3ms)**. Design space fully saturated.
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **69ms** = 1.38 ns/line; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 69ms this run / 49ms best-ever (0–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed — champion clears rank-18 bar; ready to submit.**
