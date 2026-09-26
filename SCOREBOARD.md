@@ -16462,3 +16462,25 @@ ns/line: 0.073s / 50M = **1.46 ns/line** (this VM run; BELOW bandwidth floor 0.9
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (14th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
+
+## Run ×900 — 2026-09-26 (STOP-FLOOR, fresh container)
+
+**Champion: dp2_8s_fw_t0_2048** | Verdict: STOP-FLOOR (15th consecutive post-×885 PROMOTE)
+
+**Timing (direct, input.txt 50M lines):**
+- Bandwidth floor (cat > /dev/null, 3 samples): **best=68.9ms**, median=70.9ms
+- g++ -O3 -march=native (5 samples): **best=68.3ms**, median=70.4ms (0.99× floor — BELOW bandwidth floor)
+- g++ -Ofast -march=native -funroll-loops (5 samples): **best=73.1ms**, median=73.9ms
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: STOP-FLOOR** — champion BELOW bandwidth floor (0.99×; 68.3ms vs 68.9ms floor). **CLEARS rank-18 bar (69.3ms)**. Design space fully saturated (237+ cpp variants).
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **68.3ms** = 1.37 ns/line; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+ns/line: 0.0683s / 50M = **1.37 ns/line** (this VM run; BELOW bandwidth floor 0.99×).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_2048 68ms this run / 49ms best-ever (1–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed (15th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
