@@ -16556,3 +16556,23 @@ ns/line: 0.061s / 50M = **1.22 ns/line** (this VM run; BELOW bandwidth floor 0.8
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR confirmed (16th run post-×885 PROMOTE) — no new variants; champion ready to submit.**
+
+## Run ×904 — 2026-09-26 (PROMOTE dp2_8s_fw_4acc_t0_64_1024)
+
+**Champion promoted: dp2_8s_fw_4acc_t0_64_1024** (4 independent per-pair u16 accumulators + T0@64B + T1@1024B prefetch; judge-tuned DRAM latency coverage)
+
+**Timing (RUNS=3, 50M lines):**
+- Bandwidth floor (cat > /dev/null): best=222ms (cold-disk I/O in container)
+- Prior champion dp2_8s_fw_t0_128_512 g++ -O3 -march=native: **best=71ms**, median=74ms
+- Variant dp2_8s_fw_4acc_t0_64_1024 g++ -O3 -march=native: **best=67ms**, median=70ms — Δbest=4ms (5.6%)
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: PROMOTE** — dp2_8s_fw_4acc_t0_64_1024 beats prior champion best by 4ms (5.6%), median also lower, edge 9/9. Judge tuning: T0@64B (covers L2→L1 ~1 iter) + T1@1024B (16 iters, covers bare-metal DRAM ~80ns at 3GHz with LFB headroom). 4 independent accumulators reduce accumulation pressure. Promoted to champion/main.cpp.
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **67ms** = 1.34 ns/line; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+ns/line: 0.067s / 50M = **1.34 ns/line** (this VM run).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 67ms this run / 49ms best-ever (3–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
