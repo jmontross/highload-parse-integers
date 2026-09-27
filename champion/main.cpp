@@ -1,8 +1,8 @@
-// dp2_8s_fw_4acc_t0_64_1024.cpp — 4 independent per-pair u16 accumulators + T0@64+T1@1024.
-// Judge tuning: T0@64B (1 iter, L2→L1) + T1@1024B (16 iters ahead, DRAM→L2).
-// Judge (~80ns DRAM, 3GHz): 80ns × 3GHz = 240cy; 16 iters × 21cy = 336cy ≈ covers LFB queuing (240cy DRAM + queuing overhead).
-// 1024B = 1.33× above theoretical min for LFB headroom for judge: DRAM latency / cycles_per_iter × cache_line_size.
-// Gap between champion T1@512B and tried T1@2048B; 768B is the sweet-spot estimate.
+// dp2_8s_fw_4acc_t0_64_896.cpp — 4 independent per-pair u16 accumulators + T0@64+T1@896.
+// Judge tuning: T0@64B (1 iter, L2→L1) + T1@896B (14 iters ahead, DRAM→L2).
+// 14 iters × 21cy = 294cy ≈ 98ns → slightly over 80ns DRAM latency to account for LFB
+// queuing delay (16 prefetch requests / ~1 issue/cy → 16cy queuing, total 240+16 = 256cy needed).
+// T1@896B covers queuing delay headroom beyond the theoretical minimum (768B / 12 iters).
 // Overflow: each accum gets 1 pair/iter × max 108/lane × 100 iters = 10,800 < 65,535.
 
 #include <cstdio>
@@ -336,12 +336,12 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1024)
+                ITER_BODY(896)
             }
             widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
         }
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1024)
+            ITER_BODY(896)
         }
         widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
 
