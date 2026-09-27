@@ -69,7 +69,7 @@
 </style></head>
 <body><div class="wrap">
   <h1>parse_integers — chasing rank 18 🎯</h1>
-  <div class="meta">Autonomous optimizer · updated 2026-09-27 · sum <code>53687387166542798</code> · 50,000,000 lines ·
+  <div class="meta">Autonomous optimizer · updated 2026-09-27 14:05 UTC · sum <code>53687387166542798</code> · 50,000,000 lines ·
     <a href="https://highload.fun/challenges/compute/parse_integers/leaderboard">real leaderboard ↗</a></div>
 
   
@@ -112,35 +112,263 @@
   </div>
 
   <div class="goal">
-    <div class="card"><div class="k">Champion wall-time (run ×911)</div>
-      <div class="v">75.0 ms</div></div>
+    <div class="card"><div class="k">Champion wall-time</div>
+      <div class="v">—</div></div>
     <div class="card"><div class="k">Per line</div>
-      <div class="v">1.50 ns</div></div>
+      <div class="v">—</div></div>
     <div class="card"><div class="k">Target (rank 18)</div>
       <div class="v">69.3 ms</div></div>
-    <div class="card"><div class="k">Gap / Status</div>
-      <div class="v bad" style="font-size:14px">1.1× — AT bandwidth floor (floor=76ms); STOP-FLOOR</div></div>
+    <div class="card"><div class="k">Gap</div>
+      <div class="v bad" style="font-size:14px">no correct champion timing yet</div></div>
   </div>
   
+  
+  <h2>🏁 Plan to an honest rank 18 — 2/7 done</h2>
+  <div class="reality">
+    <b>Reality check.</b> The rank-18 bar is ≈69 ms for a full 50M-line parse
+    (~1.4 ns/line on x86). That is only physically reachable on the <b>x86 cloud box</b> —
+    on the owner's ARM Mac just <i>reading</i> the input (~82 ms) already costs more than
+    the whole target. And even on x86, local ns/line predicts leaderboard <i>position</i> only loosely:
+    the one ground-truth number is submitting to the <b>judge</b> (Phase 6). Everything below is honest
+    about which hardware proves what.
+  </div>
+  
+      <div class="barwrap">
+        <div class="barlabel dim">no x86 timing yet — progress is measured only on the cloud box.
+          On this ARM Mac, merely reading the input (~82 ms) already exceeds the
+          69 ms target, so the win can't be shown here.</div>
+      </div>
+  <div class="tasks">
+      <div class="task done">
+        <div class="thead">
+          <span class="box">☑</span>
+          <span class="tnum">Phase 0</span>
+          <span class="ttitle">Unblock the cloud — grant the Claude GitHub App access to this repo</span>
+          <span class="owner" style="color:#f0b429;border-color:#f0b42955;background:#f0b42918">👤 you</span>
+          <span class="when">DO THIS NOW</span>
+        </div>
+        <div class="crit"><b>Done when:</b> A routine run completes on the x86 cloud box (this page then shows x86 timings instead of ARM).</div>
+        <details open><summary>how</summary><div class="detail">
+   <p>The repo is <b>private</b>, so every 2-hour cloud run currently dies with
+   <code>HTTP 400 github_repo_access_denied</code> — the agent can't even clone it.
+   Re-authorizing your GitHub <i>login</i> does NOT fix this; a private repo needs the
+   Claude GitHub <b>App installation</b> granted access to this specific repo.</p>
+   <ol>
+     <li>Open <a href="https://github.com/settings/installations">github.com/settings/installations</a></li>
+     <li>Click <b>Configure</b> next to the <b>Claude</b> (Anthropic) app.</li>
+     <li>Under <b>Repository access</b>: choose <b>All repositories</b>, or
+         <b>Only select repositories</b> → add <code>jmontross/highload-parse-integers</code>.</li>
+     <li>Click the green <b>Save</b>.</li>
+     <li><b>App not listed?</b> It may be installed on an organization — check that org's
+         <i>Settings → GitHub Apps</i>, or reinstall from
+         <a href="https://claude.ai/settings/connectors">claude.ai → Settings → Connectors → GitHub</a>.</li>
+     <li><b>Verify:</b> ask Claude to re-trigger the routine — expect <code>HTTP 200</code>, not 400.
+         Once a cloud run completes, this box ticks itself.</li>
+   </ol></div></details>
+      </div>
+      <div class="task done">
+        <div class="thead">
+          <span class="box">☑</span>
+          <span class="tnum">Phase 1</span>
+          <span class="ttitle">SWAR number parse — break the per-digit latency chain</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">done</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Committed as champion v2 (~11% over scalar, portable, no intrinsics).</div>
+        <details><summary>how</summary><div class="detail"><p>The scalar champion is latency-bound on the serial <code>v = v*10 + d</code>
+   chain (~11 ns/line). SWAR parses a whole number in a short shift/add tree instead.
+   Modest but real, and it's the portable baseline the SIMD work builds on.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 2</span>
+          <span class="ttitle">Read the bandwidth floor — set the honest ceiling before writing SIMD</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">FIRST, on x86</span>
+        </div>
+        <div class="crit"><b>Done when:</b> run.sh&#x27;s floor is recorded. If the x86 floor &gt; 69 ms, rank 18 is UNREACHABLE on that box — report that, don&#x27;t write more SIMD.</div>
+        <details><summary>how</summary><div class="detail"><p><code>run.sh</code> prints a <b>bandwidth floor</b> (<code>cat &gt; /dev/null</code>) —
+   the time to merely stream every byte once. A correct parser can never beat it.</p>
+   <p>On the owner's ARM Mac that floor is <b>~82 ms &gt; the 69 ms target</b>, which is exactly
+   why the win cannot be shown locally. The agent's first job on the x86 box is to read the
+   floor there: if it's already above 69 ms, the honest finding is
+   <i>"bandwidth-bound below target on this hardware"</i> — a real result, not a failure.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 3</span>
+          <span class="ttitle">Hybrid AVX2 — find newlines with movemask, parse each span with SWAR</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">the main win</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Correct (canonical sum + 9/9 edge cases) AND faster than the SWAR champion on x86, re-verified with RUNS=5, then promoted.</div>
+        <details><summary>how</summary><div class="detail"><p>The realistic, gettable-correct first SIMD milestone — it captures most of the win:</p>
+   <ul>
+     <li>Load 32 bytes: <code>_mm256_loadu_si256</code>.</li>
+     <li>Newline mask: <code>_mm256_movemask_epi8(_mm256_cmpeq_epi8(v, '\n'))</code> → a 32-bit mask.</li>
+     <li>Walk the set bits (<code>tzcnt</code>/<code>_tzcnt_u32</code>) to get each number's span, and parse
+         that span with the SWAR routine. This removes the per-byte branch that dominates the scalar loop.</li>
+     <li>Keep 2–4 independent <code>uint64</code> accumulators so the adds don't serialize.</li>
+     <li>Guard with <code>#ifdef __AVX2__</code>; keep the scalar loop as the <code>#else</code> fallback.</li>
+   </ul>
+   <p>ARM COMPILE_FAIL on this variant is expected — it's validated on the x86 cloud box, which matches the judge.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 4</span>
+          <span class="ttitle">Full vectorized digit-weight reduction (staged madd tree / AVX-512 VNNI)</span>
+          <span class="owner" style="color:#58a6ff;border-color:#58a6ff55;background:#58a6ff18">🤖 cloud agent</span>
+          <span class="when">stretch</span>
+        </div>
+        <div class="crit"><b>Done when:</b> Correct AND beats the hybrid champion. The variable-length boundary handling is the hard part — nail it against the correctness gate.</div>
+        <details><summary>how</summary><div class="detail"><p>The math: <code>sum = Σ digit · 10^(distance to the number's end)</code>, summed over
+   <i>all</i> digit bytes — no need to isolate individual numbers, just weight each digit by its
+   distance to the next newline.</p>
+   <p><b>Direction, not gospel</b> (the agent nails the exact sequence empirically):</p>
+   <ul>
+     <li>You <b>cannot</b> do the whole reduction in one <code>vpdpbusd</code>/<code>maddubs</code> —
+         int8/int16 weights overflow past two digits (10² &gt; 127). The real technique is a
+         <b>staged tree</b>: <code>maddubs</code>[10,1] → <code>madd</code>[100,1] → <code>madd</code>[10000,1],
+         which only works on <b>fixed-width, known-alignment</b> chunks.</li>
+     <li>So the hard, valuable part is deriving per-byte 10^k weights from the newline mask and
+         handling numbers that straddle a block boundary (carry into the next block).</li>
+     <li>AVX-512: 64-byte loads, <code>__mmask64</code> from <code>_mm512_cmpeq_epi8_mask</code>,
+         <code>_mm512_dpbusd_epi32</code> (VNNI) for the staged dot-products. Guard with
+         <code>__AVX512F__/__AVX512BW__/__AVX512VNNI__</code> + scalar fallback.</li>
+   </ul></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 5</span>
+          <span class="ttitle">Champion beats ~1.4 ns/line on the cloud box</span>
+          <span class="owner" style="color:#a970ff;border-color:#a970ff55;background:#a970ff18">🤖+👤</span>
+          <span class="when">🎯 target</span>
+        </div>
+        <div class="crit"><b>Done when:</b> x86 champion ≤ 1.4 ns/line — a PROXY for rank 18. Local hardware ≠ the judge; confirm only at the judge (next step).</div>
+        <details><summary>how</summary><div class="detail"><p>This ticks automatically once the x86 champion crosses ~1.4 ns/line. Treat it as a
+   strong signal, not a standing — the cloud box is not the judge's exact hardware, so the real
+   position is only known after submitting.</p></div></details>
+      </div>
+      <div class="task ">
+        <div class="thead">
+          <span class="box">☐</span>
+          <span class="tnum">Phase 6</span>
+          <span class="ttitle">Submit the champion to the judge &amp; record the real time</span>
+          <span class="owner" style="color:#f0b429;border-color:#f0b42955;background:#f0b42918">👤 you</span>
+          <span class="when">ground truth</span>
+        </div>
+        <div class="crit"><b>Done when:</b> champion/main.cpp pasted into highload.fun, the judge&#x27;s reported ns written into SCOREBOARD.md.</div>
+        <details><summary>how</summary><div class="detail"><p>The agent cannot submit (needs your logged-in browser). When it flags a champion ready:
+   paste <code>champion/main.cpp</code> into the
+   <a href="https://highload.fun/challenges/compute/parse_integers">judge</a>, run it, and record the
+   real number in <code>SCOREBOARD.md</code>. That number — not any local time — is whether we hit rank 18.</p></div></details>
+      </div></div>
+
   <h2>Leaderboard — where we'd land</h2>
   <table>
     <tr><th>Rank</th><th>User</th><th>Score</th><th>Compiler</th><th>Wall</th><th>Mem</th></tr>
     
-      <tr class=""><td class="rank">#16</td><td>Maya Rebholz</td><td class="score">5,259</td><td class="cc">g++10.5.0</td><td class="wall">53,341,520 ns<span class="sub">1.07 ns/line</span></td><td class="mem">2,117,632 B</td></tr>
-      <tr class=""><td class="rank">#19</td><td>flavio87</td><td class="score">5,560</td><td class="cc">g++14.2.0</td><td class="wall">55,454,846 ns<span class="sub">1.11 ns/line</span></td><td class="mem">2,113,536 B</td></tr>
-      <tr class=""><td class="rank">#12</td><td>vahook</td><td class="score">4,566</td><td class="cc">g++13.3.0</td><td class="wall">62,794,723 ns<span class="sub">1.26 ns/line</span></td><td class="mem">2,416,640 B</td></tr>
-      <tr class=""><td class="rank">#11</td><td>Danylo Mocherniuk</td><td class="score">4,558</td><td class="cc">g++13.3.0</td><td class="wall">65,048,742 ns<span class="sub">1.30 ns/line</span></td><td class="mem">2,400,256 B</td></tr>
-      <tr class=""><td class="rank">#13</td><td>caando</td><td class="score">4,616</td><td class="cc">g++13.3.0</td><td class="wall">65,457,349 ns<span class="sub">1.31 ns/line</span></td><td class="mem">2,473,984 B</td></tr>
-      <tr class=""><td class="rank">#15</td><td>Mikołaj Uzarski</td><td class="score">5,112</td><td class="cc">clang++18.1.3</td><td class="wall">65,550,791 ns<span class="sub">1.31 ns/line</span></td><td class="mem">2,277,376 B</td></tr>
-      <tr class=""><td class="rank">#14</td><td>Jack Frigaard</td><td class="score">4,679</td><td class="cc">clang++18.1.3</td><td class="wall">67,202,103 ns<span class="sub">1.34 ns/line</span></td><td class="mem">2,519,040 B</td></tr>
-      <tr class=""><td class="rank">#20</td><td>Adam Folwarczny</td><td class="score">5,694</td><td class="cc">g++14.2.0</td><td class="wall">67,209,826 ns<span class="sub">1.34 ns/line</span></td><td class="mem">2,117,632 B</td></tr>
-      <tr class="target"><td class="rank">#18 🎯</td><td>olliecrow</td><td class="score">5,400</td><td class="cc">g++13.3.0</td><td class="wall">69,301,147 ns<span class="sub">1.39 ns/line</span></td><td class="mem">2,301,952 B</td></tr>
-      <tr class="us"><td class="rank">~#20</td><td>★ our champion (dp2_8s_fw_4acc_t0_64_896)</td><td class="score">—</td><td class="cc">g++ -O3 -march=native</td><td class="wall">75,000,000 ns<span class="sub">1.50 ns/line local; 49ms best-ever</span></td><td class="mem">~2MB</td></tr>
-      <tr class=""><td class="rank">#17</td><td>Matt Stuchlik</td><td class="score">5,288</td><td class="cc">clang++10.0.0</td><td class="wall">109,689,379 ns<span class="sub">2.19 ns/line</span></td><td class="mem">2,289,664 B</td></tr>
-      <tr class=""><td class="rank">#21</td><td>lipapipa</td><td class="score">5,812</td><td class="cc">g++13.3.0</td><td class="wall">—</td><td class="mem">—</td></tr>
+      <tr class="">
+        <td class="rank">#16</td>
+        <td class="user">Maya Rebholz <span class="tier" style="background:#3fb95022;color:#3fb950;border:1px solid #3fb95055">Skilled</span></td>
+        <td class="score">5,259</td>
+        <td class="cc">g++10.5.0</td>
+        <td class="wall">53,341,520 ns<span class="sub">1.07 ns/line</span></td>
+        <td class="mem">2,117,632 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#19</td>
+        <td class="user">flavio87 <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
+        <td class="score">5,560</td>
+        <td class="cc">g++14.2.0</td>
+        <td class="wall">55,454,846 ns<span class="sub">1.11 ns/line</span></td>
+        <td class="mem">2,113,536 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#12</td>
+        <td class="user">vahook <span class="tier" style="background:#3fb95022;color:#3fb950;border:1px solid #3fb95055">Skilled</span></td>
+        <td class="score">4,566</td>
+        <td class="cc">g++13.3.0</td>
+        <td class="wall">62,794,723 ns<span class="sub">1.26 ns/line</span></td>
+        <td class="mem">2,416,640 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#11</td>
+        <td class="user">Danylo Mocherniuk <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
+        <td class="score">4,558</td>
+        <td class="cc">g++13.3.0</td>
+        <td class="wall">65,048,742 ns<span class="sub">1.30 ns/line</span></td>
+        <td class="mem">2,400,256 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#13</td>
+        <td class="user">caando <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
+        <td class="score">4,616</td>
+        <td class="cc">g++13.3.0</td>
+        <td class="wall">65,457,349 ns<span class="sub">1.31 ns/line</span></td>
+        <td class="mem">2,473,984 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#15</td>
+        <td class="user">Mikołaj Uzarski <span class="tier" style="background:#3fb95022;color:#3fb950;border:1px solid #3fb95055">Skilled</span></td>
+        <td class="score">5,112</td>
+        <td class="cc">clang++18.1.3</td>
+        <td class="wall">65,550,791 ns<span class="sub">1.31 ns/line</span></td>
+        <td class="mem">2,277,376 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#14</td>
+        <td class="user">Jack Frigaard <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
+        <td class="score">4,679</td>
+        <td class="cc">clang++18.1.3</td>
+        <td class="wall">67,202,103 ns<span class="sub">1.34 ns/line</span></td>
+        <td class="mem">2,519,040 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#20</td>
+        <td class="user">Adam Folwarczny <span class="tier" style="background:#3fb95022;color:#3fb950;border:1px solid #3fb95055">Skilled</span></td>
+        <td class="score">5,694</td>
+        <td class="cc">g++14.2.0</td>
+        <td class="wall">67,209,826 ns<span class="sub">1.34 ns/line</span></td>
+        <td class="mem">2,117,632 B</td>
+      </tr>
+      <tr class="target">
+        <td class="rank">#18 🎯</td>
+        <td class="user">olliecrow <span class="tier" style="background:#a970ff22;color:#a970ff;border:1px solid #a970ff55">Master</span></td>
+        <td class="score">5,400</td>
+        <td class="cc">g++13.3.0</td>
+        <td class="wall">69,301,147 ns<span class="sub">1.39 ns/line</span></td>
+        <td class="mem">2,301,952 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#17</td>
+        <td class="user">Matt Stuchlik <span class="tier" style="background:#8b949e22;color:#8b949e;border:1px solid #8b949e55">Apprentice</span></td>
+        <td class="score">5,288</td>
+        <td class="cc">clang++10.0.0</td>
+        <td class="wall">109,689,379 ns<span class="sub">2.19 ns/line</span></td>
+        <td class="mem">2,289,664 B</td>
+      </tr>
+      <tr class="">
+        <td class="rank">#21</td>
+        <td class="user">lipapipa <span class="tier" style="background:#3fb95022;color:#3fb950;border:1px solid #3fb95055">Skilled</span></td>
+        <td class="score">5,812</td>
+        <td class="cc">g++13.3.0</td>
+        <td class="wall">—<span class="sub"></span></td>
+        <td class="mem">—</td>
+      </tr>
   </table>
 
-  <div class="warn">⚠️ Run ×911 HOLD/false-PROMOTE: run.sh PROMOTE for dp2_8s_fw_t0_t1 (73ms sweep) → direct 17-round interleaved shows TIED min (75ms both). Champion dp2_8s_fw_4acc_t0_64_896 unchanged. 911 consecutive STOP-FLOOR/HOLD. Best-ever: 49ms at run ×885. <b>SUBMIT champion/main.cpp with g++ -O3 -march=native.</b></div>
+  <h2>This run — all variants</h2>
+  <table>
+    <tr><th>Program</th><th>Wall (best)</th><th>Per line</th><th>Status</th></tr>
+    <tr><td colspan=4>no results</td></tr>
+  </table>
 
-  <footer>Generated 2026-09-27. Champion: dp2_8s_fw_4acc_t0_64_896 (digit-place + 8-stream MLP). Submit with: g++ -O3 -march=native. Best-ever local: 49ms (run ×885).</footer>
+  <footer>Generated by <code>gen_index.py</code> on each <code>run.sh</code>.
+    Snapshot of ranks 11–21 captured 2026-07-03; refresh <code>SNAPSHOT</code> as the board moves.
+    Compiler: c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · arch x86_64.</footer>
 </div></body></html>
