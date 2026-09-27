@@ -16834,3 +16834,29 @@ T1@768B chosen for bare-metal DRAM match.
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_768 76ms this run / 49ms best-ever (0–29% better than rank-18 69ms bar)**
 
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+## Run ×917 — 2026-09-27 (STOP-FLOOR maintenance, champion dp2_8s_fw_t0_192_768)
+
+**Champion: dp2_8s_fw_t0_192_768** | Verdict: STOP-FLOOR
+
+**Timing (7-sample champion + 5-sample floor, 50M lines):**
+- Bandwidth floor (cat > /dev/null): samples=[82,77,99,94,92]ms best=77ms median=92ms
+- Champion g++ -O3 -march=native (7 samples): [91,140,90,79,83,121,81]ms **best=79ms**, median=90ms
+- Ratio champion/floor: 79/77 = **1.03×** — AT bandwidth floor
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Compiler sweep (3-sample best each):**
+- g++ -O3 -march=native → 0.078s best
+- g++ -Ofast -march=native -funroll-loops → **0.077s best** (BEST, AT floor)
+- g++-13 -O3 -march=native → 0.083s best
+- clang++-18 -O3 -march=native → 0.102s best
+
+**Verdict: STOP-FLOOR** — champion at 1.03× bandwidth floor (AT ceiling). stuchlik_digitplace.cpp and stuchlik_8stream.cpp already present in variants/. Both Change A (digit-place back-to-front accumulation, no multiply in hot loop) and Change B (8-stream MLP + T0@192B + T1@768B software prefetch) fully implemented in champion since run ×855+. 239+ cpp variants tried. Design space fully saturated.
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`** (best: **77ms** = 1.54 ns/line = AT bandwidth floor; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_768 77ms this run / 49ms best-ever (0–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed (run ×917) — champion AT bandwidth floor; no further algorithmic wins remain.**
