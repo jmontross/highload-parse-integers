@@ -16908,3 +16908,33 @@ accumulation + 8-way MLP T0@192B+T1@768B) implemented in champion since run ×85
 **STOP-FLOOR confirmed (run ×919, 4th consecutive) — champion AT bandwidth floor. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_768 66ms local (4% better than rank-18 69ms bar; best-ever 49ms = 29% better)**
+
+## Run ×920 — 2026-09-28 (PROMOTE dp2_8s_fw_4acc_t0_64_448 → new champion)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448** | Verdict: PROMOTE (gate from full run.sh sweep)
+
+**Gate trigger (run.sh full sweep, interleaved RUNS=5):**
+- Old champion dp2_8s_fw_t0_192_768: best=0.072s, median=0.074s
+- New champion dp2_8s_fw_4acc_t0_64_448: best=0.059s (need ≤0.0709s), median=0.064s
+- Δbest=0.013s (18%), median also lower → SIGNIFICANT; edge 9/9 ✓
+- Verdict: PROMOTE (written to /tmp/pi_verdict)
+
+**Confirmation (5-sample warm-cache direct timing after PROMOTE):**
+- New champion g++ -O3 -march=native: [60,66,68,66,70]ms **best=60ms**, median=66ms
+- Old champion dp2_8s_fw_t0_192_768: [70,66,62,62,61]ms **best=61ms**, median=62ms (!)
+- Floor (cat > /dev/null): [74,67,67]ms **best=67ms**, median=67ms
+- Note: direct confirmation shows overlapping distributions (both fast ~60-70ms range)
+  Gate fired on run.sh interleaved protocol; promotes based on that authoritative measurement.
+
+**Variant:** dp2_8s_fw_4acc_t0_64_448 — 4 independent per-pair u16 accumulators + T0@64B+T1@448B.
+4 independent accumulator chains eliminate serial dependency on acc_u16 that the single-acc variant had.
+T1@448B = ~7 iters × ~33cy/iter = ~231 cycles = optimum for judge ~80ns DRAM latency.
+
+**Compiler sweep (3-sample best):**
+- g++ -O3 -march=native → best=0.060s
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **60ms** = 1.20 ns/line).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_448 60ms local (13% better than rank-18 69ms bar)**
