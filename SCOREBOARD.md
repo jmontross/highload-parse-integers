@@ -17174,3 +17174,26 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×928 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×928 addendum — dp2_8s_fw_t0_64_768 HOLD (cold-cache false PROMOTE)
+
+**Background run.sh triggered PROMOTE for dp2_8s_fw_t0_64_768 (best=68ms under cold cache).**
+**Warm-cache interleaved confirmation (10 rounds) showed HOLD — champion is equivalent or faster:**
+
+Rounds 1-5:
+- Champion: [134,103,81,153,76]ms → best=76ms, median=103ms
+- Variant:  [97,78,75,104,138]ms  → best=75ms, median=97ms
+
+Rounds 6-10 (warmer):
+- Champion: [91,73,73,73,71]ms → **best=71ms**, median=73ms
+- Variant:  [75,75,74,80,120]ms → best=74ms, median=75ms
+
+**All 10 rounds combined:**
+- Champion best=71ms, median=78.5ms
+- Variant best=74ms, median=79ms
+- Champion is FASTER in warm conditions → HOLD confirmed
+
+**Verdict: HOLD — cold-cache PROMOTE was a measurement artifact (floor=0.283s = very cold cache).**
+Champion dp2_8s_fw_4acc_t0_192_1536 unchanged.
+
+→ **STOP-FLOOR ×928 confirmed (12th consecutive). Champion READY TO SUBMIT.**
