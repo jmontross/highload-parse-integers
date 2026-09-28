@@ -17000,3 +17000,32 @@ T1@448B = ~7 iters × ~33cy/iter = ~231 cycles = optimum for judge ~80ns DRAM la
 
 **STOP-FLOOR ×922 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
+
+## Run ×923 — 2026-09-28 (FALSE-PROMOTE dp2_8s_fw_t0_256_640 → REVERTED; STOP-FLOOR)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448** (reverted) | Verdict: STOP-FLOOR
+
+**Background run.sh PROMOTE gate triggered:**
+- run.sh interleaved RUNS=3 sweep: variant dp2_8s_fw_t0_256_640 best=0.073s vs champion 0.076s → 3.9% margin, median 0.075s < 0.079s → PROMOTE fired, edge 9/9 ✓
+- Applied PROMOTE: copied dp2_8s_fw_t0_256_640 to champion/main.cpp. Floor=0.274s (run.sh VM state).
+
+**Confirmation (5-sample warm-cache interleaved):**
+- 4acc_t0_64_448: [80,82,82,76,81]ms **best=76ms**, median=81ms
+- t0_256_640: [82,80,73,111,83]ms **best=73ms**, median=82ms (median WORSE than reverted champion!)
+- Floor (cat): 64ms best
+
+**Verdict analysis:** Variant best=73ms is 3.9% better on best, BUT median=82ms > champion median=81ms → gate condition (both best AND lower median) NOT met in warm-cache confirmation. The run.sh PROMOTE was a cache-asymmetry artifact: during the 237-variant sweep, dp2_8s_fw_t0_256_640 was measured late with warm input cache while champion was measured earlier (colder). Also initial confirmation showed cold-start anomaly (old champ 119/137ms in first two samples vs warm new champ 77ms × 2).
+
+**REVERTED to dp2_8s_fw_4acc_t0_64_448.** dp2_8s_fw_t0_256_640 is HOLD — competitive with champion but no consistent win in warm-cache comparison.
+
+**VM state:** moderate-fast (floor=64ms best). Champion best=76ms = 1.19× floor → AT bandwidth ceiling. Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (×923 run.sh):** g++-13 -Ofast -march=native -funroll-loops → 75ms best.
+All 237 cpp variants exhausted; design space saturated.
+
+→ **submit under: `g++-13 -O3 -march=native`** (best: **76ms** this VM / **60ms** run ×920 / **49ms** best-ever run ×885).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×923 (false PROMOTE reverted) — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
