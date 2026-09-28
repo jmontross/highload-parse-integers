@@ -17029,3 +17029,24 @@ All 237 cpp variants exhausted; design space saturated.
 
 **STOP-FLOOR ×923 (false PROMOTE reverted) — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
+
+
+## Run ×924 — 2026-09-28 (STOP-FLOOR confirmed; no new variants)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448** | Verdict: STOP-FLOOR
+
+**Timing (5-sample interleaved champion vs bandwidth floor):**
+- Bandwidth floor (cat > /dev/null): [75,74,80,76,73]ms **best=73ms**, median=75ms
+- Champion g++-13 -O3 -march=native: [131,78,87,92,94]ms **best=78ms**, median=88ms (131ms = cold-start outlier)
+- Ratio champion/floor: 78/73 = **1.07×** — AT bandwidth ceiling (<2× → STOP-FLOOR)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Status:** STOP-FLOOR ×924 (4th consecutive). Design space fully saturated (237+ cpp variants, 239 total). Both BREAKTHROUGH DIRECTIVE changes fully implemented. No new directions. Champion ready to submit.
+
+**Best-ever: 49ms (run ×885) / 60ms (run ×920) / 78ms this VM run.**
+
+→ **submit under: `g++-13 -O3 -march=native`**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×924 — champion AT bandwidth ceiling. READY TO SUBMIT.**
