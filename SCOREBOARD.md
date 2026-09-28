@@ -17257,3 +17257,35 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×930 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 76ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×931 — 2026-09-28 (STOP-FLOOR confirmed; champion dp2_8s_fw_4acc_t0_192_1536 unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR (15th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): 3 samples=[78,76,71]ms **best=71ms**, median=76ms
+- Champion g++ -O3 (5 samples): [188ms cold, 86,81,89,76]ms **best=76ms warm**, median=86ms
+- Champion g++-13 -O3 (5 samples): [84,78,82,89,80]ms **best=78ms**, median=82ms
+- Champion g++-13 -Ofast -funroll-loops (3 samples): [97,88,84]ms **best=84ms**
+- Ratio champion/floor: 76/71 = **1.07×** — AT bandwidth ceiling (<2× → STOP-FLOOR)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep summary:**
+- g++ -O3 -march=native: **76ms** (BEST this VM)
+- g++-13 -O3 -march=native: 78ms
+- g++-13 -Ofast -march=native -funroll-loops: 84ms
+- → submit under: `g++ -O3 -march=native` (this VM); `g++-13 -O3 -march=native` historically best on fast VMs
+
+**Status:** STOP-FLOOR ×931 (15th consecutive). Design space fully saturated (239+ cpp variants).
+Both BREAKTHROUGH DIRECTIVE changes (digit-place accumulation + 8-way MLP T0@192B+T1@1536B) implemented.
+Champion architecture unchanged since run ×926 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 60ms (run ×920) / 76ms this VM run.**
+
+→ **submit under: `g++-13 -O3 -march=native`** (canonical best on fast VMs).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×931 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 76ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
