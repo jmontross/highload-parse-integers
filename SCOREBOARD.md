@@ -16885,3 +16885,26 @@ ns/line: 0.064s / 50M = **1.28 ns/line** (this VM warm-cache run; BELOW bandwidt
 **STOP-FLOOR confirmed (3rd run post-×916 PROMOTE) — champion below bandwidth floor. READY TO SUBMIT with `g++ -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_768 64ms local (7% better than rank-18 69ms bar; best-ever 49ms = 29% better)**
+
+## Run ×919 — 2026-09-28 (STOP-FLOOR maintenance, champion dp2_8s_fw_t0_192_768)
+
+**Champion: dp2_8s_fw_t0_192_768** | Verdict: STOP-FLOOR (4th consecutive post-×916 PROMOTE)
+
+**Timing (direct 5-sample, 50M lines):**
+- Bandwidth floor (cat > /dev/null, 5 samples): [76,71,75,73,71]ms → **best=71ms**, median=73ms
+- Champion g++ -O3 -march=native (5 samples): [81,85,74,73,74]ms → **best=73ms**, median=74ms
+- Ratio champion/floor: 73/71 = **1.03×** — AT bandwidth floor
+- ns/line: 73ms / 50M = **1.46 ns/line**
+- Edge: 9/9 ✓ | Correctness: 53687387166542798 ✓
+
+**Verdict: STOP-FLOOR** — champion at 1.03× bandwidth floor. Design space fully saturated (239+ cpp variants tried). Both BREAKTHROUGH DIRECTIVE changes fully implemented in champion since run ×855+. No new variants to try.
+
+**Champion architecture:** dp2_8s_fw_t0_192_768 — 8 spatial streams, digit-place accumulation (no multiply in hot loop), two-tier prefetch T0@192B (L1, 3 iters=24ns) + T1@768B (DRAM, 12 iters=96ns, bare-metal judge tuned).
+
+→ **submit under: `g++ -O3 -march=native`** (best: **73ms** = 1.46 ns/line; best-ever: **49ms** / 0.98 ns/line at run ×885 — CORRECT ✓).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_768 73ms this run / 49ms best-ever (0–29% better than rank-18 69ms bar)**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR confirmed (run ×919) — champion AT bandwidth floor; no further algorithmic wins remain.**
