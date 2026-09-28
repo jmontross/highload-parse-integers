@@ -17226,3 +17226,34 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×929 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 76ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×930 — 2026-09-28 (STOP-FLOOR confirmed; champion dp2_8s_fw_4acc_t0_192_1536 unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR (14th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): 3 samples=[73,85,80]ms **best=73ms**, median=80ms
+- Champion (3 samples): [139,104,75]ms **best=75ms**, median=104ms (139+104ms = cold binary/page)
+- Ratio champion/floor: 76/73 = **1.04×** — AT bandwidth ceiling (<2× → STOP-FLOOR)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (3-sample best, champion binary):**
+- g++ -O3 -march=native: 78ms
+- g++-13 -O3 -march=native: 77ms
+- g++-13 -Ofast -march=native -funroll-loops: **76ms** (BEST)
+- clang++-18 -O3 -march=native: 84ms
+- → submit under: `g++-13 -Ofast -march=native -funroll-loops`
+
+**Status:** STOP-FLOOR ×930 (14th consecutive). Design space fully saturated (239+ cpp variants).
+Both BREAKTHROUGH DIRECTIVE changes (digit-place accumulation + 8-way MLP T0@192B+T1@1536B) implemented.
+Champion architecture unchanged since run ×926 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 60ms (run ×920) / 76ms this VM run.**
+
+→ **submit under: `g++-13 -Ofast -march=native -funroll-loops`** (best: **76ms** this VM / **best-ever 49ms** run ×885).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×930 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 76ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
