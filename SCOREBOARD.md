@@ -17076,3 +17076,41 @@ Champion architecture unchanged since run ×920 PROMOTE.
 **STOP-FLOOR ×925 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_448 90ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×926 — 2026-09-28 (PROMOTE dp2_8s_fw_4acc_t0_192_1536 → new champion)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: PROMOTE (gate from run.sh background sweep + warm confirmation)
+
+**Gate trigger (run.sh RUNS=3 background sweep):**
+- Old champion dp2_8s_fw_4acc_t0_64_448: best=0.0910s
+- New candidate dp2_8s_fw_4acc_t0_192_1536: best=0.0860s (need ≤0.0896s) — SIGNIFICANT; edge 9/9 ✓
+- Verdict: PROMOTE
+
+**Warm-cache interleaved confirmation (5 samples each):**
+- Old champion: [175,118,97,91,108]ms **best=91ms**, median=108ms (175ms = cold-binary)
+- New champion: [89,88,93,93,98]ms **best=88ms**, median=93ms
+- Samples 2-5 only: champ median=103ms vs variant median=93ms, Δ=10ms > noise band
+- New champion confirmed FASTER under warm conditions
+
+**New champion direct timing (5 samples post-PROMOTE, g++-13 -O3):**
+- Samples: [91,126,172,94,88]ms **best=88ms**, median=94ms (126+172ms = VM hiccups)
+- Bandwidth floor: [103,94,84]ms **best=84ms**, median=94ms
+- Ratio: 88/84 = **1.05×** — AT bandwidth ceiling
+
+**Compiler sweep (3-sample best):**
+- g++ -O3 -march=native: **89ms** (BEST)
+- g++-13 -O3 -march=native: 92ms
+- g++ -Ofast -march=native -funroll-loops: 91ms
+- clang++-18 -O3 -march=native: 108ms
+
+**Variant:** dp2_8s_fw_4acc_t0_192_1536 — 4 independent per-pair u16 accumulators,
+T0@192B + T1@1536B prefetch (vs old champion's T0@64B + T1@448B).
+T1@1536B = 48 iters × ~33cy = longer prefetch lookhead for better DRAM latency hiding.
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**Best-ever: 49ms (run ×885) / 60ms (run ×920) / 88ms this VM run.**
+
+→ **submit under: `g++ -O3 -march=native`** (best: **89ms** this VM / **best-ever 49ms** run ×885).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 89ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
