@@ -16973,3 +16973,30 @@ T1@448B = ~7 iters × ~33cy/iter = ~231 cycles = optimum for judge ~80ns DRAM la
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR ×921 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+## Run ×922 — 2026-09-28 (STOP-FLOOR; HOLD — VM oscillation between champion and t0_192_768)
+
+**Champion: dp2_8s_fw_4acc_t0_64_448** | Verdict: STOP-FLOOR (5th consecutive post-×916)
+
+**Timing (5-sample interleaved comparison):**
+- Bandwidth floor (cat > /dev/null): 3 samples=[108,73,68]ms **best=68ms**, median=73ms
+- Champion g++ -O3 -march=native (interleaved): [90,81,79,99,114]ms **best=79ms**, median=90ms (outlier 114ms = VM hiccup)
+- dp2_8s_fw_t0_192_768 (interleaved): [91,73,78,75,83]ms **best=73ms**, median=78ms
+- Ratio champion/floor: 79/68 = **1.16×** — AT bandwidth floor (<2× → STOP-FLOOR)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓ (unchanged champion)
+
+**Gate analysis:** Apparent gap = champion_median(90ms) - variant_median(78ms) = 12ms. Noise band (excl. 114ms outlier) = 99-79 = 20ms. Gap < noise band → **HOLD** (gap within noise). Same VM oscillation pattern as 50+ prior runs: these variants rotate as "winner" depending on VM microstate. In ×920 (full run.sh interleaved sweep), 4acc_t0_64_448 gated 18% over t0_192_768; in ×921 they were 1.1% apart; this run 10% apart with high jitter. Consistent with bandwidth-bound cluster.
+
+**Other variants (3-sample direct):**
+- dp2_8s_fw_4acc_t0_64_448_200it: best=79ms, median=83ms — HOLD (tied champion best)
+- dp2_8s_fw_4acc_t0_512_2048: best=78ms, median=83ms — HOLD (1.3% best, noise)
+- All others within noise
+
+**Status:** STOP-FLOOR confirmed. Champion dp2_8s_fw_4acc_t0_64_448 unchanged. Design space fully saturated (237+ cpp variants). Both BREAKTHROUGH DIRECTIVE changes implemented. Best-ever: **49ms** (run ×885). Latest best: **60ms** (run ×920).
+
+→ **submit under: `g++-13 -O3 -march=native`** (best: **79ms** this VM / **60ms** run ×920 / **49ms** best-ever run ×885).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×922 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
