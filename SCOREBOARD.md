@@ -17385,3 +17385,22 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×934 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 77ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×934b — 2026-09-29 (HOLD — false PROMOTE from background run.sh)
+
+**Background run.sh** (floor=328ms, heavily loaded VM during 239-variant compile): PROMOTE gate fired for `dp2_8s_fw_2w_4096` vs champion `dp2_8s_fw_4acc_t0_192_1536` (variant best=74ms vs champ best=81ms).
+
+**Direct solo benchmarks** (g++-13 -O3 -march=native, quiet VM):
+- NEW dp2_8s_fw_2w_4096 (7 solo runs): best=77ms, median≈81ms
+- OLD dp2_8s_fw_4acc_t0_192_1536 (5 solo runs): best=77ms, median≈80ms
+
+**Verdict: HOLD** — both variants identical on solo benchmarks (77ms best, ~80ms median). Classic false PROMOTE: run.sh measured variant second (cache warmed by champion run), systematic bias. Run ×932b pattern.
+
+What dp2_8s_fw_2w_4096 does: dual T1 prefetch at 4096B AND 4096+32B per stream (vs champion's T0@192B+T1@1536B). No advantage at this VM speed.
+
+Champion reverted / unchanged: `dp2_8s_fw_4acc_t0_192_1536`. STOP-FLOOR ×934 stands.
+
+| Variant | Solo Best | Solo Median | vs champ | Note |
+|---|---|---|---|---|
+| dp2_8s_fw_2w_4096 | 77ms | 81ms | tied | False PROMOTE — HOLD |
+| dp2_8s_fw_4acc_t0_192_1536 (champion) | 77ms | 80ms | — | Retained |
