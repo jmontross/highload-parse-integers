@@ -17319,3 +17319,20 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×932 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 70ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×932b — 2026-09-29 (background run.sh PROMOTE→HOLD; false promote reverted)
+
+**Background run.sh** (floor=0.252s, loaded VM during 239-variant compile): PROMOTE gate fired for `dp2_8s_4acc_fw_t0_192_768` vs champion `dp2_8s_fw_4acc_t0_192_1536` (variant best=0.068s vs champ best=0.071s, median lower too).
+
+**Direct 7-round interleaved confirmation** (g++ -O3 -march=native, floor=69ms):
+- NEW dp2_8s_4acc_fw_t0_192_768: best=72ms (warm), median=79ms (6 warm samples)
+- OLD dp2_8s_fw_4acc_t0_192_1536: best=75ms, median=76ms
+
+**Verdict: HOLD** — new wins on best (72 < 75ms ✓) but loses on median (79 > 76ms ✗). Gate requires BOTH. Classic VM oscillation (run.sh sequential timing under compile load inflated champion's slot).
+
+Champion reverted to `dp2_8s_fw_4acc_t0_192_1536`. STOP-FLOOR ×932 stands.
+
+| Variant | Best | Median | vs champ best | Note |
+|---|---|---|---|---|
+| dp2_8s_4acc_fw_t0_192_768 | 72ms | 79ms | +4.2% best | Wins best only — HOLD/revert |
+| dp2_8s_fw_4acc_t0_192_1536 (champion) | 75ms | 76ms | — | Tighter median, retained |
