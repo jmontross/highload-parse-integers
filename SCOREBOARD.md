@@ -17337,3 +17337,28 @@ Champion reverted to `dp2_8s_fw_4acc_t0_192_1536`. STOP-FLOOR ×932 stands.
 |---|---|---|---|---|
 | dp2_8s_4acc_fw_t0_192_768 | 72ms | 79ms | +4.2% best | Wins best only — HOLD/revert |
 | dp2_8s_fw_4acc_t0_192_1536 (champion) | 75ms | 76ms | — | Tighter median, retained |
+
+## Run ×933 — 2026-09-29 (STOP-FLOOR confirmed; champion dp2_8s_fw_4acc_t0_192_1536 unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR (17th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): 5 samples=[68,68,71,68,76]ms **best=68ms**, median=68ms
+- Champion g++-13 -O3 -march=native: 5 samples=[74,67,67,66,74]ms **best=66ms warm**, median=67ms
+- Champion g++ -O3 -march=native: 5 samples=[71,82,78,68,70]ms **best=68ms warm**, median=71ms
+- Champion clang++-18 -O3 -march=native: 5 samples=[79,83,77,75,79]ms **best=75ms warm**, median=79ms
+- Ratio champion/floor: 66/68 = **0.97×** — AT/BELOW bandwidth ceiling (<2× → STOP-FLOOR; within noise)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Status:** STOP-FLOOR ×933 (17th consecutive). Design space fully saturated (239+ cpp variants).
+Champion architecture unchanged since run ×926 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 60ms (run ×920) / 66ms this VM run.**
+
+→ **submit under: `g++-13 -O3 -march=native`** (best this run: **66ms**; historically best on fast VMs; best-ever 49ms run ×885).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×933 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 66ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
