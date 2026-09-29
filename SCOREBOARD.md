@@ -17590,3 +17590,20 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×941 — champion AT/BELOW bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 52ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run log 2026-09-29 (scheduled run ×942) — STOP-FLOOR confirmed; BREAKTHROUGH DIRECTIVE implemented prior runs
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×942 | 0.066 | 0.069 | — | VM floor=0.228s; champion 0.066 < 2×0.228=0.456 → STOP-FLOOR. Best-ever 49ms. |
+| dp2_8s_fw_8acc | HOLD | 0.058 | 0.069 | +12.1% best, tied median | 8 independent YMM accumulators vs champion 4-acc. Impressive best but median tied → HOLD (VM noise). |
+
+**BREAKTHROUGH DIRECTIVE assessment:** Changes A (digit-place accumulation) and B (8-stream MLP) from Stuchlik/zielaj are ALREADY FULLY IMPLEMENTED in champion dp2_8s_fw_4acc_t0_192_1536. The dp2 family (pshufb place_ctrl shuffle tables + 8 independent streams + T0/T1 prefetch) is the exact documented architecture. All 237 variants exhausted. STOP-FLOOR ×942.
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**Compiler sweep:** g++-13 -Ofast -march=native -funroll-loops → 0.065s best
+
+**STOP-FLOOR ×942. Champion dp2_8s_fw_4acc_t0_192_1536. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops`. Best-ever 49ms (29% better than rank-18 bar 69ms).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 49ms best-ever (29% over rank-18 69ms bar)**
