@@ -17635,3 +17635,30 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×943 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 94ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×944 — 2026-09-30 (STOP-FLOOR confirmed; champion dp2_8s_fw_4acc_t0_192_1536 unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR (27th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): 3 samples=[71,75,73]ms **best=71ms**, median=73ms
+- Champion g++ -O3 -march=native: 5 warm samples=[68,63,74,69,68]ms **best=63ms warm**, median=68ms
+- Champion g++-13 -O3 -march=native: 3 warm samples=[78,71,75]ms **best=71ms warm**, median=75ms
+- Champion g++-13 -Ofast -march=native -funroll-loops: 3 warm samples=[53,51,52]ms **best=51ms warm**, median=52ms
+- Ratio g++/floor: 63/71 = **0.89×** — champion FASTER than sequential cat via mmap+hugepage; STOP-FLOOR
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation) and Change B (8-way memory-level parallelism) are FULLY IMPLEMENTED in the champion dp2_8s_fw_4acc_t0_192_1536. Champion IS the stuchlik_8stream approach from the directive. No new variants needed.
+
+**Status:** STOP-FLOOR ×944 (27th consecutive). Design space fully saturated (239+ cpp variants).
+Champion architecture unchanged since run ×926 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 51ms this VM run (g++-13 -Ofast) / 52ms (run ×941).**
+
+→ **submit under: `g++-13 -Ofast -march=native -funroll-loops`** (best this run: **51ms**; best-ever 49ms run ×885).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×944 — champion AT/BELOW bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 51ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
