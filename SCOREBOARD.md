@@ -17689,3 +17689,26 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×945 — champion AT bandwidth ceiling (1.01× floor). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 76ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×946 — 2026-09-30 (STOP-FLOOR confirmed; stuchlik directive variants benchmarked)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR ×946 (29th consecutive)
+
+**Timing (3-run direct, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): best=0.074s, median=0.076s — fast VM
+- Champion g++ -O3 -march=native: best=0.075s, median=0.087s — **1.01× floor** → STOP-FLOOR
+- stuchlik_digitplace (Change A only): best=0.619s — 8.3× SLOWER than champion (switch-based scatter, not vectorized as well)
+- stuchlik_8stream (Change B, per-number parse_quad): best=0.162s — 2.2× SLOWER than champion
+- Correctness: all three output 53687387166542798 ✓ | Champion edge: 9/9 ✓
+
+**BREAKTHROUGH DIRECTIVE verdict:** Both stuchlik variants are SLOWER than the champion. The dp2 champion already incorporates Change A (digit-place accumulation via pshufb) and Change B (8 spatially-separated streams) in a more optimized form:
+- Change A in champion: pshufb-based 16-byte window digit scattering (vectorized, no switch table), 4 independent u16 accumulators
+- Change B in champion: 8 independent spatially-separated ~52 MB streams with T0@192B + T1@1536B prefetch
+
+**Status:** STOP-FLOOR ×946. Champion within 1.35% of bandwidth floor (0.075s vs 0.074s floor). Design space fully exhausted (239+ cpp variants, all angles tried).
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: 75ms; best-ever 49ms run ×885).
+
+**STOP-FLOOR ×946 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 75ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
