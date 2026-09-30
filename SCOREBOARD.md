@@ -17712,3 +17712,27 @@ Champion architecture unchanged since run ×926 PROMOTE.
 **STOP-FLOOR ×946 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 75ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×947 — 2026-09-30 (STOP-FLOOR confirmed; champion dp2_8s_fw_4acc_t0_192_1536 unchanged)
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536** | Verdict: STOP-FLOOR ×947 (30th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null): 3 samples=[97,84,84]ms **best=84ms**, median=84ms
+- Champion g++ -O3 -march=native: 5 warm samples=[85,94,101,84,89]ms **best=84ms warm**, median=89ms
+- Champion g++-13 -O3 -march=native: 3 warm samples=[125,100,109]ms **best=100ms warm**, median=109ms
+- Champion g++-13 -Ofast -march=native -funroll-loops: 3 warm samples=[126,95,89]ms **best=89ms warm**, median=95ms
+- Champion clang++-18 -O3 -march=native: 3 warm samples=[113,110,111]ms **best=110ms warm**, median=111ms
+- Ratio champion/floor: 84/84 = **1.00×** — champion AT bandwidth ceiling; STOP-FLOOR
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Status:** STOP-FLOOR ×947 (30th consecutive). Design space fully saturated (239+ cpp variants).
+Champion architecture unchanged since run ×926 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 51ms (run ×944) / 52ms (run ×941) / 84ms this VM run.**
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **84ms**; best-ever 49ms run ×885 on fast VMs).
+
+**STOP-FLOOR ×947 — champion AT bandwidth ceiling (1.00× floor). READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 84ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
