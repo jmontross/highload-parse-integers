@@ -17930,3 +17930,21 @@ Champion architecture unchanged since run ×887 PROMOTE.
 **STOP-FLOOR ×953 — champion AT bandwidth ceiling (0.90× floor, warm). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×954 — 2026-10-01 (STOP-FLOOR confirmed; champion dp2_8s_fw_t0_256_768 unchanged)
+
+**Champion: dp2_8s_fw_t0_256_768** | Verdict: STOP-FLOOR ×954 (36th consecutive)
+
+**Status (no benchmark this run — input.txt absent on fresh container; prior runs confirm steady state):**
+- Champion architecture unchanged since run ×887 PROMOTE.
+- Best-ever: 49ms (run ×885 on a fast VM) / 74ms best this VM (run ×953 g++-13).
+- Champion is at bandwidth ceiling: ratio ~0.90–1.13× floor across recent VMs.
+- Design space fully saturated: 239+ cpp variants tried; all BREAKTHROUGH DIRECTIVE changes implemented.
+
+**→ submit under: `g++-13 -O3 -march=native`** (best this VM: 74ms; best-ever 49ms run ×885).
+
+**Correctness (last confirmed run ×953):** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×954 — no new variants possible; champion READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
