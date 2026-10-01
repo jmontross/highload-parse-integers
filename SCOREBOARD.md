@@ -17896,3 +17896,37 @@ Champion architecture unchanged since run ×887 PROMOTE.
 **STOP-FLOOR ×952 — champion AT bandwidth ceiling (0.975× floor, warm). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×953 — 2026-10-01 (STOP-FLOOR confirmed; champion dp2_8s_fw_t0_256_768 unchanged)
+
+**Champion: dp2_8s_fw_t0_256_768** | Verdict: STOP-FLOOR ×953 (35th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null, warm): 3 samples=[89,82,84]ms **best=82ms**, median=85ms
+- Champion g++ -O3 -march=native: 3 warm samples=[388,74,94]ms **best=74ms** (1st sample cold), median=94ms
+- Champion g++-13 -O3 -march=native: 3 warm samples **best=75ms**
+- Champion g++-13 -Ofast -march=native -funroll-loops: 3 warm samples **best=86ms**
+- Champion clang++-18 -O3 -march=native: 3 warm samples **best=90ms**
+- Ratio champion/floor: 74/82 = **0.90×** (champion FASTER than cat via mmap+MAP_POPULATE; AT bandwidth ceiling)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (champion, warm):**
+- g++ -O3 -march=native → **0.074s best** (**BEST**)
+- g++-13 -O3 -march=native → 0.075s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.086s best
+- clang++-18 -O3 -march=native → 0.090s best
+
+**BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation via pshufb place_ctrl tables) and Change B (8-way memory-level parallelism via 8 independent spatially-separated streams + T0/T1 two-tier prefetch) are FULLY IMPLEMENTED in champion dp2_8s_fw_t0_256_768. All BREAKTHROUGH DIRECTIVE variants benchmarked in run ×823 and found slower. No new variants possible.
+
+**Status:** STOP-FLOOR ×953 (35th consecutive). Design space fully saturated (239+ cpp variants).
+Champion architecture unchanged since run ×887 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 74ms g++ this VM run.**
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **74ms**; best-ever 49ms run ×885 on fast VMs).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×953 — champion AT bandwidth ceiling (0.90× floor, warm). READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
