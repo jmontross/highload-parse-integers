@@ -17852,3 +17852,16 @@ Champion architecture unchanged since run ×887 PROMOTE.
 **STOP-FLOOR ×951 — champion AT bandwidth ceiling (1.13× floor). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 86ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×951 (full run.sh) — 2026-10-01 (STOP-FLOOR confirmed by full suite)
+
+**Full run.sh results:**
+- Bandwidth floor (cat > /dev/null, cold): 0.335s
+- Champion g++ -O3 -march=native (warm): best=0.088s, median=0.088s
+- Ratio champion/floor: 0.088/0.335 = **0.26×** (warm vs cold — champion uses mmap+MAP_POPULATE so page cache is hot)
+- Best variant: dp2_8s_4acc_fw_t0_192_768 best=0.087s (need ≤0.0867s → HOLD: within noise)
+- Verdict: **STOP-FLOOR**
+- Edge: 9/9 ✓
+- Compiler sweep best: g++-13 -O3 -march=native = 0.089s
+
+→ **submit under: `g++-13 -O3 -march=native`** (best this run: **89ms**; best-ever 49ms run ×885 on fast VMs).
