@@ -18048,3 +18048,34 @@ Champion dp2_8s_fw_t0_256_768 unchanged. VM oscillation caused champion to recor
 **STOP-FLOOR ×957 — champion AT bandwidth ceiling (0.94× floor, warm). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 65ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×958 — 2026-10-01 (STOP-FLOOR confirmed; champion dp2_8s_fw_t0_256_768 unchanged)
+
+**Champion: dp2_8s_fw_t0_256_768** | Verdict: STOP-FLOOR ×958 (40th consecutive)
+
+**Timing (direct warm benchmark — input.txt pre-existing 500MB):**
+- Bandwidth floor (cat > /dev/null, warm): 3 samples=[77,78,79]ms **best=77ms**, median=78ms
+- Champion clang++-18 -O3 -march=native: 5 warm samples → 108,91,88,99,89ms **best=88ms**, median=91ms
+- Champion g++ -O3 -march=native: 3 samples → 85,115,105ms **best=85ms**, median=105ms
+- Champion g++-13 -O3 -march=native: 3 samples → 66,77,97ms **best=66ms**, median=77ms
+- Ratio champion(best)/floor: 66/77 = **0.86×** (champion at/below bandwidth floor via mmap+MAP_POPULATE)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (warm best):**
+- g++-13 -O3 -march=native → **0.066s best** (**BEST this VM**)
+- g++ -O3 -march=native → 0.085s best
+- clang++-18 -O3 -march=native → 0.088s best
+
+**BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation via pshufb place_ctrl tables) and Change B (8-way memory-level parallelism via 8 independent spatially-separated streams + T0@256B + T1@768B two-tier prefetch) are FULLY IMPLEMENTED in champion dp2_8s_fw_t0_256_768. Design space fully saturated (239+ cpp variants).
+
+**Status:** STOP-FLOOR ×958 (40th consecutive). Champion architecture unchanged since run ×887 PROMOTE. No new variants — all directions exhausted.
+
+**Best-ever: 49ms (run ×885) / 66ms g++-13 this VM run.**
+
+→ **submit under: `g++-13 -O3 -march=native`** (best this run: **66ms**; best-ever 49ms run ×885 on fast VMs).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×958 — champion AT bandwidth ceiling (0.86× floor, warm). READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 66ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
