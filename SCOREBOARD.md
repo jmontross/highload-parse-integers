@@ -18006,3 +18006,16 @@ Champion architecture unchanged since run ×887 PROMOTE.
 **STOP-FLOOR ×956 — champion AT bandwidth ceiling (0.68× floor, warm). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 51ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×956 addendum — FALSE PROMOTE (background run.sh, VM oscillation)
+
+Background run.sh (RUNS=3, SWEEP=0) reported PROMOTE for `dp2_8s_fw_4acc_t0_384_1536` (best=0.050s vs champion 0.064s, Δbest=21.9%). **NOT applied — confirmed false PROMOTE:**
+
+1. dp2_8s_fw_4acc_t0_384_1536 is an existing HOLD variant (tested and HOLDed in earlier runs — best tied, median +1ms)
+2. Both STOP-FLOOR and PROMOTE fired simultaneously in run.sh (classic VM oscillation pattern, same as ×114, ×115, ×116, ×126, ×131, ×223-×224)
+3. **Direct re-confirmation** (interleaved same-VM): champion best=0.050s/median=0.066s vs variant best=0.063s/median=0.067s → **champion WINS on best by 20%, ties on median**
+4. Floor: 0.071s warm — champion at 0.050s = 0.70× floor → STOP-FLOOR confirmed
+
+Champion dp2_8s_fw_t0_256_768 unchanged. VM oscillation caused champion to record 0.064s in run.sh's interleaved batch (during which variant got a hot cache hit at 0.050s). Direct test shows champion is actually the faster program.
+
+**STOP-FLOOR ×956 confirmed (false PROMOTE rejected). Champion dp2_8s_fw_t0_256_768 remains. SUBMIT with `g++-13 -O3 -march=native`.**
