@@ -18079,3 +18079,15 @@ Champion dp2_8s_fw_t0_256_768 unchanged. VM oscillation caused champion to recor
 **STOP-FLOOR ×958 — champion AT bandwidth ceiling (0.86× floor, warm). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 66ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×958 addendum — FALSE PROMOTE (background RUNS=3 run.sh, VM scheduling)
+
+Background run.sh (RUNS=3, SWEEP=0) reported PROMOTE for `dp2_8s_fw_2w_4096` (best=0.062s vs champion 0.074s). **NOT applied — confirmed false PROMOTE:**
+
+1. Direct 13-round interleaved test: champion best=73ms/median=78ms vs variant best=74ms/median=83ms → **champion WINS on both**
+2. RUNS=3 is insufficient to distinguish programs at ~80ms median with ±20ms VM jitter
+3. Same VM oscillation pattern as ×956, ×114-×116, ×126, ×131, ×223-×224
+
+Champion dp2_8s_fw_t0_256_768 unchanged. dp2_8s_fw_2w_4096 is marginally slower on extended testing.
+
+**STOP-FLOOR ×958 confirmed (false PROMOTE rejected). Champion dp2_8s_fw_t0_256_768 remains. SUBMIT with `g++-13 -O3 -march=native`.**
