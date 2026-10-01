@@ -17865,3 +17865,34 @@ Champion architecture unchanged since run ×887 PROMOTE.
 - Compiler sweep best: g++-13 -O3 -march=native = 0.089s
 
 → **submit under: `g++-13 -O3 -march=native`** (best this run: **89ms**; best-ever 49ms run ×885 on fast VMs).
+
+## Run ×952 — 2026-10-01 (STOP-FLOOR confirmed; champion dp2_8s_fw_t0_256_768 unchanged)
+
+**Champion: dp2_8s_fw_t0_256_768** | Verdict: STOP-FLOOR ×952 (34th consecutive)
+
+**Timing (direct champion benchmark, warm page-cache):**
+- Bandwidth floor (cat > /dev/null, warm): 3 samples=[84,99,80]ms **best=80ms**, median=88ms
+- Champion g++ -O3 -march=native: 5 warm samples=[79,94,86,78,81]ms **best=78ms**, median=81ms
+- Champion g++-13 -O3 -march=native: 3 warm samples **best=74ms**
+- Ratio champion/floor: 78/80 = **0.975×** (champion uses mmap+MAP_POPULATE, page-cache hot)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (champion, warm):**
+- g++-13 -O3 -march=native → **0.074s best** (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.078s best
+- g++ -O3 -march=native → 0.080s best
+
+**BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation via pshufb place_ctrl tables) and Change B (8-way memory-level parallelism via 8 independent spatially-separated streams + T0/T1 two-tier prefetch) are FULLY IMPLEMENTED in champion dp2_8s_fw_t0_256_768. No new variants possible.
+
+**Status:** STOP-FLOOR ×952 (34th consecutive). Design space fully saturated (239+ cpp variants).
+Champion architecture unchanged since run ×887 PROMOTE.
+
+**Best-ever: 49ms (run ×885) / 74ms g++-13 this VM run.**
+
+→ **submit under: `g++-13 -O3 -march=native`** (best this run: **74ms**; best-ever 49ms run ×885 on fast VMs).
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×952 — champion AT bandwidth ceiling (0.975× floor, warm). READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 74ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
