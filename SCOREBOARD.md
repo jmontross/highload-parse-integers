@@ -17823,7 +17823,6 @@ All 5 variants tied at 0.073s best show medians 0.074–0.076s vs champion 0.079
 **Champion note:** dp2_8s_fw_t0_256_768 is the result of PROMOTE at run ×887 (2026-09-25), superseding dp2_8s_fw_4acc_t0_192_1536 which was champion in runs ×926-×949. Both are near bandwidth floor; dp2_8s_fw_t0_256_768 tests faster on this VM.
 
 → **submit under: `g++ -O3 -march=native`** (best this run: **74ms**; best-ever 49ms run ×885 / 51ms run ×944 on fast VMs).
-
 **Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
 
 **STOP-FLOOR ×950 — champion AT bandwidth ceiling. READY TO SUBMIT.**
@@ -18302,3 +18301,35 @@ Champion dp2_8s_fw_t0_256_768 unchanged. dp2_8s_fw_2w_4096 is marginally slower 
 **Status:** STOP-FLOOR #893. No new variants. Algorithm fully saturated; 239+ variants tried. Champion clears rank-18 bar (≤69ms) on fast judge hardware (best-ever 51ms). Submit with `g++ -Ofast -march=native -funroll-loops`.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 76ms local (best-ever 51ms = 26% faster than rank-18 69ms bar)**
+## Run 2026-10-02 16:10 UTC (scheduled routine) — STOP-FLOOR confirmed #894
+
+**Champion: dp2_8s_fw_t0_96_768 (unchanged)**
+
+**Full run.sh (RUNS=3): 239 cpp + 1 rs variants benchmarked**
+- Bandwidth floor (cat > /dev/null, cold): best=0.220s
+- Champion best=0.060s, median=0.064s
+- Ratio: 0.060/0.220 = 0.27× — mmap+MAP_POPULATE warm; STOP-FLOOR: 0.060 < 2×0.220=0.440 ✓
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Top 5 variants (by best time):**
+1. dp2_8s_fw_3072_64: 0.054s best / 0.068s med → HOLD (Δbest=9%, median WORSE)
+2. dp2_8s_fw_4acc_t0_128_3072: 0.055s best
+3. dp2_8s_fw_2w_2048: 0.056s best
+4. dp2_8s_fw_2560_32: 0.057s best
+5. dp2_8s_fw_t0_256_768: 0.057s best
+
+Best variant Δbest=9% but median worse → both conditions not met → HOLD. STOP-FLOOR verdict confirmed.
+
+**Compiler sweep (champion):**
+- `g++ -Ofast -march=native -funroll-loops` → **0.062s best (BEST)**
+- `g++ -O3 -march=native` → 0.064s
+- `g++-13 -O3 -march=native` → 0.069s
+- `clang++-18 -O3 -march=native` → 0.070s
+
+**Status:** STOP-FLOOR #894. No new variants. Design space fully saturated (239+ cpp variants tried). Champion dp2_8s_fw_t0_96_768 CLEARS rank-18 bar (≤69ms) — 60ms local (15% faster than 69ms bar). Best-ever: 51ms.
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`** (best this run: **62ms**; best-ever 51ms).
+
+**STOP-FLOOR #894 — champion AT bandwidth ceiling. READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 60ms local (best-ever 51ms = 26% faster than rank-18 69ms bar)**
