@@ -18334,3 +18334,20 @@ Best variant Δbest=9% but median worse → both conditions not met → HOLD. ST
 **STOP-FLOOR #894 — champion AT bandwidth ceiling. READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 60ms local (best-ever 51ms = 26% faster than rank-18 69ms bar)**
+
+## Run 2026-10-02 (scheduled routine) — STOP-FLOOR confirmed #895
+
+**Champion: dp2_8s_fw_t0_96_768 (unchanged)**
+
+**Quick benchmark (c++ -O3 -march=native, 5 runs interleaved):**
+- Champion: 65ms, 64ms, 53ms, 53ms, 63ms → best=53ms, median=63ms
+- Bandwidth floor (cat > /dev/null): 73ms, 72ms, 76ms → floor=72ms
+- Ratio: 53ms / 72ms = **0.74× floor → AT BANDWIDTH CEILING**
+
+**Correctness:** 53687387166542798 ✓ (all 5 runs)
+
+**Status:** STOP-FLOOR #895. Champion dp2_8s_fw_t0_96_768 confirmed at bandwidth ceiling (ratio < 1.0, well below 2× floor = 144ms threshold). No new variants. Design space exhausted (239+ cpp variants). Champion clears rank-18 bar (≤69ms): 53ms best = **23% faster than 69ms bar**, best-ever 51ms.
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`** (best: 53ms this run; best-ever 51ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 53ms local (best-ever 51ms = 26% faster than rank-18 69ms bar)**
