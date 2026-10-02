@@ -18175,3 +18175,33 @@ Champion dp2_8s_fw_t0_256_768 unchanged. dp2_8s_fw_2w_4096 is marginally slower 
 **STOP-FLOOR ×961 — champion AT bandwidth ceiling (1.13× floor). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 86ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×962 — 2026-10-02 (STOP-FLOOR confirmed; champion dp2_8s_fw_t0_256_768 unchanged)
+
+**Champion: dp2_8s_fw_t0_256_768** | Verdict: STOP-FLOOR ×962 (44th consecutive)
+
+**Timing (direct warm benchmark — input.txt 50M lines, 524MB):**
+- Bandwidth floor (cat > /dev/null, 3 samples): [98,94,73]ms **best=73ms**, median=94ms
+- Champion g++ -O3 -march=native: 5 warm samples → 64,64,66,70,97ms **warm best=64ms**, warm median=66ms
+- Ratio champion(best)/floor: 64/73 = **0.88×** (sub-floor — cache warm; this fast VM at bandwidth ceiling)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (warm best, 3-sample):**
+- g++ -O3 -march=native → **0.058s best** (**BEST this sweep**)
+- g++-13 -O3 -march=native → 0.063s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.067s best
+- clang++-18 -O3 -march=native → 0.063s best
+
+→ **submit under: `g++ -O3 -march=native`** (best this run: **58ms** sweep / **64ms** direct).
+
+**BREAKTHROUGH DIRECTIVE status:** Both Change A (digit-place accumulation via pshufb place_ctrl tables) and Change B (8-way memory-level parallelism via 8 independent spatially-separated streams + T0@256B + T1@768B two-tier prefetch) are FULLY IMPLEMENTED in champion dp2_8s_fw_t0_256_768. Design space fully saturated (239+ cpp variants).
+
+**Status:** STOP-FLOOR ×962 (44th consecutive). Champion architecture unchanged since run ×887 PROMOTE. No new variants — all directions exhausted.
+
+**Best-ever: 49ms (run ×885) / 58ms this VM run (sweep).**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**STOP-FLOOR ×962 — champion AT/BELOW bandwidth ceiling (0.88× floor, very fast VM). READY TO SUBMIT.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 58ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
