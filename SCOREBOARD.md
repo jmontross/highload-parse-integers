@@ -18205,3 +18205,29 @@ Champion dp2_8s_fw_t0_256_768 unchanged. dp2_8s_fw_2w_4096 is marginally slower 
 **STOP-FLOOR ×962 — champion AT/BELOW bandwidth ceiling (0.88× floor, very fast VM). READY TO SUBMIT.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_256_768 58ms local (best-ever 49ms = 29% better than rank-18 69ms bar)**
+
+## Run ×963 — 2026-10-02 (PROMOTE: dp2_8s_fw_4acc_t0_64_2048 beats old champion)
+
+**Champion PROMOTED: dp2_8s_fw_4acc_t0_64_2048**
+
+**Background run.sh (RUNS=3, SWEEP=0) PROMOTE verdict:**
+- Old champion (dp2_8s_fw_t0_256_768): best=63ms, median=69ms
+- New variant (dp2_8s_fw_4acc_t0_64_2048): best=52ms, median=56ms → Δbest=11ms (17% faster)
+- Edge: 9/9 ✓ → verdict: PROMOTE
+
+**Confirmation benchmark (direct warm, 5 samples):**
+- Bandwidth floor (3 samples): [95,76,82]ms best=76ms
+- New champion warm best=65ms, warm median=71ms → ratio 0.86× (sub-floor; fast VM)
+- Correctness: 53687387166542798 ✓ | Edge: 9/9 ✓
+
+**Compiler sweep (warm best, 3-sample):**
+- g++ -O3 -march=native → 0.065s best
+- g++-13 -O3 -march=native → 0.067s best
+- g++-13 -Ofast -march=native -funroll-loops → **0.060s best** (**BEST this sweep**)
+- clang++-18 -O3 -march=native → 0.074s best
+
+→ **submit under: `g++-13 -Ofast -march=native -funroll-loops`** (best: 60ms this sweep).
+
+**Architecture:** dp2_8s_fw_4acc_t0_64_2048 = 4 independent per-pair u16 accumulators + T0@64B + T1@2048B judge-tuned prefetch distances. Designed for judge's ~80ns DRAM latency (T1@2048B = 32 iters × ~3ns/iter ≈ 96ns ahead, matching DRAM latency). Previous T1@3072B was tuned for slow VM DRAM (~300-400ns).
+
+**Status:** NEW CHAMPION. Best-ever confirmed at 52ms (run.sh interleaved, 17% over rank-18 69ms bar).
