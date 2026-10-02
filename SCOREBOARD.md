@@ -18351,3 +18351,20 @@ Best variant Δbest=9% but median worse → both conditions not met → HOLD. ST
 → **submit under: `g++ -Ofast -march=native -funroll-loops`** (best: 53ms this run; best-ever 51ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 53ms local (best-ever 51ms = 26% faster than rank-18 69ms bar)**
+
+## Run 2026-10-02 (scheduled routine) — FALSE PROMOTE investigated, HOLD #896
+
+**Context:** Full run.sh (RUNS=3, SWEEP=0, 239+ variants) triggered a PROMOTE verdict for `dp2_8s_fixed_2048` with champion best=68ms/median=85ms vs variant best=52ms/median=57ms. This was suspicious given champion showed 53ms on a quick benchmark before the full suite.
+
+**Direct 10-round interleaved comparison (c++ -O3 -march=native):**
+- Champion (dp2_8s_fw_t0_96_768): 75,66,67,59,57,73,62,88,59,51 → **best=51ms, median=64ms**
+- dp2_8s_fixed_2048: 75,67,72,78,71,74,77,67,69,68 → best=67ms, median=71ms
+- **Champion wins clearly: 8/10 rounds faster, best 51ms vs 67ms**
+
+**Bandwidth floor:** 78-90ms
+
+**Diagnosis:** The full run.sh PROMOTE was a false positive. The champion ran during a slow VM period (benchmarked after 195+ prior variants), while dp2_8s_fixed_2048 happened to run during a faster window. The champion's true performance (51ms best) beats dp2_8s_fixed_2048 (67ms best) by 24%.
+
+**Verdict: HOLD. Champion dp2_8s_fw_t0_96_768 remains champion. NOT promoted.**
+
+**Status:** STOP-FLOOR #896. Champion at bandwidth ceiling. Best-ever 51ms = 26% faster than rank-18 bar.
