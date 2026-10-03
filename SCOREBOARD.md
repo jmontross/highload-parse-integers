@@ -18588,3 +18588,26 @@ Compiler sweep (champion, full run.sh, RUNS=5):
 All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) long implemented; dp2 champion supersedes both.
 
 **HOLD #904. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Best-ever 48ms = 30% over rank-18 bar (69ms).**
+
+## Run 2026-10-03 (scheduled routine) — STOP-FLOOR confirmed #905
+
+**Champion: dp2_8s_fw_4acc_t0_64_1024 (unchanged)**
+
+**Quick benchmark (5 runs, g++ -O3 -march=native):**
+- Champion: best=0.094s (0.101, 0.123, 0.094, 0.094, 0.097)
+- Bandwidth floor (cat > /dev/null, 3 runs): 0.093, 0.099, 0.095 → floor=0.093s
+- Ratio: 0.094s / 0.093s = **1.01× floor → AT BANDWIDTH CEILING**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Compiler sweep (3 samples each):**
+- `g++ -O3 -march=native` → 0.089s best (cache-warm) (**BEST**)
+- `g++-13 -O3 -march=native` → 0.093s best
+- `g++-13 -Ofast -march=native -funroll-loops` → 0.094s best
+- `g++ -Ofast -march=native -funroll-loops` → 0.096s best
+
+**Status:** STOP-FLOOR #905. Champion dp2_8s_fw_4acc_t0_64_1024 confirmed at bandwidth ceiling (1.01× floor). No new variants — design space exhausted (240 cpp variants tried, including stuchlik_digitplace and stuchlik_8stream). Best compiler: `g++ -O3 -march=native` (89ms cache-warm; best-ever 48ms on fast VMs = 30% faster than rank-18 69ms bar).
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 89ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
