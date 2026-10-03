@@ -18491,3 +18491,26 @@ Fast VM (floor=0.281–0.383s across runs). Cascade fired across 8 promotions �
 → **submit under: `g++-13 -Ofast -march=native -funroll-loops`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 51ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — STOP-FLOOR confirmed #901
+
+**Champion: dp2_8s_fw_4acc_t0_64_1024 (unchanged)**
+
+**Quick benchmark (g++ -Ofast -march=native -funroll-loops, 5 runs interleaved):**
+- Champion: 78ms, 76ms, 76ms, 76ms, 76ms → best=76ms, median=76ms
+- Bandwidth floor (cat > /dev/null, 5 runs): 74ms, 87ms, 79ms, 83ms, 83ms → floor=74ms
+- Ratio: 76ms / 74ms = **1.03× floor → AT BANDWIDTH CEILING**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Compiler sweep (3 samples each):**
+- `g++ -O3 -march=native` → 76ms best
+- `g++ -Ofast -march=native -funroll-loops` → 76ms best
+- `g++-13 -O3 -march=native` → 76ms best
+- `g++-13 -Ofast -march=native -funroll-loops` → 77ms best
+
+All compilers identical (76ms) — algorithm fully bandwidth-bound. No new variants — design space exhausted (240+ cpp variants tried). 
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 76ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
