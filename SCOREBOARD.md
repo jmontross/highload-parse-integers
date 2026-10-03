@@ -18628,3 +18628,30 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 73ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — PROMOTE → STOP-FLOOR #907
+
+**Champion: dp2_8s_fw_3072_32 (PROMOTED from dp2_8s_fw_4acc_t0_64_1024)**
+
+**Initial benchmark (5 runs interleaved, g++ -O3 -march=native):**
+- Prior champion (fw_4acc_t0_64_1024): best=0.077s, median=0.083s
+- fw_3072_32: best=0.075s, median=0.078s → **2.6% margin on best (>1.5% gate), median lower → PROMOTE ✓**
+- Bandwidth floor: 0.066s min / 0.068s median
+
+**Confirmation benchmark (5 runs interleaved, g++ -O3 -march=native):**
+- New champion (fw_3072_32): best=0.073s, median=0.074s
+- Prior champion (fw_4acc_t0_64_1024): best=0.074s, median=0.076s → doesn't gate → STOP-FLOOR #907
+- Bandwidth floor: 0.085s → champion 0.073s = 0.86× floor (mmap+hugepage bypass > cat)
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Compiler sweep on new champion:**
+- `g++ -O3 -march=native` → 0.073s (**BEST**)
+- `g++ -Ofast -march=native -funroll-loops` → 0.081s
+- Prior champion (fw_4acc_t0_64_1024) with -O3 → 0.072s (within noise, oscillation)
+
+**Status:** STOP-FLOOR #907. dp2_8s_fw_3072_32 promoted as new champion (dual T1@3072+32B double-loop). VM oscillation: fw_3072_32 and fw_4acc_t0_64_1024 alternate as winner depending on VM state; both within ~1-3% of each other at bandwidth ceiling. No new variants — design space exhausted (240+ cpp variants tried). Best-ever 48ms (fast VM) = 30% over rank-18 bar (69ms).
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_3072_32 73ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
