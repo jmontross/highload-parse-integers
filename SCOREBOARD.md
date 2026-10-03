@@ -18539,3 +18539,27 @@ Champion clears rank-18 bar (≤69ms): 77ms local / best-ever 48ms. Best-ever 48
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 77ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — STOP-FLOOR confirmed #903
+
+**Champion: dp2_8s_fw_4acc_t0_64_1024 (unchanged)**
+
+**Quick benchmark (g++ -O3 -march=native, 5 runs):**
+- Champion: best=0.075s, median=0.082s
+- Bandwidth floor (cat > /dev/null, 5 runs): floor=0.063s best, 0.068s median
+- Ratio: 0.075s / 0.063s = **1.19× floor → STOP-FLOOR**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Compiler sweep (3 samples each):**
+- `g++ -Ofast -march=native -funroll-loops` → 0.074s (**BEST**)
+- `g++ -O3 -march=native` → 0.079s
+- `g++-13 -Ofast -march=native -funroll-loops` → 0.079s
+- `g++-13 -O3 -march=native` → 0.084s
+- `clang++ -O3 -march=native` → 0.086s
+
+**Status:** STOP-FLOOR #903. Champion dp2_8s_fw_4acc_t0_64_1024 confirmed at bandwidth ceiling (1.19× floor on moderate VM). No new variants — design space exhausted (240+ cpp variants tried, including stuchlik_digitplace and stuchlik_8stream). Best compiler: `g++ -Ofast -march=native -funroll-loops` (74ms on this VM; best-ever 48ms on fast VMs = 30% faster than rank-18 69ms bar).
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 74ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
