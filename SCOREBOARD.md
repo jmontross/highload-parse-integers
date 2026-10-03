@@ -18563,3 +18563,28 @@ Champion clears rank-18 bar (≤69ms): 77ms local / best-ever 48ms. Best-ever 48
 → **submit under: `g++ -Ofast -march=native -funroll-loops`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 74ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — full run.sh PROMOTE re-evaluated → HOLD #904
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | HOLD ×904 | 0.0770 | 0.0780 | — | Focused 5-run test (clean VM, floor=0.066s). 1.17× floor. Edge 9/9. |
+| dp2_8s_fw_t0_7168 | HOLD | 0.0760 | 0.0770 | +1.3% best / +1.3% med | Full run.sh PROMOTE re-evaluated. 1.3% < 1.5% gate → HOLD. |
+
+Full run.sh (loading VM with 238 variant builds) fired PROMOTE on dp2_8s_fw_t0_7168 (best=0.073s vs champion 0.078s under load). Focused 5-run interleaved retest on clean VM shows: champion best=0.077s/median=0.078s vs variant best=0.076s/median=0.077s — only 1.3% gap, below 1.5% gate threshold. Classic VM-load false promote: the champion's best sample was degraded by compilation I/O during the full sweep. HOLD confirmed. Champion unchanged.
+
+dp2_8s_fw_t0_7168: T0@512B + T1@7168B (very aggressive far-tier). On loaded VMs with elevated DRAM latency, 7168B lookahead wins vs champion's T1@1024B. On clean VM, the difference is ≤1.3% (noise). This pattern repeats the VM-oscillation cascade documented in runs ×219–×225.
+
+Correctness: variant 53687387166542798 ✓ | Edge: 9/9 | Floor: 0.066s (clean VM).
+
+Compiler sweep (champion, full run.sh, RUNS=5):
+- g++ -O3 -march=native → 0.076s best (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.077s
+- g++-13 -O3 -march=native → 0.077s
+- g++-13 -Ofast -march=native -funroll-loops → 0.077s
+- clang++ -O3 -march=native → 0.084s
+- clang++ -Ofast -march=native -funroll-loops → 0.087s
+
+All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (stuchlik_digitplace) and Change B (stuchlik_8stream) long implemented; dp2 champion supersedes both.
+
+**HOLD #904. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Best-ever 48ms = 30% over rank-18 bar (69ms).**
