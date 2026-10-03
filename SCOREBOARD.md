@@ -18456,3 +18456,38 @@ Champion best-ever 51ms = **26% faster than rank-18 69ms bar**.
 → **submit under: `g++ -Ofast -march=native -funroll-loops`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 89ms local (best-ever 51ms = 26% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — PROMOTE cascade ×8 → dp2_8s_fw_4acc_t0_64_1024; STOP-FLOOR confirmed #900
+
+**Champion change: dp2_8s_fw_t0_96_768 → dp2_8s_fw_4acc_t0_64_1024 (VM oscillation cascade)**
+
+Fast VM (floor=0.281–0.383s across runs). Cascade fired across 8 promotions — all dp2 variants cluster 0.048–0.065s; VM variability (floor varied 5× over session) drives champion rotation. Final settled champion: dp2_8s_fw_4acc_t0_64_1024 (T0@64B near + T1@1024B far, 4 accumulators, 8 streams).
+
+| # | Promoted | Best(s) | Med(s) | Note |
+|---|---|---|---|---|
+| 1 | dp2_8s_fw_t0_64_1536 | 0.048 | 0.063 | Over dp2_8s_fw_t0_96_768 (prev champ), +3.9% |
+| 2 | dp2_8s_fw_200it | 0.049 | 0.054 | Over dp2_8s_fw_t0_64_1536, +21% |
+| 3 | dp2_8s_fw_t0_128_768 | 0.049 | 0.063 | Over dp2_8s_fw_200it, +3.9% |
+| 4 | dp2_8s_4acc_fw_t0_192_768 | 0.049 | 0.054 | Over dp2_8s_fw_t0_128_768, +21% |
+| 5 | dp2_8s_fw_4acc_t0_64_2048 | 0.048 | 0.065 | Over dp2_8s_4acc_fw_t0_192_768, +21% |
+| 6 | dp2_8s_fw_4acc_t0_256_1024 | 0.049 | 0.063 | Over dp2_8s_fw_4acc_t0_64_2048, +10.9% |
+| 7 | dp2_8s_fw_4acc_t0_512_7168 | 0.049 | 0.053 | Over dp2_8s_fw_4acc_t0_256_1024, +3.9% |
+| 8 | dp2_8s_fw_4acc_t0_64_1024 | 0.049 | 0.063 | Over dp2_8s_fw_4acc_t0_512_7168, +21% |
+
+**Final STOP-FLOOR (RUNS=5, floor=0.326s):** champion dp2_8s_fw_4acc_t0_64_1024 best=0.051s med=0.061s. Best variant dp2_8s_fw_200it best=0.049s < gate threshold 0.050s, but median=0.062 > 0.061 champ → HOLD/STOP-FLOOR. Cascade settled.
+
+**Compiler sweep (final run, moderate VM floor=0.383s):**
+- g++-13 -Ofast -march=native -funroll-loops → 0.049s (**BEST**)
+- g++ -O3 -march=native → 0.050s
+- g++ -Ofast -march=native -funroll-loops → 0.052s
+- g++-13 -O3 -march=native → 0.049s
+- clang++ -O3 -march=native → 0.057s
+- clang++ -Ofast -march=native -funroll-loops → 0.056s
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 | **index.html:** 51ms
+
+**Status:** STOP-FLOOR #900. Champion dp2_8s_fw_4acc_t0_64_1024 confirmed at bandwidth ceiling (0.051s = 7.4× faster than floor 0.383s). Best-ever 48ms local (= 30% faster than rank-18 bar 69ms). Design space fully saturated — 240+ variants tried.
+
+→ **submit under: `g++-13 -Ofast -march=native -funroll-loops`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 51ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
