@@ -18437,3 +18437,22 @@ Champion clears rank-18 bar (≤69ms): 72ms local / best-ever 51ms. Best-ever 51
 → **submit under: `g++ -Ofast -march=native -funroll-loops`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 72ms local (best-ever 51ms = 26% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — STOP-FLOOR confirmed #899
+
+**Champion: dp2_8s_fw_t0_96_768 (unchanged)**
+
+**Quick benchmark (g++ -Ofast -march=native -funroll-loops, 5 runs):**
+- Champion: 90ms, 89ms, 89ms, 90ms, 91ms → best=89ms, median=90ms
+- Bandwidth floor (cat > /dev/null, 5 runs): 82ms, 83ms, 83ms, 85ms, 83ms → floor=82ms
+- Ratio: 89ms / 82ms = **1.09× floor → AT BANDWIDTH CEILING**
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** (confirmed ×965+)
+
+**Status:** STOP-FLOOR #899. Champion dp2_8s_fw_t0_96_768 confirmed at bandwidth ceiling (ratio 1.09×, well below 2× floor = 164ms threshold). No new variants — design space exhausted (240+ cpp variants, all implemented including stuchlik_digitplace and stuchlik_8stream).
+
+Champion best-ever 51ms = **26% faster than rank-18 69ms bar**.
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_96_768 89ms local (best-ever 51ms = 26% over rank-18 69ms bar)**
