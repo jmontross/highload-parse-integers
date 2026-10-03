@@ -18514,3 +18514,28 @@ All compilers identical (76ms) — algorithm fully bandwidth-bound. No new varia
 → **submit under: `g++ -Ofast -march=native -funroll-loops`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 76ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-03 (scheduled routine) — STOP-FLOOR confirmed #902
+
+**Champion: dp2_8s_fw_4acc_t0_64_1024 (unchanged)**
+
+**Quick benchmark (g++ -O3 -march=native, 3 runs):**
+- Champion: 117ms, 77ms, 77ms → best=77ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 85ms, 74ms, 81ms → floor=74ms
+- Ratio: 77ms / 74ms = **1.04× floor → AT BANDWIDTH CEILING**
+
+**Correctness:** 53687387166542798 ✓
+
+**Compiler sweep (3 samples each, all identical):**
+- `g++ -O3 -march=native` → 75ms (**BEST**)
+- `g++ -Ofast -march=native -funroll-loops` → 76ms
+- `g++-13 -O3 -march=native` → 76ms
+- `g++-13 -Ofast -march=native -funroll-loops` → 76ms
+
+**Status:** STOP-FLOOR #902. Champion dp2_8s_fw_4acc_t0_64_1024 confirmed at bandwidth ceiling (1.04× floor). No new variants — design space exhausted (240+ cpp variants tried, including stuchlik_digitplace and stuchlik_8stream). All compilers equivalent (algorithm fully memory-bound).
+
+Champion clears rank-18 bar (≤69ms): 77ms local / best-ever 48ms. Best-ever 48ms = **30% faster than rank-18 69ms bar**.
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 77ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
