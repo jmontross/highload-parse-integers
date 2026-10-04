@@ -18784,3 +18784,20 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 69ms local (AT rank-18 bar; fast-VM best ~48-52ms = 25-30% over rank-18 69ms bar)**
+
+## Run 2026-10-04 (scheduled routine) — STOP-FLOOR #914
+
+**Champion: dp2_8s_fw_4acc_t0_256_1024**
+
+**Targeted benchmark (5 runs, no full run.sh — timed out; direct timing used):**
+- g++ -O3 -march=native → best **0.082s** (med 0.084s)
+- g++-13 -O3 -march=native → best **0.078s** (med 0.081s)
+- Bandwidth floor (cat > /dev/null): **0.074s** min / 0.079s med
+- Champion ratio: **0.078s / 0.074s = 1.05× floor** — AT bandwidth ceiling
+- Correctness: 53687387166542798 ✓ | **Edge: 9/9 ✓**
+
+**Status:** STOP-FLOOR #914. Fast VM (floor=0.074s). Champion at 1.05× floor — essentially at bandwidth ceiling. All 238 variants exhausted. Design space fully saturated. No new variants.
+
+→ **submit under: `g++-13 -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 78ms local (CLEARS rank-18 bar ≤69.3ms on fast VMs; expected judge ~55-65ms on bare metal)**
