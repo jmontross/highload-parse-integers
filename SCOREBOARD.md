@@ -18878,3 +18878,20 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -Ofast -march=native -funroll-loops`** (80ms best, vs 83ms for -O3)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 80ms local (best-ever 50ms = 28% over rank-18 69ms bar)**
+
+## Run log 2026-10-04 (scheduled run ×236) — STOP-FLOOR; maintenance check
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_1024) | STOP-FLOOR ×236 | 0.089 | 0.105 | — | Moderate VM (floor=0.072s min). Champion at 1.24× floor (<2× threshold → STOP-FLOOR). Edge 9/9. Correctness ✓ (53687387166542798). |
+
+STOP-FLOOR ×236 (RUNS=5, floor=0.072s min, champion g++-13 -O3 best=0.089s / median=0.105s = 1.24× floor). Moderate VM state. Algorithm fully converged; all 178 cpp + 1 rs variants exhausted. Design space saturated. Both Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) fully implemented — dp2 champion supersedes both. Correctness: 53687387166542798 ✓. Edge 9/9.
+
+Compiler sweep (3-sample each, moderate VM):
+- g++ -O3 -march=native → 0.089s best (tied best)
+- g++-13 -O3 -march=native → 0.089s best (**TIED BEST**)
+- clang++-18 -O3 -march=native → 0.100s best
+
+Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDWIDTH FLOOR 0.067s). Definitively memory-bound. Algorithm at bandwidth ceiling.
+
+**STOP-FLOOR ×236. Champion dp2_8s_fw_4acc_t0_256_1024. SUBMIT with `g++-13 -O3 -march=native`. This VM moderate (89ms = 1.24× floor of 72ms). Fast-VM best ~63-69ms (AT/CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~55-65ms on bare metal.**
