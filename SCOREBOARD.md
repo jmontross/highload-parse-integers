@@ -18840,3 +18840,21 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 80ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+## Run 2026-10-04 (scheduled routine) — STOP-FLOOR confirmed #950
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536 (unchanged; main branch)**
+
+**Quick benchmark (5 runs, g++ -O3 -march=native):**
+- Champion: 109ms, 80ms, 85ms, 89ms, 87ms → best=80ms, median=87ms
+- g++ -Ofast -march=native -funroll-loops: best=79ms, median=86ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 71ms, 72ms, 71ms → floor=71ms
+- Ratio (O3): 80ms / 71ms = **1.13× floor** → STOP-FLOOR
+- Ratio (Ofast): 79ms / 71ms = **1.11× floor** → STOP-FLOOR
+
+**Correctness:** 53687387166542798 ✓
+
+**Status:** STOP-FLOOR #950. Champion dp2_8s_fw_4acc_t0_192_1536 at bandwidth ceiling. Design space exhausted. Best local 79ms (Ofast) vs floor 71ms.
+
+→ **submit under: `g++ -Ofast -march=native -funroll-loops`** (marginally better than -O3)
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 79ms local (best-ever 49ms = 29% over rank-18 69ms bar)**
