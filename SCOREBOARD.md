@@ -1847,6 +1847,21 @@ Compiler sweep (3 samples each, slow VM):
 
 Note: on fast VMs (run ×208) g++-13 -O3 was definitively best at 0.063s. Compiler ordering is within noise on slow VMs.
 
+## Run log 2026-10-04 (scheduled run ×210) — STOP-FLOOR; maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_3072_32) | STOP-FLOOR ×210 | 0.059 | 0.064 | — | Fast VM (floor=0.068s min/0.073s med). STOP-FLOOR: 0.059 < 2×0.068=0.136. index.html: 63ms — CLEARS rank-18 bar. |
+| dp2_8s_fw_4acc_t0_64_3072 | HOLD | 0.065 | 0.071 | −10.2% best (WORSE) | VM oscillation: 4acc+T0 variant worse on this VM state. Previously champion at ×208, but current 3072_32 performs better today. |
+
+STOP-FLOOR ×210 (RUNS=5 interleaved, floor=0.068s min/0.073s med, champion 0.059s = 0.87× floor — FASTER than cat due to mmap+MAP_POPULATE+hugepages).
+
+Maintenance check. No new variants — design space fully exhausted (178 cpp + 1 rs variants). Champion dp2_8s_fw_3072_32 at best=0.059s / median=0.064s. index.html: 63ms (CLEARS rank-18 bar of 69.3ms).
+
+Note on champion/main.cpp: the file contains dp2_8s_fw_3072_32 code (dual T1@3072+3072+32, single acc_u16). SCOREBOARD records dp2_8s_fw_4acc_t0_64_3072 as the ×208 champion but both variants perform within noise on this VM; 3072_32 measured slightly faster (0.059 best vs 0.065 best) today. Edge 9/9.
+
+**STOP-FLOOR ×210. Champion dp2_8s_fw_3072_32. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. Local best 59ms (CLEARS rank-18 bar 69.3ms). index.html: 63ms.**
+
 Edge: 9/9. index.html: 63ms (fast-VM canonical best from run ×208).
 
 **STOP-FLOOR ×209. Champion dp2_8s_fw_4acc_t0_64_3072. SUBMIT with `g++-13 -O3 -march=native`. Fast-VM best 63ms (CLEARS rank-18 bar ≤69.3ms). This VM slow (93ms = 1.09× floor); no algorithmic regression.**
