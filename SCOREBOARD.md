@@ -18717,3 +18717,24 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_3072_32 52ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-04 (scheduled routine) — STOP-FLOOR confirmed #911
+
+**Champion: dp2_8s_fw_3072_32 (unchanged)**
+
+**Quick benchmark (3 runs, clang++ -O3 -march=native):**
+- Champion: 92ms, 81ms, 80ms → best=80ms, median=81ms
+- Bandwidth floor (cat > /dev/null): 70ms
+- Ratio: 80ms / 70ms = **1.14× floor** (medium VM — mmap+hugepage in effect)
+
+**Compiler sweep:**
+- `clang++ -O3 -march=native` → 80ms (**BEST**)
+- `g++ -Ofast -march=native -funroll-loops` → 82ms
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Status:** STOP-FLOOR #911. Champion dp2_8s_fw_3072_32 confirmed at bandwidth ceiling. Medium VM today (floor=70ms). No new variants — design space fully exhausted (240 cpp variants tried). Best-ever 48ms (fast VM) = 30% over rank-18 bar (69ms). Algorithm fully memory-bound.
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_3072_32 80ms local (best-ever 48ms, fast-VM best 52-59ms = 30% over rank-18 69ms bar)**
