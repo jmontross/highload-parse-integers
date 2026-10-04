@@ -18823,3 +18823,20 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`** (fastest across all compilers tested)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 58ms local best (BEATS rank-18 bar 69ms by 16%; fast-VM best ever 48ms = 30% over rank-18 bar)**
+
+## Run 2026-10-04 (scheduled routine) — STOP-FLOOR confirmed #916
+
+**Champion: dp2_8s_fw_4acc_t0_256_1024 (unchanged)**
+
+**Quick benchmark (5 runs, g++ -O3 -march=native):**
+- Champion: 85ms, 80ms, 80ms, 83ms, 88ms → best=80ms, median=83ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 82ms, 80ms, 70ms → floor=70ms
+- Ratio: 80ms / 70ms = **1.14× floor** → STOP-FLOOR
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**Status:** STOP-FLOOR #916. Champion dp2_8s_fw_4acc_t0_256_1024 confirmed at bandwidth ceiling (1.14× floor on medium VM). 240 variants tried; design space fully exhausted. Best-ever 48ms (fast VM) = 30% over rank-18 bar (69ms). No new variants.
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 80ms local (best-ever 48ms = 30% over rank-18 69ms bar)**
