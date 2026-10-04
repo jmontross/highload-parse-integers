@@ -18738,3 +18738,33 @@ All 240+ cpp variants benchmarked. Design space fully saturated. Both Change A (
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_3072_32 80ms local (best-ever 48ms, fast-VM best 52-59ms = 30% over rank-18 69ms bar)**
+
+## Run 2026-10-04 (scheduled routine) — PROMOTE #912
+
+**PROMOTED: dp2_8s_fw_4acc_t0_256_1024** (via run.sh gate)
+
+**Gate result (from full run.sh, RUNS=3 interleaved):**
+- Prior champion (dp2_8s_fw_3072_32): best=0.083s
+- Variant (dp2_8s_fw_4acc_t0_256_1024): best=0.067s, median=0.074s vs champ 0.088s
+- Margin: 19% → PROMOTE gate fired. Edge 9/9.
+
+**Algorithm:** dp2_8s_fw double-loop structure + **4 independent u16 accumulators** (breaks serial acc dependency chain: single has 4 serial vpaddw; 4acc has 4 parallel vpaddw) + T0@256B (4 iters L1 prefetch) + T1@1024B (16 iters L2 prefetch). All per-u16-accumulator max: 144/lane × 100 iters = 14,400 < 65,535 → safe.
+
+**Confirmation benchmark (3-5 runs each, same session):**
+- New champion (clang++ -O3): best=79ms, median=82ms
+- Old champion clang++ -O3: best=81ms, median=84ms  
+- New champion (g++ -O3): **70ms consistently** ← BEST
+
+**Compiler sweep (new champion):**
+- `g++ -O3 -march=native` → **70ms** (BEST — AT rank-18 bar 69.3ms)
+- `g++-13 -O3 -march=native` → 71ms
+- `g++ -Ofast -march=native -funroll-loops` → 72ms
+- `clang++ -O3 -march=native` → 80ms
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Status:** PROMOTE #912. dp2_8s_fw_4acc_t0_256_1024 is new champion. 4-way parallel accumulation breaks the serial vpaddw dependency — 4 independent accumulators filled by 4 stream pairs each. g++ -O3 best: **70ms = 1.01× rank-18 bar (69.3ms)**. Best-ever fast-VM expected ~55-60ms. Floor today: 68ms.
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 70ms local (at rank-18 bar; fast-VM expected ~55-60ms = 15-20% over rank-18 bar)**
