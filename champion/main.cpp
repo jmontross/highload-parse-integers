@@ -1,9 +1,11 @@
-// dp2_8s_fw_4acc_t0_256_1024.cpp — T0@256B (4 iters) + T1@1024B (16 iters ~107ns at 3GHz).
-// Same prefetch distances as champion (T0@256B + T1@1024B), judge-tuned.
-// 4 independent accumulators break the serial dependency chain on acc_u16:
-//   single: acc += pair01; acc += pair23; acc += pair45; acc += pair67; (4 serial adds)
-//   4acc:   acc0 += pair01; acc1 += pair23; acc2 += pair45; acc3 += pair67; (4 parallel)
-// Each accumulator sees max 144/lane/iter × 100 iters = 14,400 < 65,535 → safe.
+// dp2_8s_fw_4acc_t0_256_3072.cpp — 4acc + T0@256B (4 iters, L2->L1) + T1@3072B (48 iters, DRAM->L2).
+// Champion dp2_8s_fw_t0_t1 uses ONE acc_u16 with 4 serial _mm256_add_epi16 calls:
+//   acc_u16 += cvt(r01); acc_u16 += cvt(r23); acc_u16 += cvt(r45); acc_u16 += cvt(r67)
+// These create a 4-deep serial dependency chain (~4 cycles each = 16 cycles latency).
+// Single-acc T0+T1 grid exhausted at x108 (T0@{64..512} x T1@{512..8192}B).
+// 4acc_t0t1 champion uses T0@512; this fills T0@256 gap in 4acc T0@{64,128,256,512}xT1@3072 grid.
+// Theory: freeing acc from serial chain lets OOO overlap widen with CTZ/PSHUF work.
+// Overflow: 1 pair x max 108/lane x 100 iters = 10,800 < 65,535. T0@256 = 4 iters lookahead.
 
 #include <cstdio>
 #include <cstdint>
@@ -71,15 +73,6 @@ static inline __m128i tree4(
     __m128i s0, __m128i s1, __m128i s2, __m128i s3)
 {
     return _mm_add_epi8(_mm_add_epi8(s0, s1), _mm_add_epi8(s2, s3));
-}
-
-static __attribute__((noinline)) void
-widen_4acc(__m256i& a0, __m256i& a1, __m256i& a2, __m256i& a3, uint64_t* wide_acc) {
-    __m256i sum = _mm256_add_epi16(_mm256_add_epi16(a0, a1), _mm256_add_epi16(a2, a3));
-    alignas(32) uint16_t lanes[16];
-    _mm256_store_si256((__m256i*)lanes, sum);
-    for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
-    a0 = a1 = a2 = a3 = _mm256_setzero_si256();
 }
 
 static inline uint64_t nl_mask64(const unsigned char* p) {
@@ -241,8 +234,9 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// 4 independent per-pair u16 accumulators: T0@256B + T1@1024B per stream.
-// Removes serial dependency chain through single acc_u16.
+// 4 independent per-pair accumulators + T0@256B (near, L1) + T1@3072B (far, L2).
+// acc0=streams(0,1), acc1=streams(2,3), acc2=streams(4,5), acc3=streams(6,7).
+// Independence eliminates the 4-deep serial chain on acc_u16 in champion.
 #define ITER_BODY(PFD) \
     _mm_prefetch((const char*)(p0 + 256), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
@@ -282,6 +276,15 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     acc2 = _mm256_add_epi16(acc2, _mm256_cvtepu8_epi16(_mm_add_epi8(r4, r5))); \
     acc3 = _mm256_add_epi16(acc3, _mm256_cvtepu8_epi16(_mm_add_epi8(r6, r7))); \
     }
+
+static __attribute__((noinline)) void
+widen_4acc(__m256i& a0, __m256i& a1, __m256i& a2, __m256i& a3, uint64_t* wide_acc) {
+    __m256i sum = _mm256_add_epi16(_mm256_add_epi16(a0, a1), _mm256_add_epi16(a2, a3));
+    alignas(32) uint16_t lanes[16];
+    _mm256_store_si256((__m256i*)lanes, sum);
+    for (int k = 0; k < 10; k++) wide_acc[k] += lanes[k];
+    a0 = a1 = a2 = a3 = _mm256_setzero_si256();
+}
 
 static uint64_t solve(const unsigned char* data, size_t size) {
     if (size == 0) return 0;
@@ -328,17 +331,19 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         __m256i acc2 = _mm256_setzero_si256();
         __m256i acc3 = _mm256_setzero_si256();
 
+        // Double-loop: outer iterates widen groups, inner exactly 100 iters.
+        // Per-acc overflow: 1 pair × max 108/lane × 100 iters = 10,800 < 65,535.
         size_t groups = safe_iters / 100;
         size_t remain = safe_iters % 100;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(1024)
+                ITER_BODY(3072)
             }
             widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
         }
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(1024)
+            ITER_BODY(3072)
         }
         widen_4acc(acc0, acc1, acc2, acc3, wide_acc);
 
@@ -346,8 +351,8 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
 #define STREAM_TAIL(pi, bi, ei) \
         while ((pi) + 96 < (ei)) { \
-            __m128i r = process_window_dp((pi), (bi), nl_mask64(pi)); \
-            acc0 = _mm256_add_epi16(acc0, _mm256_cvtepu8_epi16(r)); \
+            acc0 = _mm256_add_epi16(acc0, \
+                _mm256_cvtepu8_epi16(process_window_dp((pi), (bi), nl_mask64(pi)))); \
             (pi) += 64; \
         } \
         widen_4acc(acc0, acc1, acc2, acc3, wide_acc); \

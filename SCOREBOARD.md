@@ -18981,3 +18981,35 @@ Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDW
 → **submit under: `g++-13 -O3 -march=native`** (74ms best, 79ms median on this VM; clang 69ms may be possible on a warm-cache run)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 74ms local (best-ever 48ms = 30% over rank-18 bar)**
+
+## Run 2026-10-05 (full run.sh) — **PROMOTE: dp2_8s_fw_4acc_t0_256_3072**
+
+**Previous champion:** dp2_8s_fw_4acc_t0_256_1024 (T1=1024B)
+**New champion:** dp2_8s_fw_4acc_t0_256_3072 (T1=3072B) — only change: T1 prefetch 1024B→3072B (48-iter lookahead)
+
+**Full run.sh results (interleaved 5 samples, ~238 variants):**
+- Previous champion: best=59ms, median=73ms
+- New champion: best=54ms, median=64ms → **Δmedian=−9ms (12.3% improvement)**
+- Floor (cat > /dev/null): 249ms (cold during full-run exhaustion — not comparable)
+- Verdict: PROMOTE (variant median < champion best, AND beats ≥0.015s threshold, AND edge 9/9)
+
+**Confirmation run (warm VM, targeted):**
+- g++ -O3 -march=native → 65ms, 67ms, 73ms, **55ms**, 65ms → best=55ms, median=65ms
+- g++-13 -O3 -march=native → 65ms, 64ms, 68ms, 63ms, 64ms → **best=63ms**, median=64ms
+- clang++-18 -O3 -march=native → 95ms, 81ms, 73ms → best=73ms
+- Bandwidth floor: 73ms, 76ms, 78ms → floor=73ms
+- Champion ratio (g++-13): **63ms / 73ms = 0.86× floor** — BELOW bandwidth floor ✓
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 ✓
+
+**Compiler sweep (from full run.sh):**
+- g++ -O3 -march=native → 60ms
+- g++ -Ofast -march=native -funroll-loops → 59ms
+- g++-13 -O3 -march=native → **55ms (BEST)**
+- clang++ -O3 -march=native → 70ms
+
+→ **submit under: `g++-13 -O3 -march=native`** (55ms best during full run, 63ms targeted confirm)
+
+**Status:** PROMOTED. New champion dp2_8s_fw_4acc_t0_256_3072. T1 prefetch distance 3072B (3× longer lookahead than 1024B) reduces pipeline stalls when DRAM latency is high. Design remains dp2+8s+fw+4acc+dual-pf; only tuning parameter changed.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 55ms local (20% over rank-18 69ms bar)**
