@@ -19086,3 +19086,19 @@ Correctness: 53687387166542798 ✓ | Edge: 9/9
 → **submit under: `g++ -O3 -march=native`**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (best-ever 64ms = CLEARS rank-18 bar 69.3ms)**
+
+## Run 2026-10-05 (full run.sh PROMOTE → failed confirmation) — HOLD
+
+**Context:** Full run.sh (RUNS=3, 240+ variants, floor=271ms cold sweep) issued PROMOTE for `dp2_8s_fw_6144_32`:
+- Full-run timings: variant best=74ms vs champion best=78ms (Δ=4ms, "significant" vs cold floor)
+- Edge: 9/9
+
+**Targeted confirmation (warm VM, 5 runs each):**
+- New candidate (dp2_8s_fw_6144_32, g++): 81ms, 105ms, 85ms, 84ms, 123ms → **best=81ms**, median=~85ms
+- Old champion (dp2_8s_fw_4acc_t0_256_3072, g++): 78ms, 78ms, 83ms, 77ms, 77ms → **best=77ms**, median=78ms
+- Bandwidth floor: 76ms, 76ms, 93ms → floor=76ms
+
+**Verdict: HOLD** — targeted confirmation failed; old champion 77ms best vs new variant 81ms best. Promotion was cold-run artifact. **Champion reverted to dp2_8s_fw_4acc_t0_256_3072**.
+
+The `dp2_8s_fw_6144_32` dual-offset 6144B prefetch does not improve over the 3072B variant on this VM.
+Design space remains fully saturated.
