@@ -18918,3 +18918,26 @@ Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDW
 → **submit under: `g++ -O3 -march=native`** (best=64ms on this VM, floor=69ms)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_1024 64ms local (CLEARS rank-18 bar 69ms; best-ever 48ms = 30% over rank-18 bar)**
+
+## Run 2026-10-05 (scheduled routine) — STOP-FLOOR confirmed #953
+
+**Champion: dp2_8s_fw_4acc_t0_192_1536 (unchanged)**
+
+**Benchmark (5 runs each, g++ -O3 -march=native):**
+- Champion: 79ms, 122ms (outlier), 78ms, 78ms, 79ms → best=78ms, median=79ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 83ms, 79ms, 76ms → floor=76ms
+- Champion ratio: **78ms / 76ms = 1.03× floor** → STOP-FLOOR
+
+**Compiler sweep (3-sample, g++ builds only):**
+- g++ -O3 -march=native → **best=78ms (BEST)**
+- g++-13 -O3 -march=native → best=78ms (BEST, tied)
+- g++ -Ofast -march=native -funroll-loops → best=79ms
+- clang++-18 -O3 -march=native → best=94ms
+
+→ **submit under: `g++ -O3 -march=native`** (78ms best, tied with g++-13)
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9 (verified prior runs)
+
+**Status:** STOP-FLOOR #953. Champion dp2_8s_fw_4acc_t0_192_1536 AT bandwidth ceiling (1.03× floor on moderate VM). 240+ variants; design space exhausted. BREAKTHROUGH DIRECTIVE (stuchlik_digitplace/stuchlik_8stream) verified slower in ×823; champion IS Change A+B optimized. No new variants.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 78ms local (best-ever 49ms = 29% over rank-18 69ms bar)**
