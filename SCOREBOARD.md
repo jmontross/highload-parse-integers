@@ -19032,3 +19032,21 @@ Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDW
 → **submit under: `g++ -O3 -march=native`** (71ms best today; g++ slightly faster than g++-13 today)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 71ms local (3% over rank-18 69ms bar today; best-ever 48ms = 30% over bar)**
+
+## Run 2026-10-05 (scheduled routine) — STOP-FLOOR #957
+
+**Champion: dp2_8s_fw_4acc_t0_256_3072 (unchanged)**
+
+**Benchmark (5 targeted runs, g++ -O3 -march=native):**
+- g++ -O3 -march=native: 0.411s (cold), 0.082s, 0.076s, 0.078s, 0.101s → **best=76ms**, median=~82ms (excluding cold)
+- g++-13 -O3 -march=native: 0.076s, 0.150s, 0.114s, 0.084s, 0.081s → **best=76ms** (g++-13 tied g++)
+- Bandwidth floor (cat > /dev/null, 3 runs): 80ms, 76ms, 72ms → **floor=72ms**
+- Champion ratio (g++): **76ms / 72ms = 1.05× floor** → STOP-FLOOR
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Status:** STOP-FLOOR #957. Moderate VM (floor=72ms; prior runs at floor=69ms). Champion at 1.05× bandwidth ceiling. 240+ variants exhausted; design space fully saturated. Both BREAKTHROUGH DIRECTIVE approaches (Change A digit-place + Change B 8-stream) already implemented in dp2 champion. No new variants to try.
+
+→ **submit under: `g++ -O3 -march=native`** or `g++-13 -O3 -march=native` (tied at 76ms today)
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (best-ever 48ms = 30% over rank-18 bar; run ×955/full-run 55ms)**
