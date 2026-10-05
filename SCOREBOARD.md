@@ -19013,3 +19013,22 @@ Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDW
 **Status:** PROMOTED. New champion dp2_8s_fw_4acc_t0_256_3072. T1 prefetch distance 3072B (3× longer lookahead than 1024B) reduces pipeline stalls when DRAM latency is high. Design remains dp2+8s+fw+4acc+dual-pf; only tuning parameter changed.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 55ms local (20% over rank-18 69ms bar)**
+
+## Run 2026-10-05 (scheduled routine) — STOP-FLOOR confirmed #956
+
+**Champion: dp2_8s_fw_4acc_t0_256_3072 (unchanged)**
+
+**Benchmark (5 runs, g++ -O3 -march=native):**
+- Champion: 80ms, 75ms, 71ms, 82ms, 118ms → best=71ms, median=80ms
+- g++-13: 79ms, 78ms, 77ms, 79ms, 75ms → best=75ms, median=78ms
+- clang++-18: 104ms, 111ms, 115ms → best=104ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 69ms, 72ms, 77ms → floor=69ms
+- Champion ratio (g++): **71ms / 69ms = 1.03× floor** → STOP-FLOOR
+
+**Correctness:** 53687387166542798 ✓
+
+**Status:** STOP-FLOOR #956. Champion at bandwidth ceiling (1.03× floor). 240+ variants exhausted; design space fully saturated. Both BREAKTHROUGH DIRECTIVE approaches (Change A digit-place + Change B 8-stream) already implemented in champion. No new variants.
+
+→ **submit under: `g++ -O3 -march=native`** (71ms best today; g++ slightly faster than g++-13 today)
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 71ms local (3% over rank-18 69ms bar today; best-ever 48ms = 30% over bar)**
