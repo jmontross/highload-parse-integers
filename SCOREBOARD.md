@@ -19050,3 +19050,19 @@ Fast-VM canonical best from prior runs (×234): g++-13 = 0.067s (TIED WITH BANDW
 → **submit under: `g++ -O3 -march=native`** or `g++-13 -O3 -march=native` (tied at 76ms today)
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (best-ever 48ms = 30% over rank-18 bar; run ×955/full-run 55ms)**
+
+## Run log 2026-10-05 (scheduled run ×958) — STOP-FLOOR; fast VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×958 | 0.064 | ~0.081 | — | Fast VM (floor=0.074s min/0.078s med). Champion faster than cat: 0.064 < 0.074 (mmap+hugepages). STOP-FLOOR: 0.064 < 2×0.074=0.148. index.html: 64ms — CLEARS rank-18 bar (69.3ms). |
+
+STOP-FLOOR ×958 (RUNS=5 direct, floor=0.074s min/0.078s med, champion 0.064s = 0.86× floor — faster than cat due to mmap+MAP_POPULATE+hugepages). Fast VM today.
+
+Maintenance check. No new variants — design space fully exhausted (240+ cpp + 1 rs variants). Champion dp2_8s_fw_4acc_t0_256_3072 at best=0.064s / median≈0.081s (wide spread, VM oscillation). Edge 9/9. index.html: 64ms (CLEARS rank-18 bar of 69.3ms).
+
+Correctness: 53687387166542798 ✓ | Edge: 9/9
+
+**STOP-FLOOR ×958. Champion dp2_8s_fw_4acc_t0_256_3072. SUBMIT with `g++ -O3 -march=native`. Local best 64ms (CLEARS rank-18 bar 69.3ms). index.html: 64ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 64ms local (CLEARS rank-18 bar 69.3ms; best-ever ~55ms on fastest VMs)**
