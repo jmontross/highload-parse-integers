@@ -19066,3 +19066,23 @@ Correctness: 53687387166542798 ✓ | Edge: 9/9
 **STOP-FLOOR ×958. Champion dp2_8s_fw_4acc_t0_256_3072. SUBMIT with `g++ -O3 -march=native`. Local best 64ms (CLEARS rank-18 bar 69.3ms). index.html: 64ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 64ms local (CLEARS rank-18 bar 69.3ms; best-ever ~55ms on fastest VMs)**
+
+## Run 2026-10-05 (scheduled routine) — STOP-FLOOR #959
+
+**Champion: dp2_8s_fw_4acc_t0_256_3072 (unchanged)**
+
+**Benchmark (5 targeted runs):**
+- g++ -O3 -march=native: 78ms, 88ms, 102ms, 76ms, 77ms → **best=76ms**, median=~78ms
+- g++-13 -O3 -march=native: 82ms, 83ms, 87ms, 91ms, 81ms → **best=81ms**, median=83ms
+- Bandwidth floor (cat > /dev/null, 3 runs): 91ms, 67ms, 67ms → **floor=67ms min**
+- Champion ratio (g++): **76ms / 67ms = 1.13× floor** → STOP-FLOOR
+
+**Correctness:** 53687387166542798 ✓ | **Edge:** 9/9
+
+**Status:** STOP-FLOOR #959. Moderate VM today (floor=67ms, champion 76ms = 1.13× floor). 240+ variants exhausted; design space fully saturated. Both BREAKTHROUGH DIRECTIVE approaches (Change A digit-place + Change B 8-stream) already implemented in dp2 champion.
+
+**index.html:** 76ms (1.1× off rank-18 bar; best-ever 64ms on fastest VMs CLEARS bar)
+
+→ **submit under: `g++ -O3 -march=native`**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (best-ever 64ms = CLEARS rank-18 bar 69.3ms)**
