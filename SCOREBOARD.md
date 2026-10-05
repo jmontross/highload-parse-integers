@@ -19102,3 +19102,21 @@ Correctness: 53687387166542798 ✓ | Edge: 9/9
 
 The `dp2_8s_fw_6144_32` dual-offset 6144B prefetch does not improve over the 3072B variant on this VM.
 Design space remains fully saturated.
+
+## Run log 2026-10-05 (scheduled run ×960) — STOP-FLOOR; moderate VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×960 | 0.091 | 0.093 | — | Moderate VM (floor=0.066s min/0.069s med). Ratio=1.38× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×960. Moderate VM today (floor min=0.066s, med=0.069s; champion g++ -O3 best=0.091s med=0.093s = 1.38× floor). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at T0@256B/T1@3072B) fully implemented in champion dp2_8s_fw_4acc_t0_256_3072. Design space saturated: 240+ cpp + 1 rs variants exhausted.
+
+Compiler comparison (3-sample each):
+- g++ -O3 -march=native → 0.091s best (**BEST**)
+- g++-13 -O3 -march=native → 0.092s best (tied within noise)
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 0.091s / 50M = 1.82 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VM (runs ×955/×958: 55–64ms) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+**STOP-FLOOR ×960. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 91ms (moderate VM, 1.38× floor 66ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
