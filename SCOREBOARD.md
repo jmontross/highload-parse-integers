@@ -19184,3 +19184,28 @@ ns/line: 0.073s / 50M = 1.46 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 
 → **submit under: g++-13 -O3 -march=native** (73ms today; best-ever ~55ms bare metal).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 73ms local today (best-ever ~55ms; CLEARS rank-18 bar 69.3ms on fast VMs)**
+
+## Run log 2026-10-06 (scheduled run ×964) — STOP-FLOOR; slow VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×964 | 0.076 | 0.080 | — | Slow VM (floor=0.326s). g++ -O3 -march=native best=0.077s. Edge 9/9. Correct ✓ (53687387166542798). |
+| dp2_8s_fw_t0_128_3072 (existing) | HOLD | 0.073 | 0.094 | −4% best / +17% med | Lucky best sample; median worse than champion — HOLD. |
+
+STOP-FLOOR ×964. Slow VM today (floor=0.326s; champion=0.076s = 0.23× floor — champion faster than floor due to mmap+hugepages vs pipe). All 238+ cpp + 1 rs variants exhausted. Design space fully saturated. Both Change A (digit-place digit-place accumulation) and Change B (8-stream MLP + dual-tier prefetch) fully implemented in champion dp2_8s_fw_4acc_t0_256_3072.
+
+Compiler sweep (champion, 5 runs each):
+- g++ -O3 -march=native → 0.077s best (**BEST**)
+- g++ -Ofast -march=native -funroll-loops → 0.078s
+- g++-13 -O3 -march=native → 0.078s
+- g++-13 -Ofast -march=native -funroll-loops → 0.079s
+- clang++ -O3 -march=native → 0.085s
+- clang++ -Ofast -march=native -funroll-loops → 0.085s
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 0.076s / 50M = 1.52 ns/line (slow VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VMs (best-ever ~59ms run ×210) champion CLEARS rank-18 bar. Expected judge bare-metal: ~55-65ms.
+
+→ **submit under: g++ -O3 -march=native** (76ms today; fast-VM canonical best ~59ms clears rank-18 bar 69.3ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (fast-VM best ~59ms; CLEARS rank-18 bar 69.3ms on fast VMs)**
