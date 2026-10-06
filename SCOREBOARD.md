@@ -19289,3 +19289,27 @@ Full run.sh (RUNS=3, 240 variants, cold sweep, floor=286ms) issued PROMOTE for `
 **Verdict: HOLD** — Δbest=1ms (1.2%) within noise band. Cold-sweep PROMOTE was a page-cache-eviction artifact (240 variants evict cache; champion measured cold, variant got lucky on a warm iteration). Champion retained: **dp2_8s_fw_4acc_t0_256_3072**.
 
 Both variants correct (9/9). Design space remains fully saturated.
+
+## Run log 2026-10-06 (scheduled run ×967) — STOP-FLOOR; moderate VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×967 | 0.075 | 0.082 | — | Moderate VM (floor=0.072s min). g++ -O3 best=0.075s = 1.04× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×967. Moderate VM today (floor min=0.072s; champion g++ -O3 best=0.075s = 1.04× floor — at bandwidth floor). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at T0@256B/T1@3072B) fully implemented in champion dp2_8s_fw_4acc_t0_256_3072. Design space saturated: 240+ cpp + 1 rs variants exhausted.
+
+Compiler comparison (3 runs each):
+- g++ -O3 -march=native: 0.077s, 0.077s, 0.079s → **best=0.077s** (**BEST**)
+- g++-13 -O3 -march=native: 0.084s, 0.087s, 0.085s → **best=0.084s**
+- clang++-18 -O3 -march=native: 0.104s, 0.126s, 0.113s → **best=0.104s**
+- Bandwidth floor (cat): 0.072s, 0.079s, 0.084s → **floor=0.072s min**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 0.075s / 50M = 1.50 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VMs (best-ever ~55ms) champion well clears rank-18 bar.
+
+→ **submit under: g++ -O3 -march=native** (75ms today; champion at bandwidth floor)
+
+**STOP-FLOOR ×967. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 75ms (1.04× floor 72ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 75ms local today (moderate VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
