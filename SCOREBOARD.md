@@ -19420,3 +19420,25 @@ ns/line: 78ms / 50M = 1.56 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69
 **STOP-FLOOR ×971. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 78ms (moderate VM, 1.16× floor 67ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 78ms local today (moderate VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
+
+## Run log 2026-10-06 (scheduled run ×971 — full run.sh, false PROMOTE correction)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×971 | 0.079 | 0.084 | — | Direct test (floor=78ms min). Champion 1.01× floor. |
+| dp2_8s_fw_t0_256 | FALSE-PROMOTE (not applied) | 0.076 | 0.082 | +3.8% | run.sh gate fired under VM load (champion=81ms, cand=73ms). Interleaved re-run: cand best=76ms vs champ best=78ms → within ±3ms jitter → HOLD. Not copied to champion. |
+
+Full run.sh complete (238 variants, ran under heavy VM build load). run.sh PROMOTE gate fired for dp2_8s_fw_t0_256 (T0@256B+T1@3072B, single acc) based on VM-loaded timing: champion 81ms vs candidate 73ms (9.9%). Per rules, confirmation required.
+
+Confirmation interleaved test (5 pairs, unloaded VM, floor=78ms):
+- dp2_8s_fw_t0_256 (cand): 86, 82, 87, 76, 82ms → best=76ms, median=82ms
+- champion (dp2_8s_fw_4acc_t0_256_3072): 85, 78, 79, 86, 84ms → best=78ms, median=84ms
+- floor (cat): 87, 78, 85ms → best=78ms
+
+Δbest=2ms = within jitter band (noise ≈ ±3ms). Classic false PROMOTE: candidate appears better under VM build load due to timing order (candidate runs before champion in a lower-load window). NOT a genuine win. Champion unchanged.
+
+Also: direct 5-run non-interleaved (earlier in run): candidate [106,80,87,82,81] best=80ms; champion [90,93,86,85,79] best=79ms → champion narrowly wins. Confirms HOLD.
+
+Note: both variants use identical T0@256B + T1@3072B prefetch distances; the only difference is single-acc vs 4-acc. Within noise on this hardware. Champion (4-acc) retained for its theoretically lower serial dependency latency.
+
+**STOP-FLOOR ×971. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. run.sh false PROMOTE for dp2_8s_fw_t0_256 not applied. SUBMIT with `g++ -O3 -march=native`. VM best 78ms (floor=78ms = AT bandwidth ceiling). Expected judge: ~50-65ms bare metal (CLEARS rank-18 bar ≤69.3ms).**
