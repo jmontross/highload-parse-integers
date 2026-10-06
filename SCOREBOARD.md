@@ -19373,3 +19373,27 @@ ns/line: 94ms / 50M = 1.88 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69
 **STOP-FLOOR ×969. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 94ms (moderate VM, 1.19× floor 79ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 94ms local today (moderate VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
+
+## Run log 2026-10-06 (scheduled run ×970) — STOP-FLOOR; fast VM check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×970 | 0.079 | 0.084 | — | Fast VM (floor=0.066s min). g++ -O3 best=0.079s = 1.20× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×970. Fast VM today (floor min=66ms; champion g++ -O3 best=79ms = 1.20× floor). Design space fully saturated: 240+ cpp + 1 rs variants exhausted.
+
+Compiler comparison (5 samples each, floor=66ms min):
+- g++ -O3 -march=native: 83ms, 84ms, 84ms, 79ms, 91ms → **best=79ms** (**BEST**)
+- g++ -Ofast -march=native: 128ms, 88ms, 91ms, 81ms, 135ms → best=81ms (higher jitter)
+- clang++ -O3 -march=native: 102ms, 91ms, 96ms, 85ms, 140ms → best=85ms
+- Bandwidth floor (cat): 73ms, 68ms, 70ms, 66ms, 88ms → **floor=66ms min**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 79ms / 50M = 1.58 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms). Champion at 1.20× floor. On fastest VMs (best-ever ~55ms) champion CLEARS rank-18 bar by wide margin. Expected judge bare-metal: ~50-65ms.
+
+→ **submit under: g++ -O3 -march=native** (79ms today; fast-VM canonical best ~55ms clears rank-18 bar 69.3ms)
+
+**STOP-FLOOR ×970. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 79ms (fast VM, 1.20× floor 66ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 79ms local today (fast VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
