@@ -19313,3 +19313,17 @@ ns/line: 0.075s / 50M = 1.50 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 
 **STOP-FLOOR ×967. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 75ms (1.04× floor 72ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 75ms local today (moderate VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
+
+## Run log 2026-10-06 (background run.sh ×967b) — False PROMOTE (cold-sweep artifact); HOLD
+
+Full run.sh (RUNS=3, 240+ variants, cold sweep, floor=0.431s) issued PROMOTE for `dp2_8s_fw_t0_64_640`:
+- Cold-sweep timings: variant best=0.061s vs champion best=0.064s (Δ=3ms, 4.7%; median also lower in full sweep)
+
+**Targeted 7-round interleaved (g++-13 -O3 -march=native, warm VM, floor=0.069s min):**
+- Champion: 0.126, 0.070, 0.067, 0.068, 0.067, 0.074, 0.084 → **min=0.067s**, med≈0.070s
+- Variant: 0.114, 0.066, 0.068, 0.065, 0.066, 0.094, 0.092 → **min=0.065s**, med≈0.068s
+- Δmin=2ms (3%) — WITHIN noise band; rounds 6-7 variant SLOWER (0.094/0.092 vs 0.074/0.084)
+
+**Verdict: HOLD** — Δmin=2ms (3%) is within noise; variant is inconsistently faster. Cold-sweep PROMOTE was a page-cache-eviction artifact (240+ variants evict cache; champion measured cold, variant got lucky warm iterations). Same false-positive pattern as ×824/×816b/×810b/×879/×893b/×966b. Champion unchanged: **dp2_8s_fw_4acc_t0_256_3072**.
+
+Both variants correct (9/9). Design space remains fully saturated. 968 consecutive STOP-FLOOR/HOLD.
