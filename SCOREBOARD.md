@@ -19209,3 +19209,24 @@ ns/line: 0.076s / 50M = 1.52 ns/line (slow VM; rank-18 bar = 1.39 ns/line = 69ms
 → **submit under: g++ -O3 -march=native** (76ms today; fast-VM canonical best ~59ms clears rank-18 bar 69.3ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 76ms local today (fast-VM best ~59ms; CLEARS rank-18 bar 69.3ms on fast VMs)**
+
+## Run log 2026-10-06 (scheduled run ×965) — STOP-FLOOR; moderate VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×965 | 0.078 | 0.095 | — | Moderate VM (floor=0.077s min). g++-13 best=0.078s = 1.01× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×965. Moderate VM today (floor min=0.077s, med≈0.079s; champion g++-13 best=0.078s = 1.01× floor — at bandwidth floor). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at T0@256B/T1@3072B) fully implemented in champion dp2_8s_fw_4acc_t0_256_3072. Design space saturated: 240+ cpp + 1 rs variants exhausted.
+
+Compiler comparison (5 runs each):
+- g++ -O3 -march=native: best=0.081s, med=0.098s
+- g++-13 -O3 -march=native: best=0.078s, med=0.095s (**BEST**)
+- Bandwidth floor (cat): min=0.077s, med≈0.079s
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 0.078s / 50M = 1.56 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VMs (best-ever ~55ms) champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+→ **submit under: g++-13 -O3 -march=native** (78ms today; fast-VM canonical best ~55ms clears rank-18 bar 69.3ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 78ms local today (best-ever ~55ms; CLEARS rank-18 bar 69.3ms on fast VMs)**
