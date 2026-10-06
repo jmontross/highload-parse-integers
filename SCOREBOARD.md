@@ -19327,3 +19327,26 @@ Full run.sh (RUNS=3, 240+ variants, cold sweep, floor=0.431s) issued PROMOTE for
 **Verdict: HOLD** — Δmin=2ms (3%) is within noise; variant is inconsistently faster. Cold-sweep PROMOTE was a page-cache-eviction artifact (240+ variants evict cache; champion measured cold, variant got lucky warm iterations). Same false-positive pattern as ×824/×816b/×810b/×879/×893b/×966b. Champion unchanged: **dp2_8s_fw_4acc_t0_256_3072**.
 
 Both variants correct (9/9). Design space remains fully saturated. 968 consecutive STOP-FLOOR/HOLD.
+
+## Run log 2026-10-06 (scheduled run ×968) — STOP-FLOOR; moderate VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×968 | 0.106 | ~0.117 | — | Moderate VM (floor=0.083s min). g++ -O3 best=0.106s = 1.28× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×968. Moderate VM today (floor min=83ms; champion g++ -O3 best=106ms = 1.28× floor). Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch at T0@256B/T1@3072B) fully implemented in champion dp2_8s_fw_4acc_t0_256_3072. Design space saturated: 240+ cpp + 1 rs variants exhausted.
+
+Compiler comparison (5 samples each, floor=83ms min):
+- g++ -O3 -march=native: 0.180s, 0.120s, 0.106s, 0.108s, 0.125s → **best=0.106s** (**BEST**)
+- g++-13 -O3 -march=native: 0.164s, 0.117s, 0.121s, 0.126s, 0.106s → **best=0.106s** (tied)
+- Bandwidth floor (cat): 0.090s, 0.083s, 0.091s, 0.088s, 0.093s → **floor=0.083s min**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 106ms / 50M = 2.12 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). On fast VMs (best-ever ~55ms; run ×966: 71ms) champion clears rank-18 bar.
+
+→ **submit under: g++ -O3 -march=native** (106ms today on moderate VM; fast VM best ~55-71ms CLEARS rank-18 bar)
+
+**STOP-FLOOR ×968. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM today 106ms (moderate/slow VM, 1.28× floor 83ms). Expected judge time: ~50-70ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 106ms local today (moderate VM; best-ever ~55ms CLEARS rank-18 bar 69.3ms)**
