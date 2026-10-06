@@ -19275,3 +19275,17 @@ ns/line: 0.071s / 50M = 1.42 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms
 **STOP-FLOOR ×966. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best 71ms (at bandwidth floor). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 71ms local today (at bandwidth floor; CLEARS rank-18 bar 69.3ms on fast VMs)**
+
+## Run log 2026-10-06 (background run.sh ×966b) — False PROMOTE (cold-sweep artifact); HOLD
+
+Full run.sh (RUNS=3, 240 variants, cold sweep, floor=286ms) issued PROMOTE for `dp2_8s_fw_t0_64_768`:
+- Cold-sweep timings: variant best=70ms vs champion best=75ms (Δ=5ms; median 76ms vs 96ms)
+
+**Targeted head-to-head (warm VM, 5 runs each, floor=76ms min):**
+- Champion (dp2_8s_fw_4acc_t0_256_3072, g++-13): 86ms, 103ms, 106ms, 115ms, 105ms → **best=86ms**
+- Variant (dp2_8s_fw_t0_64_768, g++-13): 113ms, 85ms, 103ms, 103ms, 86ms → **best=85ms**
+- Bandwidth floor: 83ms, 76ms, 78ms → floor=76ms
+
+**Verdict: HOLD** — Δbest=1ms (1.2%) within noise band. Cold-sweep PROMOTE was a page-cache-eviction artifact (240 variants evict cache; champion measured cold, variant got lucky on a warm iteration). Champion retained: **dp2_8s_fw_4acc_t0_256_3072**.
+
+Both variants correct (9/9). Design space remains fully saturated.
