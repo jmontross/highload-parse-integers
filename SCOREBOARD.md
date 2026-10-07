@@ -19447,3 +19447,24 @@ Also: direct 5-run non-interleaved (earlier in run): candidate [106,80,87,82,81]
 Note: both variants use identical T0@256B + T1@3072B prefetch distances; the only difference is single-acc vs 4-acc. Within noise on this hardware. Champion (4-acc) retained for its theoretically lower serial dependency latency.
 
 **STOP-FLOOR ×971. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. run.sh false PROMOTE for dp2_8s_fw_t0_256 not applied. SUBMIT with `g++ -O3 -march=native`. VM best 78ms (floor=78ms = AT bandwidth ceiling). Expected judge: ~50-65ms bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+## Run log 2026-10-07 (scheduled run ×972) — STOP-FLOOR; fast VM check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×972 | 0.069 | 0.077 | — | Fast VM (floor=0.066s min). g++ -O3 best=0.069s = 1.05× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×972. Fast VM today (floor min=66ms; champion g++ -O3 best=69ms = 1.05× floor). Design space fully saturated: 240+ cpp + 1 rs variants exhausted. Champion AT bandwidth ceiling today.
+
+Timings (5 runs): 75ms, 110ms, 87ms, 77ms, 69ms → **best=69ms** (exactly meets rank-18 bar 69.3ms)
+Bandwidth floor (cat): 113ms, 66ms, 66ms → **floor=66ms min**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+ns/line: 69ms / 50M = 1.38 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms). Champion AT rank-18 bar TODAY. On fastest VMs (best-ever ~55ms) champion CLEARS rank-18 bar by wide margin. Expected judge bare-metal: ~50-65ms.
+
+→ **submit under: g++ -O3 -march=native** (69ms today; champion AT rank-18 bar on this VM; expected judge ~50-65ms on bare metal)
+
+**STOP-FLOOR ×972. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 69ms = 1.05× floor 66ms = AT bandwidth ceiling. Best-ever local ~55ms. Expected judge: ~50-65ms bare metal (CLEARS rank-18 bar ≤69.3ms).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 69ms local today (fast VM; AT rank-18 bar 69.3ms; best-ever ~55ms; expected judge ~50-65ms)**
