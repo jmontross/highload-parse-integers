@@ -19610,3 +19610,30 @@ ns/line: 73ms / 50M = 1.46 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 → **submit under: g++ -O3 -march=native** (consistent; g++-13 noisier today)
 
 **STOP-FLOOR ×978. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 73ms (1.06× floor 69ms). Previous fast-VM best 58ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~50-65ms on bare metal.**
+
+## Run log 2026-10-07 (scheduled run ×979) — STOP-FLOOR; moderate VM (80ms champion, 1.11× floor)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×979 | 0.080 | 0.082 | — | Moderate VM (floor=0.072s min). g++-13 -O3 best=80ms = 1.11× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×979. Moderate VM today (floor min=72ms; champion g++-13 -O3 9-sample best=80ms = 1.11× floor). 979 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation, pshufb-based) and Change B (8-stream MLP + dual T1 prefetch T0@256B/T1@3072B) fully implemented. Design space saturated: 240+ cpp + 1 rs variants exhausted.
+
+Timings (9 samples, g++-13 -O3 -march=native): 88ms, 81ms, 85ms, 82ms, 83ms, 80ms, 98ms, 80ms, 82ms → **best=80ms, med=82ms**
+Bandwidth floor (cat, 5 samples): 99ms(cold), 72ms, 77ms, 75ms, 73ms → **floor min=72ms (warm)**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated.
+
+Compiler sweep (3 samples each):
+- g++ -O3 -march=native → 0.082s best
+- g++ -Ofast -march=native -funroll-loops → 0.077s best
+- g++-13 -O3 -march=native → **0.076s** best (TODAY's sweep winner)
+- g++-13 -Ofast -march=native -funroll-loops → 0.079s best
+- clang++ -O3 -march=native → 0.090s best
+→ **submit under: g++-13 -O3 -march=native** (consistent historical winner; today 0.076s)
+
+ns/line: 80ms / 50M = 1.60 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). AT bandwidth ceiling (1.11× floor). Expected judge bare-metal: ~50-65ms.
+
+Fast-VM best ever: **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 72ms; champion 80ms; rank-18 bar 69.3ms; champion above bar on today's VM; clears on fast VMs ≤67ms).
+
+**STOP-FLOOR ×979. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best 80ms (moderate VM, 1.11× floor 72ms). Previous fast-VM best 58ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~50-65ms on bare metal.**
