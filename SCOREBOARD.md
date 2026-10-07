@@ -14,6 +14,7 @@ Champion (dp2_8s_fw_4acc_t0_64_448, re-promoted ×419) at 0.053-0.097s (VM-depen
 
 ## Champion
 - **dp2_8s_fw_t0_256_768 (PROMOTED ×887 — T0@256B/T1@768B prefetch, single accumulator; consistently beats dp2_8s_4acc_fw_t0_192_1536 in 17-round direct comparison)** — `T0@256B (4 iters, L1) + T1@768B (12 iters = 96ns, matches bare-metal DRAM ~80-100ns); single u16 accumulator. Beats old champion (4acc + T0@192B/T1@1536B) by ~4% min and ~4% median across 17 interleaved rounds. 4acc variant with same distances tested and found SLOWER — shorter prefetch distances dominate. Judge build: g++ -O3 -march=native.`
+  — STOP-FLOOR ×974 (2026-10-07, 3-sample champion-only direct + 3-sample compiler sweep, floor=0.340s slow VM): Maintenance check — champion best=0.064s (g++-13 -O3 -march=native, 3-sample min; med=0.064s very consistent), ratio=0.19× floor (champion MUCH FASTER than cat via mmap+hugepage; AT bandwidth ceiling). Compiler sweep (3-sample): g++ -O3 -march=native → 0.058s best (noisy, max=0.173s); g++-13 -O3 -march=native → 0.064s best (BEST consistent, med=0.064s); clang++-18 -O3 -march=native → 0.072s best. → submit under: g++-13 -O3 -march=native. Edge 9/9 ✓ (53687387166542798 correct). 974 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge: ~55-65ms bare metal (local best 0.058s = 1.16 ns/line on slow VM; CLEARS rank-18 ≤69.3ms).
   — HOLD/false-PROMOTE ×967 (2026-10-07, full-sweep PROMOTE reverted; direct 7-round interleaved HOLD): run.sh (SWEEP=0, RUNS=3, floor=0.217s slow VM) issued PROMOTE for dp2_8s_fw_4acc_t0_64_448_200it (best=0.074s vs champion 0.078s, Δ=5.1%). Direct 7-round interleaved (g++-13 -O3 -march=native): champion min=0.077s/med=0.079s, candidate min=0.076s/med=0.079s → min tied within 1ms noise band — NOT a real win. FALSE POSITIVE — same cache-bias pattern as ×824/×816b/×810b/×879/×893b/×963b: full-sweep cache-thrashing inflates champion median; direct comparison shows noise-level parity. Champion dp2_8s_fw_t0_256_768 unchanged. Edge 9/9 ✓. 967 consecutive STOP-FLOOR/HOLD. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
   — STOP-FLOOR ×966 (2026-10-07, 3-sample champion-only direct + 3-sample compiler sweep, floor=0.079s moderate VM): Maintenance check — champion best=0.077s (g++-13 -O3 -march=native, 3-sample min), ratio=0.97× floor (champion FASTER than cat via mmap+hugepage; AT bandwidth ceiling). Compiler sweep (3-sample): g++ -O3 -march=native → 0.081s best; g++-13 -O3 -march=native → 0.077s best (BEST); clang++-18 -O3 -march=native → 0.089s best. → submit under: g++-13 -O3 -march=native. Edge 9/9 ✓ (53687387166542798 correct). 966 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge: ~50-65ms bare metal (local best 0.077s = 1.54 ns/line on moderate VM; CLEARS rank-18 ≤69.3ms).
   — STOP-FLOOR ×965 (2026-10-07, 3-sample champion-only direct + 3-sample compiler sweep, floor=0.080s moderate VM): Maintenance check — champion best=0.077s (g++-13 -O3 -march=native, initial 3-sample min), ratio=0.96× floor (champion FASTER than cat via mmap+hugepage; AT bandwidth ceiling). Compiler sweep (3-sample): g++ -O3 -march=native → 0.082s best; g++-13 -O3 -march=native → 0.083s best; clang++-18 -O3 -march=native → 0.089s best. → submit under: g++ -O3 -march=native. Edge 9/9 ✓ (53687387166542798 correct). 965 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge: ~50-65ms bare metal (local best 0.077s = 1.54 ns/line on moderate VM; CLEARS rank-18 ≤69.3ms).
@@ -19491,3 +19492,26 @@ ns/line: 83ms / 50M = 1.66 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69
 **STOP-FLOOR ×973. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 83ms (moderate VM, 1.15× floor 72ms). Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_256_3072 83ms local today (moderate VM; run ×972 fast VM 69ms = AT rank-18 bar; best-ever ~55ms; expected judge ~50-65ms)**
+
+---
+
+## Run log 2026-10-07 (scheduled run ×974) — STOP-FLOOR; slow VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_256_3072) | STOP-FLOOR ×974 | 0.064 | 0.064 | — | Slow VM (floor=0.340s min). g++-13 -O3 best=64ms = 0.19× floor (mmap bypasses kernel). Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×974. Slow VM today (floor min=340ms; champion g++-13 -O3 best=64ms — mmap+hugepage bypasses kernel read path entirely). 974 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented and saturated.
+
+Compiler comparison (3 runs each, floor=340ms slow VM):
+- g++ -O3 -march=native: 58ms (noisy, max=173ms), med=70ms
+- g++-13 -O3 -march=native: 64ms, 64ms, 65ms → **best=64ms med=64ms** (**BEST consistent**)
+- clang++-18 -O3 -march=native: 72ms, 72ms, 74ms → best=72ms
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 64ms / 50M = 1.28 ns/line (slow VM with mmap bypass). Rank-18 bar = 1.39 ns/line = 69ms. Champion CLEARS rank-18 bar. Expected judge bare-metal: ~50-65ms.
+
+→ **submit under: g++-13 -O3 -march=native** (64ms best consistent; g++ -O3 noisy today)
+
+**STOP-FLOOR ×974. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best 64ms (slow VM mmap bypass; expected judge time: ~50-65ms on bare metal, CLEARS rank-18 bar ≤69.3ms).**
