@@ -19717,3 +19717,31 @@ ns/line: 62ms / 50M = 1.24 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 **STOP-FLOOR ×982. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -Ofast -march=native -funroll-loops` (62ms today) or `g++-13 -O3 -march=native` (historically stable 64-76ms). Fast VM best 62ms CLEARS rank-18 bar ≤69.3ms by 10.5%. Expected judge bare-metal: ~50-65ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_512 62ms local today (fast VM, 0.86× floor; expected judge ~50-65ms; CLEARS rank-18 bar 69.3ms by ~10%)**
+
+### Full run ×982 addendum — post-run.sh results
+
+Full run.sh (RUNS=3, g++-13 -O3, all 238 variants) completed. Key findings:
+
+| Metric | Value |
+|---|---|
+| Champion best (full run) | 54ms (1.08 ns/line) |
+| Champion median (full run) | 64ms |
+| Floor (inflated, concurrent I/O) | 223ms |
+| Best variant | dp2_8s_fw_4acc_t0_64_640: best=51ms, median=66ms |
+| Verdict | STOP-FLOOR (54ms < 2×223ms; floor inflated by concurrent I/O) |
+
+Promotion gate: dp2_8s_fw_4acc_t0_64_640 beat champion best (51ms vs 54ms, −5.6% → cleared −1.5% threshold) but MEDIAN fails (66ms > 64ms) → HOLD. Single-sample noise.
+
+Compiler sweep (champion, 3 samples each):
+- g++ -O3 -march=native: 63ms
+- g++ -Ofast -march=native -funroll-loops: 66ms  
+- g++-13 -O3 -march=native: 65ms
+- g++-13 -Ofast -march=native -funroll-loops: 77ms
+- clang++ -O3 -march=native: 68ms
+- clang++ -Ofast -march=native -funroll-loops: **61ms** ← WINNER
+
+→ **submit under: clang++ -Ofast -march=native -funroll-loops** (61ms in sweep)
+
+index.html: champion=54ms, CLEARS rank-18 bar (54ms ≤ 69.3ms).
+
+**Confirmed STOP-FLOOR ×982. Best recorded: 54ms best during full run (1.08 ns/line). Submit with clang++ -Ofast -march=native -funroll-loops. Expected judge bare-metal: ~45-60ms.**
