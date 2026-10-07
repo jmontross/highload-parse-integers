@@ -19637,3 +19637,34 @@ ns/line: 80ms / 50M = 1.60 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69
 Fast-VM best ever: **0.052s = 1.04 ns/line** — clears rank-18 bar ≤69.3ms by 25%. Today's VM moderate (floor 72ms; champion 80ms; rank-18 bar 69.3ms; champion above bar on today's VM; clears on fast VMs ≤67ms).
 
 **STOP-FLOOR ×979. Champion dp2_8s_fw_4acc_t0_256_3072 unchanged. SUBMIT with `g++-13 -O3 -march=native`. VM best 80ms (moderate VM, 1.11× floor 72ms). Previous fast-VM best 58ms (CLEARS rank-18 bar ≤69.3ms). Expected judge time: ~50-65ms on bare metal.**
+
+## Run log 2026-10-07 (scheduled run ×980) — PROMOTE → dp2_8s_fw_t0_128_512; STOP-FLOOR; moderate VM
+
+| Variant | Result | Best(s) | Med(s) | vs old champ best | Note |
+|---|---|---|---|---|---|
+| old champion (dp2_8s_fw_4acc_t0_256_3072) | — | 0.077 | ~0.090 | — | Baseline from run.sh full pass (floor=0.306s cold). |
+| variants/dp2_8s_fw_t0_128_512 | PROMOTE ×980 | 0.074 | ~0.081 | −3.9% best / −10% med | run.sh PROMOTE verdict (edge 9/9 ✓ correct ✓). Confirmed 2 rounds interleaved. |
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×980 | 0.076 | ~0.076 | — | Post-promote sweep best (g++-13 -O3 × 3: 76ms/76ms/76ms — very consistent). Edge 9/9. Correct ✓. |
+
+run.sh (background, all 228 variants): issued PROMOTE for dp2_8s_fw_t0_128_512 — beats old champion best 77ms AND median. Two confirmation rounds confirmed:
+- Round 1 (10 interleaved): new=74ms best, 81ms med; old=77ms best, 90ms med
+- Round 2 (6 interleaved): new=75ms best, 84ms med; old=79ms best, 91ms med
+
+PROMOTE conditions met: new best (74ms) beats old best (77ms) by 3.9% > 1.5% gate; new median (81ms) beats old median (90ms) by 10%; edge 9/9; correct (53687387166542798).
+
+Note: dp2_8s_fw_t0_128_512 uses T0@128B + T1@512B (shorter prefetch distances than old champion T0@256B+T1@3072B). Original file comment said "VM DRAM too slow for T1@512" but today's VM shows it performs better — consistent with the new champion having lower DRAM latency today or the shorter prefetch generating less memory-bus contention under load. Post-promote sweep was very stable (g++-13 3×76ms).
+
+Bandwidth floor (cat, 3 samples): 72ms, 75ms, 70ms → **floor min=70ms**
+STOP-FLOOR: 76ms < 2×70ms=140ms ✓ (1.09× floor).
+
+Post-promote compiler sweep (3 samples each):
+- g++ -O3 -march=native → 0.080s best
+- g++ -Ofast -march=native -funroll-loops → 0.077s best
+- g++-13 -O3 -march=native → **0.076s** best (TODAY's sweep winner; 3×76ms — very consistent)
+- g++-13 -Ofast -march=native -funroll-loops → 0.076s best (tied)
+- clang++ -O3 -march=native → 0.085s best
+→ **submit under: g++-13 -O3 -march=native** (consistent; 76ms today)
+
+ns/line: 76ms / 50M = 1.52 ns/line (moderate VM; rank-18 bar = 1.39 ns/line = 69ms). AT bandwidth ceiling (1.09× floor). Expected judge bare-metal: ~50-65ms.
+
+**STOP-FLOOR ×980. NEW CHAMPION: dp2_8s_fw_t0_128_512 (T0@128B+T1@512B, single-acc). Beats dp2_8s_fw_4acc_t0_256_3072 by 3.9% best / 10% median on today's VM. SUBMIT with `g++-13 -O3 -march=native`. VM best 76ms. Expected judge time: ~50-65ms on bare metal (CLEARS rank-18 bar ≤69.3ms on fast VMs).**
