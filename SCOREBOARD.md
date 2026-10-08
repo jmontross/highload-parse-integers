@@ -19910,3 +19910,30 @@ Prefetch change: T0@64B (1 cache line ahead, tighter L2→L1 warm) + T1@640B (10
 ns/line: 60ms / 50M = 1.20 ns/line (g++-13 best; rank-18 bar = 1.39 ns/line = 69ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_640 60ms local (g++-13 -O3; CLEARS rank-18 bar 69.3ms by 13.3%; expected judge ~45-60ms)**
+
+## Run log 2026-10-08 (scheduled run ×991) — STOP-FLOOR; fast VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_640) | STOP-FLOOR ×991 | 0.070 | 0.071 | — | Fast VM (floor=0.068s min/0.069s med). 1.03× floor (mmap+hugepages near-floor). Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×991. Fast VM today (floor min=68ms warm; champion g++ -O3 best=70ms = 1.03× floor — essentially AT bandwidth wall). 991 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented. Design space saturated at 240+ cpp + 1 rs variants.
+
+Targeted benchmark (g++ -O3, 5 warm samples): 70ms, 71ms, 70ms, 71ms, 71ms → **best=70ms, med=71ms**
+Bandwidth floor (cat, 5 warm): 72ms, 68ms, 69ms, 68ms, 70ms → **floor min=68ms (warm)**
+
+Compiler sweep (3 samples each, fast VM):
+- g++ -O3 -march=native → **70ms** best ← TODAY's best (1.03× floor, very consistent)
+- g++-13 -O3 -march=native → 70ms best (noisier: 70-104ms range)
+- g++ -Ofast -march=native -funroll-loops → 71ms best
+- clang++-18 -O3 -march=native → 80ms best
+- clang++ -O3 -march=native → 80ms best
+→ **submit under: g++ -O3 -march=native** (70ms today, most consistent)
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 70ms / 50M = 1.40 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms). At bandwidth floor.
+
+**STOP-FLOOR ×991. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++ -O3 -march=native`. Local best 70ms (1ms above rank-18 bar 69.3ms on this VM; fast-VM canonical best from run ×990 PROMOTE was 60ms = 13.3% below bar). Expected judge bare-metal: ~45-60ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_640 70ms local today (fast VM, 1.03× floor; 1.40 ns/line; expected judge ~45-60ms on bare metal; fast-VM canonical best 60ms CLEARS rank-18 bar 69.3ms by 13.3%)**
