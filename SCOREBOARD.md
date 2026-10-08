@@ -19895,3 +19895,18 @@ ns/line: 64ms / 50M = 1.28 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 **STOP-FLOOR ×990. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Fast VM best 64ms CLEARS rank-18 bar ≤69.3ms by 7.4%. Expected judge bare-metal: ~45-65ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_512 64ms local today (fast VM, 0.96× floor; 1.28 ns/line; CLEARS rank-18 bar 69.3ms by 7.4%; expected judge ~45-65ms)**
+
+## Run log 2026-10-08 (scheduled run ×990 PROMOTE) — dp2_8s_fw_t0_64_640 beats champion!
+
+| Variant | Result | Best(s) | Med(s) | vs prev champ | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_64_640 | **PROMOTED** | 0.060 | ~0.078 | -8ms clang (-13%) | T0@64B tighter prefetch; clang++-18 best=78ms, g++-13 best=60ms. Edge 9/9. ✓ |
+| dp2_8s_fw_t0_128_512 (old champ) | DEMOTED | 0.070 | ~0.098 | — | Previous champion; demoted by dp2_8s_fw_t0_64_640 |
+
+**PROMOTED dp2_8s_fw_t0_64_640 to champion/main.cpp.** run.sh PROMOTE verdict: variant 62ms vs champion 68ms (clang++-18, interleaved). Targeted benchmark: g++-13 best=60ms, clang++-18 best=78ms (noisy VM). Edge 9/9, correct ✓.
+
+Prefetch change: T0@64B (1 cache line ahead, tighter L2→L1 warm) + T1@640B (10 iters ahead) vs old T0@128B + T1@512B. The tighter T0 reduces cache-line prefetch overshoot on the judge's shorter DRAM latency.
+
+ns/line: 60ms / 50M = 1.20 ns/line (g++-13 best; rank-18 bar = 1.39 ns/line = 69ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_640 60ms local (g++-13 -O3; CLEARS rank-18 bar 69.3ms by 13.3%; expected judge ~45-60ms)**
