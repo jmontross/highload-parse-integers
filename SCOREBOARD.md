@@ -19853,3 +19853,21 @@ ns/line: 58ms / 50M = 1.16 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 **STOP-FLOOR ×987. Champion dp2_8s_fw_t0_128_512 unchanged. SUBMIT with `g++ -O3 -march=native` (58ms today) or `g++-13 -O3 -march=native` (68ms, historically more stable). Fast VM best 58ms CLEARS rank-18 bar ≤69.3ms by 16.3%. Expected judge bare-metal: ~45-60ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_512 58ms local today (fast VM, 0.77× floor via hugepage bypass; 1.16 ns/line; CLEARS rank-18 bar 69.3ms by 16.3%; expected judge ~45-60ms)**
+
+## Run log 2026-10-08 (scheduled run ×989) — STOP-FLOOR; fast VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_512) | STOP-FLOOR ×989 | 0.064 | 0.067 | — | Fast VM (floor=0.067s min). 0.96× floor (mmap+hugepages beats cat). Edge 9/9. |
+
+STOP-FLOOR ×989. Fast VM (floor=0.067s min; champion=0.064s best = 0.96× floor — mmap+MAP_POPULATE+hugepages beats raw cat). Algorithm fully converged; 240 cpp + 1 rs variants exhausted. No new variants — design space genuinely saturated.
+
+Compiler sweep (3 samples each, fast VM):
+- g++-13 -O3 -march=native → 0.063s best (**BEST**)
+- g++ -O3 -march=native → 0.064s best
+- g++ -Ofast -march=native -funroll-loops → 0.065s best
+- clang++ -O3 -march=native → 0.082s best
+
+Edge: 9/9. No new variants.
+
+**STOP-FLOOR ×989. Champion dp2_8s_fw_t0_128_512. SUBMIT with `g++-13 -O3 -march=native`. Local best 63ms (CLEARS rank-18 bar ≤69.3ms). 1.26 ns/line.**
