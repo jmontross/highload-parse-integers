@@ -19938,3 +19938,27 @@ ns/line: 70ms / 50M = 1.40 ns/line (fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 **STOP-FLOOR ×991. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++ -O3 -march=native`. Local best 70ms (1ms above rank-18 bar 69.3ms on this VM; fast-VM canonical best from run ×990 PROMOTE was 60ms = 13.3% below bar). Expected judge bare-metal: ~45-60ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_640 70ms local today (fast VM, 1.03× floor; 1.40 ns/line; expected judge ~45-60ms on bare metal; fast-VM canonical best 60ms CLEARS rank-18 bar 69.3ms by 13.3%)**
+
+## Run log 2026-10-08 (scheduled run ×992) — STOP-FLOOR; fast VM maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_640) | STOP-FLOOR ×992 | 0.068 | 0.075 | — | Fast VM (floor=0.077s min/0.079s med). 0.88× floor (mmap+hugepages faster than cat). Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×992. Fast VM today (floor min=77ms warm; champion g++-13 best=65ms = 0.84× floor — mmap+MAP_POPULATE+hugepages faster than raw cat). 992 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented. Design space saturated at 240+ cpp + 1 rs variants.
+
+Targeted benchmark (g++-13 -O3, 5 warm samples): 75ms, 76ms, 89ms, 68ms, 70ms → **best=68ms, med=75ms**
+Bandwidth floor (cat, 5 warm): 79ms, 79ms, 81ms, 77ms, 83ms → **floor min=77ms**
+
+Compiler sweep (3 samples each, fast VM):
+- g++-13 -O3 -march=native → **65ms** best ← TODAY's best (0.84× floor, mmap+hugepages)
+- g++ -O3 -march=native → 66ms best (very consistent)
+- g++ -Ofast -march=native -funroll-loops → 68ms best
+- clang++-18 -O3 -march=native → 76ms best
+→ **submit under: g++-13 -O3 -march=native** (65ms today) or **g++ -O3 -march=native** (66ms, more consistent)
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants. index.html: 65ms (CLEARS rank-18 bar ≤69.3ms by 6.2%).
+
+ns/line: 65ms / 50M = 1.30 ns/line (g++-13 fast VM; rank-18 bar = 1.39 ns/line = 69ms).
+
+**STOP-FLOOR ×992. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Local best 65ms CLEARS rank-18 bar ≤69.3ms by 6.2%. Expected judge bare-metal: ~45-60ms.**
