@@ -19962,3 +19962,22 @@ Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space
 ns/line: 65ms / 50M = 1.30 ns/line (g++-13 fast VM; rank-18 bar = 1.39 ns/line = 69ms).
 
 **STOP-FLOOR ×992. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Local best 65ms CLEARS rank-18 bar ≤69.3ms by 6.2%. Expected judge bare-metal: ~45-60ms.**
+
+## Run log 2026-10-08 (scheduled run ×993) — STOP-FLOOR; maintenance check
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_64_640) | STOP-FLOOR ×993 | 0.074 (g++-13) / 0.076 (g++) | ~0.083 / ~0.084 | — | Moderate VM (floor=0.068s min/0.069s med). 1.09× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×993. Moderate VM today (floor min=68ms warm; champion g++-13 best=74ms = 1.09× floor). 993 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented. Design space saturated at 240+ cpp + 1 rs variants.
+
+Targeted benchmark (5 warm samples):
+- g++-13 -O3 -march=native → **74ms best, 83ms med** (1.09× floor)
+- g++ -O3 -march=native → 76ms best, 84ms med
+Bandwidth floor (cat, 5 warm): **68ms min, 69ms med**
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 74ms / 50M = 1.48 ns/line (g++-13 moderate VM; rank-18 bar = 1.39 ns/line = 69ms). AT bandwidth floor (1.09×).
+
+**STOP-FLOOR ×993. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Local best 74ms (this VM moderate; fast-VM canonical best from run ×992 was 65ms CLEARS rank-18 bar 69.3ms by 6.2%). Expected judge bare-metal: ~45-60ms.**
