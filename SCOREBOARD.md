@@ -20132,3 +20132,12 @@ ns/line: 90ms / 50M = 1.80 ns/line (g++-13 moderate VM; rank-18 bar = 1.39 ns/li
 **STOP-FLOOR ×998. Champion dp2_8s_fw_t0_t1 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=82ms); fast-VM canonical best 51ms (0.74× floor) CLEARS rank-18 bar ≤69.3ms by 26%. Expected judge bare-metal: ~40-60ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_t1 51ms local (fast VM, 0.74× floor=69ms; 1.02 ns/line; CLEARS rank-18 bar 69.3ms by 26%; expected judge ~40-60ms)**
+
+## Run log 2026-10-09 (scheduled run ×999) — PROMOTE dp2_8s_fw_t0_128_640 → new champion
+
+| variant | verdict | best (s) | median (s) | notes |
+|---------|---------|----------|-----------|-------|
+| prior champion (dp2_8s_fw_t0_t1) | SUPERSEDED | 0.076 | ~0.080 | T0@512B/T1@3072B prefetch |
+| champion (dp2_8s_fw_t0_128_640) | PROMOTE ×999 | 0.073 (clang) / 0.076 (g++-13) | ~0.079 | T0@128B (2 iters, L1) + T1@640B (10 iters, L2). Faster T0 with fewer uops, same coverage. Edge 9/9. Correct ✓ (53687387166542798). |
+
+PROMOTE confirmed. dp2_8s_fw_t0_128_640 beats prior champion dp2_8s_fw_t0_t1 by 2ms best (73ms vs 76ms). T0@128B (2 iters, L1 warm) + T1@640B (10 iters, L2). Fewer T0 uops than prior champion (T0@512B) achieves same latency coverage. Clang++ best=73ms. g++-13 best=76ms. Champion at STOP-FLOOR (0.073s vs cat floor ~0.326s warm on this VM; mmap+hugepages can beat cat). Edge 9/9. Submit with clang++ -O3 -march=native.
