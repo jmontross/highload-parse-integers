@@ -20053,3 +20053,31 @@ ns/line: 56ms / 50M = 1.12 ns/line (g++-13 fast VM; rank-18 bar = 1.39 ns/line =
 **STOP-FLOOR ×995. Champion dp2_8s_fw_t0_64_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Fast VM today (floor=71ms); champion best=56ms CLEARS rank-18 bar ≤69.3ms by 19%. Expected judge bare-metal: ~45-65ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_640 56ms local today (fast VM, 0.79× floor=71ms; CLEARS rank-18 bar 69.3ms by 19% margin)**
+
+## Run log 2026-10-09 (scheduled run ×995 PROMOTE) — PROMOTE dp2_8s_fw_t0_t1 → new champion; STOP-FLOOR
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ best | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_64_640) | SUPERSEDED | 0.062 (g++) | ~0.074 | — | Full run.sh: champion best=0.059s in interleaved run. Targeted g++-13: 56ms best. |
+| dp2_8s_fw_t0_t1 | **PROMOTE** | 0.050 (full run) / 0.051 (g++ targeted) | 0.062 | **+15.3% / 18%** | Full run.sh PROMOTE verdict: best=50ms, median=62ms vs champ 59ms/63ms. Edge 9/9. T0@512B + T1@3072B. |
+| champion (dp2_8s_fw_t0_t1) | STOP-FLOOR ×996 | 0.051 (g++) | 0.062 | — | Confirmation (7 interleaved, floor=69ms min). g++ best=51ms < 2×69ms=138ms → STOP-FLOOR. Edge 9/9. |
+
+PROMOTE confirmed. Full run.sh verdict: dp2_8s_fw_t0_t1 beats prior champion by 15.3% (50ms vs 59ms best, lower median). Promoted to champion/main.cpp. Confirmation (7-sample interleaved):
+
+Targeted benchmark (7 warm interleaved samples):
+- g++ -O3 -march=native: 0.051, 0.051, 0.065, 0.060, 0.062, 0.062, 0.073 → **best=51ms, med=62ms** (**BEST — submit under this**)
+- g++-13 -O3 -march=native: 0.080, 0.065, 0.067, 0.066, 0.110, 0.063, 0.065 → best=63ms, med=66ms (noisy/outliers)
+- clang++-18 -O3 -march=native: 0.062, 0.072, 0.074, 0.071, 0.059, 0.071, 0.086 → best=59ms, med=71ms
+- Bandwidth floor (cat): 0.069, 0.075, 0.072, 0.071, 0.069, 0.075, 0.077 → floor min=69ms
+
+Champion best=51ms = 0.74× floor (faster than cat — mmap+hugepages advantage). STOP-FLOOR ×996 confirmed.
+
+dp2_8s_fw_t0_t1 description: 8 spatially-separated streams + digit-place accumulation + T0@512B (8 iters ahead, L2→L1 warm) + T1@3072B (48 iters ahead, DRAM→LLC). Two-tier coverage: T0 at 512B ensures immediate L1 availability; T1 at 3072B hides the DRAM→LLC transfer latency. vs prior champion T0@64B + T1@640B.
+
+Edge: 9/9. Correctness ✓ (53687387166542798). index.html: 51ms — CLEARS rank-18 bar (≤69.3ms) by 26% margin.
+
+41. dp2_8s_fw_t0_t1 (PROMOTE ×995/×996) — T0@512B + T1@3072B. **51ms/62ms (g++)**. NEW CHAMPION.
+
+**STOP-FLOOR ×996. Champion dp2_8s_fw_t0_t1. SUBMIT with `g++ -O3 -march=native`. Best 51ms (0.74× floor=69ms). CLEARS rank-18 bar ≤69.3ms by 26% margin. Expected judge bare-metal: ~40-60ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_t1 51ms local today (0.74× floor=69ms; 26% below rank-18 bar 69.3ms)**
