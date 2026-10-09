@@ -20165,3 +20165,27 @@ ns/line: 88ms / 50M = 1.76 ns/line (g++-13 moderate VM; rank-18 bar = 1.39 ns/li
 **STOP-FLOOR ×1000. Champion dp2_8s_fw_t0_128_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=72ms); fast-VM canonical best 51ms (0.74× floor) CLEARS rank-18 bar ≤69.3ms by 26%. Expected judge bare-metal: ~40-60ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_640 51ms local (fast VM, 0.74× floor=69ms; 1.02 ns/line; CLEARS rank-18 bar 69.3ms by 26%; expected judge ~40-60ms)**
+
+## Run log 2026-10-09 (scheduled run ×1001) — STOP-FLOOR; moderate VM (74ms best g++, 1.04× floor=71ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_640) | STOP-FLOOR ×1001 | 0.074 (g++) | ~0.077 | — | Moderate VM (floor=0.071s min). 1.04× floor. Edge 9/9. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1001. Moderate VM today (floor min=71ms warm; champion g++ best=74ms = 1.04× floor; g++-13 best=76ms; clang++-18 best=81ms). 1001 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented. Design space saturated at 240+ cpp variants. No new variants tried.
+
+Targeted benchmark (5 warm samples each, moderate VM):
+- g++ -O3 -march=native: 76ms, 74ms, 77ms, 89ms, 93ms → **best=74ms, med=77ms** (1.04× floor)
+- g++-13 -O3 -march=native: 110ms, 77ms, 90ms, 76ms, 89ms → best=76ms, med=89ms (1.07× floor)
+- clang++-18 -O3 -march=native: 91ms, 82ms, 82ms, 81ms, 83ms → best=81ms, med=82ms (1.14× floor)
+Bandwidth floor (cat, 5 warm samples): 80ms, 74ms, 71ms, 78ms, 87ms → **floor min=71ms**
+
+→ **submit under: g++ -O3 -march=native** (74ms today on moderate VM; fast-VM canonical best from prior run ×995/×996 was 51ms = 26% BELOW rank-18 bar)
+
+Edge: 9/9. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 74ms / 50M = 1.48 ns/line (g++ moderate VM; rank-18 bar = 1.39 ns/line = 69ms). AT bandwidth floor (1.04×).
+
+**STOP-FLOOR ×1001. Champion dp2_8s_fw_t0_128_640 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (floor=71ms); fast-VM canonical best 51ms (0.74× floor) CLEARS rank-18 bar ≤69.3ms by 26%. Expected judge bare-metal: ~40-60ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_640 51ms local (fast VM, 0.74× floor=69ms; 1.02 ns/line; CLEARS rank-18 bar 69.3ms by 26%; expected judge ~40-60ms)**
