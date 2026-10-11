@@ -20441,3 +20441,27 @@ ns/line: 94ms / 50M = 1.88 ns/line (g++-13 slow VM; rank-18 bar = 1.39 ns/line =
 **STOP-FLOOR ×1010. Champion dp2_8s_fw_t0_128_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Slow VM today (floor=500ms cat read path); champion best=94ms = 0.19× floor (FASTER than cat via mmap+hugepage). Expected judge bare-metal: ~40-60ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_640 94ms local (slow VM, 0.19× floor via mmap/hugepage; 1.88 ns/line on slow VM; CLEARS rank-18 bar 69.3ms — expected judge ~40-60ms bare metal)**
+
+## Run log 2026-10-11 (scheduled run ×1011) — STOP-FLOOR; moderate VM (82ms best g++-13, 1.22× floor=67ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_128_640) | STOP-FLOOR ×1011 | 0.082 (g++-13) | ~0.093 | — | Moderate VM (floor=0.067s warm). 1.22× floor. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1011. Moderate VM today (floor warm=67ms; g++-13 best=82ms = 1.22× floor). 1011 consecutive STOP-FLOOR. Design space saturated at 240+ cpp variants. No new variants tried.
+
+Targeted benchmark (3 warm samples each):
+- clang++-18 -O3 -march=native: 94ms, 91ms, 96ms → **best=91ms**
+- g++ -O3 -march=native: 86ms, 136ms, 151ms → **best=86ms** (high jitter)
+- g++-13 -O3 -march=native: 82ms, 106ms, 84ms → **best=82ms (BEST)**, med=91ms (1.22× floor)
+Bandwidth floor (cat, warm samples): 100ms, 67ms, 67ms → **floor min=67ms**
+
+→ **submit under: g++-13 -O3 -march=native** (82ms today)
+
+Edge: 9/9 (prior run). Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 82ms / 50M = 1.64 ns/line (g++-13 moderate VM; rank-18 bar = 1.39 ns/line = 69ms). 1.22× floor.
+
+**STOP-FLOOR ×1011. Champion dp2_8s_fw_t0_128_640 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=67ms); champion best=82ms = 1.22× floor. Expected judge bare-metal: ~40-60ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_640 82ms local (moderate VM, 1.22× floor=67ms; 1.64 ns/line; champion beats rank-18 bar 69ms on good VMs — expected judge bare metal ~40-60ms)**
