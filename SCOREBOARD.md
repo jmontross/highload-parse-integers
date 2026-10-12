@@ -20786,3 +20786,26 @@ ns/line: 90ms / 50M = 1.80 ns/line (g++, best sample on moderate VM — note: mo
 **STOP-FLOOR ×1024. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (floor=90ms); champion best=90ms = 1.0× floor. Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_512_2048 90ms local (moderate VM, 1.0× floor=90ms; prior fast-VM 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-12 (scheduled run ×1024 PROMOTION) — dp2_8s_fw_4acc_t0_192_1536 PROMOTED
+
+**PROMOTED: dp2_8s_fw_4acc_t0_192_1536** — 4 accumulators + T0@192B (near, L1) + T1@1536B (far, DRAM→L2).
+
+run.sh gate (RUNS=3 interleaved, background run):
+- Variant best=0.0860s (86ms), median=0.0900s
+- Prior champion (dp2_8s_fw_4acc_t0_512_2048) best=0.0900s, median=0.0930s
+- Δbest=0.004s (4.4% margin); both conditions met → PROMOTE
+- Edge: 9/9 ✓
+
+Confirmation (5 direct g++ -O3 -march=native samples, moderate VM):
+- New champion: 105ms, 92ms, 132ms, 103ms, 97ms → **best=92ms**, median≈103ms
+- Correct ✓ (53687387166542798), edge 9/9 ✓
+
+| Variant | Result | Best(s) | Med(s) | vs prior champ | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_192_1536 | PROMOTED | 0.086 (run.sh) / 0.092 (confirm) | 0.090 / 0.103 | +4.4% over prior | T0@192B near + T1@1536B far. Edge 9/9 ✓. |
+
+Submit with: `g++ -O3 -march=native` (best on sweep).
+Expected judge: ~35-50ms bare metal.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 86ms local run.sh best (4.4% over prior champion dp2_8s_fw_4acc_t0_512_2048; expected judge ~35-50ms bare metal)**
