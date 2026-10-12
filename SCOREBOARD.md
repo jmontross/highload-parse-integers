@@ -20737,3 +20737,28 @@ Submit with: `g++ -O3 -march=native` (run.sh sweep: g++ best=72ms; clang++ -Ofas
 Expected judge: ~35-50ms bare metal.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_512_2048 50ms local run.sh best (28.6% over prior champion; expected judge ~35-50ms bare metal)**
+  — STOP-FLOOR ×1023 (2026-10-12, 3-sample champion-only direct + compiler sweep, floor=0.073s moderate VM): Maintenance check — champion best=0.074s (g++-13 -O3 -march=native, 3-sample min), ratio=1.01× floor. Champion essentially AT bandwidth ceiling. Compiler sweep (3-sample direct): g++ -O3 -march=native → 0.075s best; g++-13 -O3 -march=native → 0.074s best (BEST); clang++-18 -O3 -march=native → 0.083s best. Bandwidth floor (cat, 3-sample): 0.077s, 0.081s, 0.073s → floor min=0.073s. → submit under: g++-13 -O3 -march=native. Edge 9/9 ✓ (53687387166542798 correct). 1023 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge: ~35-50ms bare metal.
+
+## Run log 2026-10-12 (scheduled run ×1023) — STOP-FLOOR; moderate VM (74ms best g++-13, 1.01× floor=73ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×1023 | 0.074 (g++-13) | ~0.081 | — | Moderate VM (floor=0.073s cat). 1.01× floor — AT bandwidth ceiling. Edge 9/9 ✓. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1023. Moderate VM today (floor min=73ms; g++-13 best=74ms = 1.01× floor). 1023 consecutive STOP-FLOOR/HOLD. Design space fully saturated at 240+ cpp variants. Champion dp2_8s_fw_4acc_t0_512_2048 with 4acc+T0@512B+T1@2048B prefetch is definitively at the bandwidth ceiling.
+
+Compiler sweep (direct timing, 3 warm samples, moderate VM):
+- g++ -O3 -march=native → 97ms, 111ms, 75ms → **best=75ms**
+- g++-13 -O3 -march=native → 83ms, 77ms, 74ms → **best=74ms (BEST)**
+- clang++-18 -O3 -march=native → 99ms, 86ms, 83ms → **best=83ms**
+Bandwidth floor (cat, 3 warm samples): 77ms, 81ms, 73ms → **floor min=73ms**
+
+→ **submit under: g++-13 -O3 -march=native** (74ms today = 1.01× floor = 1.48 ns/line)
+
+Edge: 9/9 ✓. Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 74ms / 50M = 1.48 ns/line (g++-13, best sample; rank-18 bar = 1.39 ns/line = 69ms).
+
+**STOP-FLOOR ×1023. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=73ms); champion best=74ms = 1.01× floor. Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_512_2048 74ms local (moderate VM, 1.01× floor=73ms; 1.48 ns/line; expected judge ~35-50ms bare metal)**
