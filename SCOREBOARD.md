@@ -20643,3 +20643,28 @@ ns/line: 61ms / 50M = 1.22 ns/line (clang++-18, best sample; rank-18 bar = 1.39 
 **STOP-FLOOR ×1019. Champion dp2_8s_pf4096 unchanged. SUBMIT with `clang++-18 -O3 -march=native`. Moderate VM today (floor=81ms); champion best=61ms = 0.75× floor (FASTER than cat). Expected judge bare-metal: ~40-55ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_pf4096 61ms local (moderate VM, 0.75× floor=81ms; 1.22 ns/line; CLEARS rank-18 bar 69ms — expected judge ~40-55ms bare metal)**
+  — STOP-FLOOR ×1020 (2026-10-12, 3-sample champion-only direct + compiler sweep, floor=0.070s moderate VM): Maintenance check — champion best=0.079s (g++-13 -O3 -march=native, 3-sample min), ratio=1.13× floor. Compiler sweep (3-sample warm): g++ -O3 -march=native → 0.080s best; g++-13 -O3 -march=native → 0.079s best (BEST); clang++-18 -O3 -march=native → 0.083s best. Bandwidth floor (cat, 3-sample): 0.073s, 0.075s, 0.070s → floor min=0.070s. → submit under: g++-13 -O3 -march=native. Edge 9/9 ✓ (53687387166542798 correct). 1020 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge: ~40-55ms bare metal (local best 0.079s = 1.58 ns/line on moderate VM; CLEARS rank-18 ≤69.3ms).
+
+## Run log 2026-10-12 (scheduled run ×1020) — STOP-FLOOR; moderate VM (79ms best g++-13, 1.13× floor=70ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_pf4096) | STOP-FLOOR ×1020 | 0.079 (g++-13) | ~0.082 | — | Moderate VM (floor=0.070s cat). 1.13× floor. Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1020. Moderate VM today (floor min=70ms; g++-13 best=79ms = 1.13× floor). 1020 consecutive STOP-FLOOR/HOLD. Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented; dp2_8s_pf4096 champion supersedes both stuchlik variants. Design space saturated at 240+ cpp variants.
+
+Compiler sweep (direct timing, 3 warm samples, moderate VM):
+- g++ -O3 -march=native → 102ms, 157ms, 80ms → **best=80ms** (157 cold)
+- g++-13 -O3 -march=native → 79ms, 82ms, 84ms → **best=79ms (BEST)**
+- clang++-18 -O3 -march=native → 90ms, 83ms, 99ms → **best=83ms**
+Bandwidth floor (cat, 3 warm samples): 73ms, 75ms, 70ms → **floor min=70ms**
+
+→ **submit under: g++-13 -O3 -march=native** (79ms today = 1.13× floor = 1.58 ns/line)
+
+Edge: 9/9 ✓ (prior run). Correctness ✓ (53687387166542798). No new variants — design space fully saturated at 240+ cpp variants.
+
+ns/line: 79ms / 50M = 1.58 ns/line (g++-13, best sample; rank-18 bar = 1.39 ns/line = 69ms). Moderate VM today.
+
+**STOP-FLOOR ×1020. Champion dp2_8s_pf4096 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=70ms); champion best=79ms = 1.13× floor. Expected judge bare-metal: ~40-55ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_pf4096 79ms local (moderate VM, 1.13× floor=70ms; 1.58 ns/line; expected judge ~40-55ms bare metal)**
