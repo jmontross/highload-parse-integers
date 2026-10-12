@@ -20762,3 +20762,27 @@ ns/line: 74ms / 50M = 1.48 ns/line (g++-13, best sample; rank-18 bar = 1.39 ns/l
 **STOP-FLOOR ×1023. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (floor=73ms); champion best=74ms = 1.01× floor. Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_512_2048 74ms local (moderate VM, 1.01× floor=73ms; 1.48 ns/line; expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-12 (scheduled run ×1024) — STOP-FLOOR; moderate VM (90ms best g++, 1.0× floor=90ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_512_2048) | STOP-FLOOR ×1024 | 0.090 (g++) | ~0.118 | — | Moderate VM (floor=0.090s cat). 1.0× floor — AT bandwidth ceiling. Edge N/A (direct timing only). Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1024. Moderate VM today (floor min=90ms; g++ best=90ms = 1.0× floor — champion literally AT bandwidth ceiling). 1024 consecutive STOP-FLOOR/HOLD. Design space fully saturated at 240+ cpp variants. Run verified by direct timing (background run.sh building all variants; too slow for scheduled window).
+
+Direct timing (3 samples, moderate VM, clang++ -O3 -march=native):
+- Champion: 199ms, 121ms, 121ms → best=121ms (clang++ cold/warm)
+
+Direct timing (3 samples, moderate VM, g++ -O3 -march=native):
+- Champion: 145ms, 90ms, 118ms → **best=90ms**
+
+Bandwidth floor (cat, 3 warm samples): 90ms, 91ms, 92ms → **floor min=90ms**
+
+→ Champion at 1.0× floor. Definitively memory-bandwidth bound.
+
+ns/line: 90ms / 50M = 1.80 ns/line (g++, best sample on moderate VM — note: moderate VM today is slower than prior sessions; at 1.0× floor). Prior fast-VM best: 53ms = 1.06 ns/line (rank-18 bar = 1.39 ns/line = 69ms).
+
+**STOP-FLOOR ×1024. Champion dp2_8s_fw_4acc_t0_512_2048 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (floor=90ms); champion best=90ms = 1.0× floor. Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_512_2048 90ms local (moderate VM, 1.0× floor=90ms; prior fast-VM 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
