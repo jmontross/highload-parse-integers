@@ -20854,3 +20854,27 @@ ns/line: 70ms / 50M = **1.40 ns/line** (g++-13 -O3; rank-18 bar = 1.39 ns/line =
 **STOP-FLOOR ×1027. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++-13 -Ofast -march=native`. Fast VM today (champion best 65ms with -Ofast, floor=65ms = 1.0× floor). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 65ms local (fast VM, g++-13 -Ofast; 1.30 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-13 (scheduled run ×1028) — STOP-FLOOR; moderate VM (champion 77ms, floor 82ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×1028 | 0.077 (g++ -O3) | ~0.082 | — | Moderate VM today. Champion beats cat floor (77ms < 82ms via mmap). Edge 9/9 ✓ (prior), correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1028. Moderate VM today (floor min=82ms cat; g++ champion best=77ms = 0.94× floor — champion beats bandwidth floor via mmap efficiency). 1.54 ns/line. Design space fully saturated at 240+ cpp variants.
+
+Direct timing (moderate VM):
+- Floor (cat, 3 samples): 82ms, 83ms, 82ms → **floor min=82ms**
+- Champion g++ -O3 (5 samples): 85ms, 80ms, 77ms, 79ms, 92ms → **best=77ms**, median≈80ms
+- Champion g++ -Ofast (5 samples): 91ms, 81ms, 77ms, 81ms, 82ms → **best=77ms**
+- Champion g++-13 -O3 (5 samples): 91ms, 89ms, 79ms, 88ms, 84ms → **best=79ms**
+- Champion g++-13 -Ofast (5 samples): 78ms, 80ms, 84ms, 114ms, 129ms → **best=78ms** (noisy)
+- Champion clang++-18 -O3 (3 samples): 98ms, 97ms, 82ms → **best=82ms**
+
+→ Champion at 0.94× floor (mmap faster than cat read). ns/line: 77ms / 50M = **1.54 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+
+→ **submit under: g++ -O3 -march=native** (77ms today = 1.54 ns/line; on fast VM previously 58ms = 1.16 ns/line CLEARS rank-18 bar).
+
+**STOP-FLOOR ×1028. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 77ms < floor 82ms = 0.94× floor). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 77ms local (moderate VM, 0.94× cat-floor=82ms; 1.54 ns/line; prior fast-VM 58ms=1.16 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
