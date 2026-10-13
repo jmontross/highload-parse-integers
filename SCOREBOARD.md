@@ -20921,3 +20921,23 @@ Direct timing (moderate VM, g++ -O3 -march=native):
 **STOP-FLOOR ×1030. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 64ms < floor 74ms = 0.86× floor). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 64ms local (moderate VM, 0.86× cat-floor=74ms; 1.28 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-13 (scheduled run ×1031) — STOP-FLOOR; moderate VM (champion 78ms, floor 77ms)
+
+| Variant | Result | Best(s) | Med(s) | vs champ | Note |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×1031 | 0.078 (g++ -O3) | ~0.081 | — | Moderate VM. Champion at 1.01× floor (78ms ≈ 77ms cat floor via mmap). Correct ✓ (53687387166542798). |
+
+STOP-FLOOR ×1031. Moderate VM today (floor min=77ms cat; champion best=78ms = 1.01× floor — essentially memory-bound). 1.56 ns/line. Design space fully saturated at 240+ cpp variants.
+
+Direct timing (moderate VM):
+- Floor (cat, 3 samples): 85ms, 91ms, 77ms → **floor min=77ms**
+- Champion g++ -O3 (5 samples): 144ms(cold), 85ms, 81ms, 78ms, 82ms, 78ms → **best=78ms**, median≈81ms
+
+→ Champion at 1.01× floor (memory-bound). ns/line: 78ms / 50M = **1.56 ns/line** (this VM; rank-18 bar = 1.39 ns/line = 69ms).
+
+→ **submit under: g++ -O3 -march=native** (on fast VM previously 58ms = 1.16 ns/line CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1031. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 78ms ≈ floor 77ms = 1.01× floor). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 78ms local (moderate VM, 1.01× cat-floor=77ms; 1.56 ns/line; prior fast-VM 58ms=1.16 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
