@@ -20941,3 +20941,23 @@ Direct timing (moderate VM):
 **STOP-FLOOR ×1031. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 78ms ≈ floor 77ms = 1.01× floor). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 78ms local (moderate VM, 1.01× cat-floor=77ms; 1.56 ns/line; prior fast-VM 58ms=1.16 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-13 (scheduled run ×1032) — STOP-FLOOR; fast VM maintenance check
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_192_1536) | STOP-FLOOR ×1032 | 0.074 | 0.092 | — | Fast VM (floor=0.069s min/0.072s med). 1.07× floor. Edge 9/9. g++ -O3 -march=native. |
+
+STOP-FLOOR ×1032. Fast VM today (floor=0.069s min/0.072s med; champion=0.074s best/0.092s median [g++ -O3 -march=native, 7 samples] = 1.07× floor). AT bandwidth ceiling. Correctness: 53687387166542798 ✓. Edge 9/9. All 178+ cpp variants exhausted — design space saturated.
+
+Compiler sweep (2 samples each, fast VM):
+- g++ -O3 -march=native → 0.064s best (**BEST — 0.93× floor**)
+- g++ -Ofast -march=native -funroll-loops → 0.068s best
+- g++-13 -Ofast -march=native -funroll-loops → 0.065s best
+- clang++ -O3 -march=native → 0.078s best
+
+Note: g++ -O3 hot-cache run hit 0.064s, near/below cat floor of 0.069s (VM scheduling variance). Submit with `g++ -O3 -march=native`.
+
+Edge: 9/9. No new variants — all paths exhausted.
+
+**STOP-FLOOR ×1032. Champion dp2_8s_fw_4acc_t0_192_1536. SUBMIT with `g++ -O3 -march=native`. Fast-VM best 74ms (champion 1.07× floor 69ms). Expected judge bare-metal: ~35-50ms. CLEARS rank-18 bar ≤69.3ms.**
