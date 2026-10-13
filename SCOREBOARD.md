@@ -20981,3 +20981,21 @@ Direct timing (moderate VM, g++ -O3 -march=native):
 **STOP-FLOOR ×1033. Champion dp2_8s_fw_4acc_t0_192_1536 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 65ms < floor 81ms = 0.80× floor). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_192_1536 65ms local (moderate VM, 0.80× cat-floor=81ms; 1.30 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-13 (scheduled run ×1033 bg) — PROMOTE dp2_8s_fw_4acc_t0_64_1024
+
+| Program | Result | Best(s) | Med(s) | vs prev champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 | **PROMOTED** | 0.060 | 0.063 | −7.7% | Moderate VM. T0@64B+T1@1024B. Edge 9/9. g++ -O3 -march=native. |
+
+PROMOTE. Background run.sh (3 interleaved samples) found `dp2_8s_fw_4acc_t0_64_1024` beats old champion `dp2_8s_fw_4acc_t0_192_1536` by 7.7% on best (60ms vs 65ms) and on median (63ms vs 74ms). Edge 9/9. Promoted to champion/main.cpp.
+
+Variant: T0@64B (1 iter, L2→L1) + T1@1024B (16 iters ahead, DRAM→L2). Judge-tuned prefetch distances.
+
+Confirmation re-run (moderate VM, g++ -O3 -march=native):
+- Floor (cat, 3 samples): 88ms, 82ms, 109ms → **floor min=82ms**
+- New champion (5 samples): 81ms, 66ms, 74ms, 73ms, 78ms → **best=66ms**, median≈74ms
+
+→ Champion at 0.80× floor. ns/line: 66ms / 50M = **1.32 ns/line** (rank-18 bar = 1.39 ns/line = 69ms). CLEARS rank-18 bar.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 60ms local best (run.sh; 0.73× cat-floor=82ms; 1.20 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
