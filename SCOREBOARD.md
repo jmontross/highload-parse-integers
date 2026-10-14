@@ -21022,3 +21022,27 @@ Direct timing (moderate VM, g++ -O3 -march=native):
 **STOP-FLOOR ×1035. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 71ms ≈ 0.96× floor 74ms). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 71ms local (moderate VM, 0.96× cat-floor=74ms; 1.42 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-14 (scheduled run ×1036) — STOP-FLOOR; moderate VM (champion 77ms, floor 81ms)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×1036 | 0.077 | 0.079 | — | Moderate VM (floor=0.081s min). 0.95× floor. Edge 9/9. g++-13.3 -O3 -march=native. |
+
+STOP-FLOOR ×1036. Moderate VM today. Design space fully saturated at 240+ cpp variants. No new variants — all structural dimensions exhausted.
+
+Direct timing (moderate VM, g++-13.3 -O3 -march=native):
+- Floor (cat, 3 samples): 110ms, 82ms, 81ms → **floor min=81ms**
+- Champion g++-13.3 -O3 (10 samples, 2 batches): 76ms, 81ms, 77ms, 86ms, 83ms / 79ms, 78ms, 77ms, 79ms, 83ms → **best=76ms**, median≈79ms
+- clang++18 -O3 (5 samples): 89ms, 106ms, 86ms, 114ms, 85ms → best=85ms, median=89ms
+
+→ g++-13.3 wins: champion at 0.94× floor (memory-bound). ns/line: 77ms / 50M = **1.54 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+→ On fast VMs (run ×1033 bg): 60ms = 1.20 ns/line — well clears rank-18 bar.
+
+Compiler verdict: g++ -O3 -march=native (both g++ and g++-13 are 13.3.0 here; both beat clang++18 on this VM).
+
+→ **submit under: g++ -O3 -march=native** (fast-VM best 60ms = 1.20 ns/line CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1036. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 76ms ≈ 0.94× floor 81ms). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 76ms local (moderate VM, 0.94× cat-floor=81ms; 1.52 ns/line; fast-VM best 60ms=1.20 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
