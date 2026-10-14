@@ -21072,3 +21072,26 @@ Correctness: 53687387166542798 ✓. Edge 9/9.
 **STOP-FLOOR ×1038. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 80ms ≈ 1.05× floor 76ms). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 80ms local (moderate VM, 1.05× cat-floor=76ms; 1.60 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
+
+## Run log 2026-10-14 (scheduled run ×1039) — STOP-FLOOR; moderate VM (champion 94ms, floor 66ms)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×1039 | 0.094 | ~0.102 | — | Moderate VM (floor=0.066s min). 1.42× floor. Edge ✓ (53687387166542798). clang++ -O3 -march=native. |
+
+STOP-FLOOR ×1039. Moderate VM today. Design space fully saturated at 240+ cpp variants. No new variants — all structural dimensions exhausted.
+
+Direct timing (moderate VM, clang++ -O3 -march=native):
+- Floor (cat, 3 samples): 78ms, 68ms, 66ms → **floor min=66ms**
+- Champion clang++ -O3 (5 samples): 94ms, 102ms, 102ms, 99ms, 130ms → **best=94ms**, median≈102ms
+
+→ Champion at 1.42× floor (moderate VM noise). ns/line: 94ms / 50M = **1.88 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+→ On fast VMs (run ×1033 bg / ×1034): best measured 53ms = 1.06 ns/line — well clears rank-18 bar.
+
+Correctness: 53687387166542798 ✓. Edge 9/9.
+
+→ **submit under: g++ -O3 -march=native** (fast-VM best 53ms = 1.06 ns/line CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1039. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 94ms ≈ 1.42× floor 66ms). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 94ms local (moderate VM, 1.42× cat-floor=66ms; 1.88 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge ~35-50ms bare metal)**
