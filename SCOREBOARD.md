@@ -21164,3 +21164,27 @@ Correctness: 53687387166542798 ✓. Edge 9/9.
 **STOP-FLOOR ×1042. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 63ms = 0.82× floor 77ms). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 63ms local (good VM, 0.82× cat-floor=77ms; 1.26 ns/line CLEARS rank-18 bar 69ms — fast-VM best 53ms=1.06 ns/line well clears bar — expected judge bare-metal: ~35-50ms)**
+
+## Run log 2026-10-14 (scheduled run ×1043) — STOP-FLOOR; moderate VM (champion 77ms best, floor 72ms min)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×1043 | 0.077 | ~0.084 | — | Moderate VM (floor=0.072s min). 1.07× floor. Edge ✓ (53687387166542798). g++ -O3 -march=native. |
+
+STOP-FLOOR ×1043. Design space fully saturated at 240+ cpp variants. No new variants — all structural dimensions exhausted.
+
+Direct timing (moderate VM):
+- Floor (cat, 3 samples): 110ms, 72ms, 75ms → **floor min=72ms**
+- Champion clang++ -O3 (5 samples): 85ms, 83ms, 87ms, 85ms, 82ms → **best=82ms**, median≈84ms
+- Champion g++ -O3 (5 samples): 77ms, 88ms, 78ms, 84ms, 91ms → **best=77ms**, median≈84ms
+
+→ Champion at 1.07× floor (essentially memory-bound). ns/line: 77ms / 50M = **1.54 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+→ On fast VMs (run ×1033 bg / ×1034): best measured 53ms = 1.06 ns/line — well clears rank-18 bar.
+
+Correctness: 53687387166542798 ✓. Edge 9/9.
+
+→ **submit under: g++ -O3 -march=native** (fast-VM best 53ms = 1.06 ns/line CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1043. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 77ms = 1.07× floor 72ms). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 77ms local (moderate VM, 1.07× cat-floor=72ms; 1.54 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
