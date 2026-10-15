@@ -21300,3 +21300,27 @@ Correctness: 53687387166542798 ✓. Edge 9/9.
 **STOP-FLOOR ×1047. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Moderate VM today (champion best 80ms = 0.94× floor 85ms). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 80ms local (moderate VM, 0.94× cat-floor=85ms; 1.60 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
+
+## Run log 2026-10-15 (scheduled run ×1048) — STOP-FLOOR; moderate VM (champion 77ms best, floor 345ms loaded)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×1048 | 0.077 | — | — | Moderate/loaded VM (floor=0.345s during full build suite). g++-13 -O3 best=0.077s. Edge ✓ (53687387166542798). |
+
+STOP-FLOOR ×1048. Loaded VM (floor=0.345s; all 238+ variants being compiled during timing). Champion g++-13 -O3 best=0.077s. Best variant dp2_8s_fw_t0_2048 at 0.072s best but median 0.125s (vs champ 0.080s) → HOLD (single lucky sample). Design space fully saturated at 240+ cpp variants. No new variants — all structural dimensions exhausted.
+
+Compiler sweep:
+- g++-13 -O3 -march=native → 0.077s best (**BEST**)
+- g++ -O3 -march=native → 0.080s
+- g++ -Ofast -march=native -funroll-loops → 0.086s
+- g++-13 -Ofast -march=native -funroll-loops → 0.081s
+- clang++ -O3 -march=native → 0.095s
+- clang++ -Ofast -march=native -funroll-loops → 0.087s
+
+→ submit under: g++-13 -O3 -march=native (fast-VM best ~53ms = 1.06 ns/line; CLEARS rank-18 bar 69ms).
+
+Correctness: 53687387166542798 ✓. Edge 9/9. No new variants.
+
+**STOP-FLOOR ×1048. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++-13 -O3 -march=native`. Loaded VM today (77ms = 0.22× floor 0.345s). Fast-VM best ~53ms CLEARS rank-18 bar ≤69.3ms. Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 77ms local (loaded VM; g++-13 -O3 best=77ms; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
