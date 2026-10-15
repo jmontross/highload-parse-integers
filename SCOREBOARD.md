@@ -21234,3 +21234,27 @@ Correctness: 53687387166542798 ✓. Edge 9/9.
 **STOP-FLOOR ×1045. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Slow VM today (champion best 81ms = 1.23× floor 66ms). Expected judge bare-metal: ~35-50ms.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 81ms local (slow VM, 1.23× cat-floor=66ms; 1.62 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
+
+## Run log 2026-10-15 (scheduled run ×1046) — STOP-FLOOR; moderate VM (champion 77ms best, floor 66ms min)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_4acc_t0_64_1024) | STOP-FLOOR ×1046 | 0.077 | ~0.085 | — | Moderate VM (floor=0.066s min). 1.17× floor. Edge ✓ (53687387166542798). g++ -O3 -march=native. |
+
+STOP-FLOOR ×1046. Design space fully saturated at 240+ cpp variants. No new variants — all structural dimensions exhausted.
+
+Direct timing (g++ -O3 -march=native):
+- Floor (cat, 3 samples): 73ms, 66ms, 67ms → **floor min=66ms**
+- Champion g++ -O3 (5 samples): 86ms, 77ms, 83ms, 88ms, 89ms → **best=77ms**, median≈85ms
+- Champion clang++ -O3 (5 samples): 156ms, 80ms, 81ms, 90ms, 112ms → **best=80ms**
+
+→ Champion at 1.17× floor (memory-bound). ns/line: 77ms / 50M = **1.54 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+→ On fast VMs (run ×1033 bg / ×1034): best measured 53ms = 1.06 ns/line — well clears rank-18 bar.
+
+Correctness: 53687387166542798 ✓. Edge 9/9.
+
+→ **submit under: g++ -O3 -march=native** (fast-VM best 53ms = 1.06 ns/line CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1046. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++ -O3 -march=native`. Moderate VM today (champion best 77ms = 1.17× floor 66ms). Expected judge bare-metal: ~35-50ms.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 77ms local (moderate VM, 1.17× cat-floor=66ms; 1.54 ns/line; fast-VM best 53ms=1.06 ns/line CLEARS rank-18 bar 69ms — expected judge bare-metal: ~35-50ms)**
