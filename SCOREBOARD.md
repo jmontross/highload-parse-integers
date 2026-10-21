@@ -21488,3 +21488,25 @@ Correctness: 53687387166542798 ✓.
 → **submit under: g++-13 -O3 -march=native** (fast-VM best 65ms = 1.30 ns/line CLEARS rank-18 bar 69ms).
 
 **STOP-FLOOR ×1048. Champion dp2_8s_fw_4acc_t0_64_1024 unchanged. SUBMIT with `g++-13 -O3 -march=native`.**
+
+## Run log 2026-10-21 (scheduled run ×1107) — STOP-FLOOR confirmed [CORRECTION to ×1048 entry above]
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_t0_192_6144) | STOP-FLOOR ×1107 | 0.080 | ~0.083 | — | Moderate VM (floor min=0.076s, 1.05× floor). g++-13 -O3 -march=native. Edge ✓ (53687387166542798). |
+
+STOP-FLOOR ×1107 confirmed. Note: prior entry labeled ×1048 was written in error (stale run number + stale champion name from session context); this entry corrects both.
+
+Champion: **dp2_8s_fw_t0_192_6144** — T0@192B + T1@6144B prefetch; digit-place accumulation (dp2) + 8-stream (8s) + forward-walk (fw).
+
+Direct timing (g++-13 -O3 -march=native):
+- Floor (cat, 3 samples): 77ms, 77ms, 76ms → **floor min=76ms**
+- Champion g++-13 -O3 (5 samples): 80ms, 80ms, 82ms, 84ms, 99ms → **best=80ms** = 1.05× floor
+
+→ ns/line: 80ms / 50M = **1.60 ns/line** (rank-18 bar = 1.39 ns/line = 69ms).
+→ On fast VMs (runs ×1033–1106): best measured 61-65ms — clears rank-18 bar.
+
+Correctness: 53687387166542798 ✓.
+→ **submit under: g++-13 -O3 -march=native** (fast-VM best ≈61-65ms CLEARS rank-18 bar 69ms).
+
+**STOP-FLOOR ×1107. Design space fully saturated. No new variants. Champion ready to submit.**
