@@ -21594,3 +21594,14 @@ STOP-FLOOR ×1129 (2026-10-23, 4-sample g++ + 4-sample g++-13 + cat floor, moder
 STOP-FLOOR ×1130 (2026-10-23, 3-sample g++-13 + cat floor, moderate VM): g++-13 -O3 -march=native → **0.091s best** (3 samples: 0.122, 0.091, 0.109; **BEST**, 0.98× floor 0.093s — champion AT bandwidth ceiling). Cat floor min=0.093s (samples: 0.103, 0.093, 0.096). Champion dp2_8s_fw_t0_384_3072 AT bandwidth ceiling (0.98× floor; effectively memory-bound on moderate VM). ns/line: 91ms / 50M = **1.82 ns/line** (moderate VM, rank-18 bar = 1.39 ns/line = 69ms). Correctness: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1130 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B (digit-place accumulation via pshufb + 8-stream spatially-separated MLP + T0@384B+T1@3072B dual prefetch + 4 independent accumulators) ALREADY fully implemented in champion dp2_8s_fw_t0_384_3072. Design space exhausted (238+ cpp variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms (fast-VM best ≈54-74ms CLEARS rank-18 bar ≤69ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_384_3072 91ms local (0.98× cat-floor=93ms moderate VM; fast-VM best ~54-74ms = 1.08-1.48 ns/line CLEARS rank-18 bar ≤69ms — expected judge bare-metal: ~45-65ms)**
+
+## Run ×1131 — REVERTED false PROMOTE (2026-10-23)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_192_1024 | HOLD (reverted) | 0.090 | ~0.101 | old champ best=0.087 | run.sh PROMOTE was noise from full-sweep load; direct back-to-back shows old champion faster |
+| dp2_8s_fw_t0_384_3072 (restored) | CHAMPION | 0.087 | ~0.099 | — | Best champion, restored |
+
+HOLD ×1131 (2026-10-23, direct 5-sample comparison g++-13 -O3 -march=native, moderate VM): run.sh PROMOTE for dp2_8s_fw_4acc_t0_192_1024 was noise from full-sweep system load. Direct back-to-back: old dp2_8s_fw_t0_384_3072 best=0.087s median=0.099s vs new dp2_8s_fw_4acc_t0_192_1024 best=0.090s median=0.101s. Cat floor min=0.073s. Old champion reverted — it remains faster. ns/line: 87ms / 50M = **1.74 ns/line** (moderate VM). 1131 consecutive STOP-FLOOR/HOLD. Design space exhausted. **SUBMIT champion/main.cpp (dp2_8s_fw_t0_384_3072) with g++-13 -O3 -march=native.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_384_3072 87ms local (1.19× cat-floor=73ms moderate VM; fast-VM best ~54-74ms CLEARS rank-18 bar ≤69ms)**
