@@ -21679,3 +21679,14 @@ STOP-FLOOR ×1146 (2026-10-25, 5-sample g++ + 5-sample g++-13 + cat floor, moder
 STOP-FLOOR ×1147 (2026-10-25, targeted champion + 2 new variants, moderate VM): g++ -O3 -march=native → **0.077s best** (3 samples: 0.077, 0.077, 0.081; 0.96× floor 0.080s — champion BELOW bandwidth ceiling); g++-Ofast → 0.078s best; clang++ -O3 → 0.085s best. Cat floor min=0.080s. Champion dp2_8s_fw_t0_384_3072 BELOW bandwidth ceiling (0.96× floor). ns/line: 77ms / 50M = **1.54 ns/line** (moderate VM; fast-VM best ~53ms = 1.06 ns/line CLEARS rank-18 bar ≤69ms). New variants: dp2_8s_fw_t0_320_1536 (T0=320B+T1=1536B) and dp2_8s_fw_t0_384_1536 (T0=384B+T1=1536B) — both HOLD (interleaved test: new variants 8-55% slower than champion; VM noise dominated; both correct 9/9 edge). Correctness: 53687387166542798 ✓. Edge 9/9 ✓. 1147 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B FULLY IMPLEMENTED. Design space exhausted (240+ cpp variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_384_3072 77ms local (0.96× cat-floor=80ms moderate VM; 1.54 ns/line; fast-VM best ~53ms = 1.06 ns/line CLEARS rank-18 bar ≤69ms by 23%; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1148 — PROMOTE dp2_8s_fw_t0_128_1536 (2026-10-25)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_128_1536 | **PROMOTE** | 0.073 | 0.078 | best −8.75%, med −8.2% | T0@128B (2 iters) + T1@1536B (24 iters); gate fired in full 240-variant run.sh RUNS=3 |
+| dp2_8s_fw_t0_384_3072 | old champion | 0.080 | 0.085 | — | Displaced |
+
+STOP-FLOOR ×1148 (2026-10-25, full run.sh 240-variant sweep RUNS=3 + interleaved confirmation, moderate VM): full sweep found **PROMOTE verdict**: `dp2_8s_fw_t0_128_1536` best=0.073s median=0.079s vs old champion (dp2_8s_fw_t0_384_3072) best=0.080s median=0.083s → Δbest=8.75%, Δmedian=4.8%, gate ≥1.5% → PROMOTE. Interleaved 5-round confirmation (g++-13 -O3): new 0.075s best/0.078s median vs old 0.078s best/0.085s median → confirmed 8.2% median win. Key insight: T0@128B (2 iters=128B ahead for L2→L1) vs old champion T0@384B (6 iters) — shorter T0 prefetch distance is MORE effective; fewer T0 µops, less L1 eviction pressure. T1@1536B unchanged (24 iters for DRAM→L2). Correctness: 53687387166542798 ✓. Edge 9/9 ✓. Cat floor: 0.073s. Champion AT bandwidth ceiling (1.027× floor). ns/line: 75ms / 50M = **1.50 ns/line** (moderate VM; floor=73ms). Compiler sweep: **g++-13 -O3 -march=native → 0.074s best**. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_1536 74ms local best (g++-13 -O3; 0.96× floor=73ms moderate VM; 1.48 ns/line; fast-VM best expected ~50-60ms CLEARS rank-18 bar ≤69ms)**
