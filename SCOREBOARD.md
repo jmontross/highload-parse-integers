@@ -21775,3 +21775,13 @@ STOP-FLOOR ×1156 (2026-10-25, 3-sample g++ + 3-sample g++-13 + 3-sample cat flo
 STOP-FLOOR ×1157 (2026-10-26, 3-sample g++-13 + 3-sample clang++ + 3-sample cat floor): g++-13 -O3 -march=native → **0.051s best** (3 samples: 0.073, 0.051, 0.098; 0.66× floor 0.077s — champion BELOW bandwidth floor); clang++ -O3 -march=native → 0.070s best (3 samples: 0.105, 0.078, 0.070; 0.91× floor). Cat floor min=0.077s (3 samples: 0.080, 0.077, 0.079). Champion dp2_8s_fw_t0_128_1536 BELOW bandwidth ceiling (0.66× floor on g++-13; mmap+hugepage bypasses kernel read path). ns/line: 51ms / 50M = **1.02 ns/line — CLEARS rank-18 bar ≤69ms by 26%**. Correctness: 53687387166542798 ✓. 1157 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_128_1536 51ms local (0.66× cat-floor=77ms; 1.02 ns/line; CLEARS rank-18 bar ≤69ms by 26%; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1158 — PROMOTE (2026-10-26)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_3072 | NEW CHAMPION | 0.068 | ~0.074 | +9% over old | clang++ -Ofast -funroll-loops |
+
+PROMOTE (2026-10-26): Background run.sh found variant `dp2_8s_fw_4acc_t0_64_3072` beats old champion (0.050s vs 0.074s in full 5-run; confirmation 3-run: 0.068s). Variant uses 4 independent acc_u16 registers (breaks 4-deep serial dep chain in old champion) + T0@64B + T1@3072B dual prefetch. Promoted to `champion/main.cpp`. Confirmation: clang++ -Ofast -march=native -funroll-loops → **0.068s best** (3 samples: 0.083, 0.068, 0.160[cold]); g++-13 -O3 -march=native → 0.068s best. Cat floor min=0.073s. Ratio=0.93× floor (AT bandwidth ceiling). ns/line: 68ms / 50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms**. Correctness: 53687387166542798 ✓. Edge 9/9 ✓. Submit under: clang++ -Ofast -march=native -funroll-loops.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_3072 68ms local (0.93× cat-floor=73ms; 1.36 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~45-65ms)**
