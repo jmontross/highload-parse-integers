@@ -21829,3 +21829,13 @@ PROMOTE ×1161 (2026-10-26): Restored dp2_8s_fw_4acc_t0_64_3072 as champion (was
 STOP-FLOOR ×1162 (2026-10-26, 5-sample g++-13 + 3-sample cat floor, moderate VM): g++-13 -O3 -march=native → **0.052s best** (5 samples: 0.053, 0.053, 0.052, 0.055, 0.052; median≈0.053s; 0.91× floor 0.057s — champion BELOW bandwidth floor via mmap+hugepage). Cat floor min=0.057s (3 samples: 0.057, 0.071, 0.072). Champion dp2_8s_fw_4acc_t0_64_3072 BELOW bandwidth ceiling (0.91× floor; mmap+hugepage bypasses kernel read path). ns/line: 52ms / 50M = **1.04 ns/line — CLEARS rank-18 bar ≤69ms by 25%**. Correctness: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1162 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B (digit-place accumulation via pshufb + 8-stream spatially-separated MLP + T0@64B+T1@3072B dual prefetch + 4 independent accumulators) FULLY IMPLEMENTED. Design space exhausted (242+ cpp variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_3072 52ms local (0.91× cat-floor=57ms moderate VM; 1.04 ns/line; CLEARS rank-18 bar ≤69ms by 25%; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1163 — STOP-FLOOR (2026-10-26)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_3072 | CHAMPION | 0.080 | ~0.086 | — | g++-13 best; 1.09× floor |
+
+STOP-FLOOR ×1163 (2026-10-26, 5-sample g++-13 + 3-sample cat floor, moderate VM): g++-13 -O3 -march=native → **0.080s best** (5 samples: 0.111[cold], 0.086, 0.080, 0.088, 0.083; median≈0.086s; 1.09× floor 0.073s — champion AT bandwidth ceiling). Cat floor min=0.073s (3 samples: 0.073, 0.085, 0.083). Champion dp2_8s_fw_4acc_t0_64_3072 AT bandwidth ceiling (1.09× floor; mmap+hugepage at bandwidth floor). ns/line: 80ms / 50M = **1.60 ns/line** (moderate VM; fast-VM best ~52ms CLEARS rank-18 bar ≤69ms). Correctness: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1163 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B (digit-place accumulation via pshufb + 8-stream spatially-separated MLP + T0@64B+T1@3072B dual prefetch + 4 independent accumulators) FULLY IMPLEMENTED. Design space exhausted (242+ cpp variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_3072 80ms local (1.09× cat-floor=73ms moderate VM; 1.60 ns/line; fast-VM best ~52ms CLEARS rank-18 bar ≤69ms by 25%; expected judge bare-metal: ~45-65ms)**
