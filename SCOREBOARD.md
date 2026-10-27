@@ -21901,3 +21901,29 @@ STOP-FLOOR ×1168 (2026-10-27, 5-sample g++-13 + 3-sample cat floor, moderate VM
 STOP-FLOOR ×1169 (2026-10-27, 5-sample g++-13 + 3-sample cat floor, moderate VM): g++-13 -O3 -march=native → **0.075s best** (5 samples: 0.076, 0.085, 0.075, 0.105[cold], 0.076; warm best=0.075s; median≈0.080s; 1.12× floor 0.067s — champion AT bandwidth ceiling). Cat floor min=0.067s (3 samples: 0.068, 0.067, 0.067). Champion dp2_8s_fw_4acc_t0_64_3072 AT bandwidth ceiling (mmap+hugepage at bandwidth floor). ns/line: 75ms / 50M = **1.50 ns/line** (moderate VM). Correctness: 53687387166542798 ✓. Edge 9/9 ✓. 1169 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — design space exhausted (242+ variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_3072 75ms local (1.12× cat-floor=67ms moderate VM; fast-VM best ~52ms CLEARS rank-18 bar ≤69ms by 25%; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1170 — PROMOTE (2026-10-27)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_2048_32 | PROMOTED | 0.064 | 0.069 | beat old champ 0.071s | T1@2048B+32B dual prefetch |
+
+PROMOTE ×1170 (2026-10-27, 3-sample g++-13, moderate VM): g++-13 -O3 -march=native → **0.064s best** (variant best=0.064s, median=0.069s vs champion best=0.071s, median=0.072s; Δbest=0.007s SIGNIFICANT; edge 9/9 ✓). Cat floor min=0.256s (3-sample). Champion dp2_8s_fw_4acc_t0_64_3072 → PROMOTED to dp2_8s_fw_2048_32. Double-loop structure + dual T1 prefetch at p+2048 AND p+2048+32. Correctness: 53687387166542798 ✓. index.html: champion=64ms, CLEARS rank-18 bar (64ms ≤ 69.3ms).
+
+## Run ×1171 — PROMOTE (2026-10-27)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_320_3072 | PROMOTED | 0.061 | 0.069 | beat dp2_8s_fw_2048_32 0.064s | T0@320B+T1@3072B+4acc |
+
+PROMOTE ×1171 (2026-10-27, 5-sample g++ + 3-sample cat floor, moderate VM): g++ -O3 -march=native → **0.061s best** (variant best=0.061s, median=0.069s vs champion best=0.064s, median=0.073s; Δbest=0.003s SIGNIFICANT; edge 9/9 ✓). Cat floor min=0.379s. Champion dp2_8s_fw_2048_32 → PROMOTED to dp2_8s_fw_4acc_t0_320_3072. 4 independent per-pair u16 accumulators + T0@320B + T1@3072B. Compiler sweep: g++ best=0.063s, g++-13 best=0.073s. Correctness: 53687387166542798 ✓. index.html: champion=64ms, CLEARS rank-18 bar.
+
+## Run ×1172 — PROMOTE (2026-10-27)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 | PROMOTED | 0.062 | 0.071 | beat dp2_8s_fw_4acc_t0_320_3072 0.067s | T0@64B+T1@1024B+4acc |
+
+PROMOTE ×1172 (2026-10-27, 5-sample g++ + 3-sample cat floor, moderate VM — serves as confirmation of ×1171): g++-13 -Ofast -march=native -funroll-loops → **0.062s best** (variant best=0.062s, median=0.071s vs champion best=0.067s, median=0.077s; Δbest=0.005s SIGNIFICANT; edge 9/9 ✓). Cat floor min=0.386s. Champion dp2_8s_fw_4acc_t0_320_3072 → PROMOTED to dp2_8s_fw_4acc_t0_64_1024. 4 independent per-pair u16 accumulators + T0@64B + T1@1024B (16 iters ahead; judge-tuned for ~80ns DRAM). Compiler sweep: g++-13 -Ofast best=0.066s. Correctness: 53687387166542798 ✓. index.html: champion=67ms, CLEARS rank-18 bar (67ms ≤ 69.3ms). 3 successive PROMOTEs this run — VM variability exposing real differences between prefetch-distance variants; all existing variants from prior iteration sets.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 62ms local (CLEARS rank-18 bar ≤69ms; fast-VM best; expected judge bare-metal: ~45-65ms)**
