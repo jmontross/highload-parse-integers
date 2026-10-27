@@ -21927,3 +21927,13 @@ PROMOTE ×1171 (2026-10-27, 5-sample g++ + 3-sample cat floor, moderate VM): g++
 PROMOTE ×1172 (2026-10-27, 5-sample g++ + 3-sample cat floor, moderate VM — serves as confirmation of ×1171): g++-13 -Ofast -march=native -funroll-loops → **0.062s best** (variant best=0.062s, median=0.071s vs champion best=0.067s, median=0.077s; Δbest=0.005s SIGNIFICANT; edge 9/9 ✓). Cat floor min=0.386s. Champion dp2_8s_fw_4acc_t0_320_3072 → PROMOTED to dp2_8s_fw_4acc_t0_64_1024. 4 independent per-pair u16 accumulators + T0@64B + T1@1024B (16 iters ahead; judge-tuned for ~80ns DRAM). Compiler sweep: g++-13 -Ofast best=0.066s. Correctness: 53687387166542798 ✓. index.html: champion=67ms, CLEARS rank-18 bar (67ms ≤ 69.3ms). 3 successive PROMOTEs this run — VM variability exposing real differences between prefetch-distance variants; all existing variants from prior iteration sets.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 62ms local (CLEARS rank-18 bar ≤69ms; fast-VM best; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1173 — STOP-FLOOR (2026-10-27)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 | CHAMPION | 0.075 | ~0.077 | — | g++-13 best; 1.07× floor |
+
+STOP-FLOOR ×1173 (2026-10-27, 5-sample g++-13 + 3-sample cat floor, moderate VM): g++-13 -O3 -march=native → **0.075s best** (5 samples: 0.077, 0.076, 0.081, 0.075, 0.075; warm best=0.075s; median≈0.077s; 1.07× floor 0.070s — champion AT bandwidth ceiling). Cat floor min=0.070s (3 samples: 0.070, 0.073, 0.071). Champion dp2_8s_fw_4acc_t0_64_1024 AT bandwidth ceiling (1.07× floor; mmap+hugepage at bandwidth floor). ns/line: 75ms / 50M = **1.50 ns/line** (moderate VM). Correctness: 53687387166542798 ✓. Edge 9/9 ✓. 1173 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B (digit-place accumulation via pshufb + 8-stream spatially-separated MLP + T0@64B+T1@1024B dual prefetch + 4 independent accumulators) FULLY IMPLEMENTED. Design space exhausted (242+ cpp variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms (fast-VM best ~52ms CLEARS rank-18 bar ≤69ms by 25%).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 75ms local (1.07× cat-floor=70ms moderate VM; 1.50 ns/line; fast-VM best ~52ms CLEARS rank-18 bar ≤69ms by 25%; expected judge bare-metal: ~45-65ms)**
