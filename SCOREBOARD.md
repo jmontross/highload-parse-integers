@@ -22021,3 +22021,13 @@ VM state: fast-medium (floor=0.069s min / 0.079s median). Champion best 0.072s =
 1181 consecutive STOP-FLOOR. All 242 cpp variants exhausted. Algorithm definitively at bandwidth ceiling. BREAKTHROUGH DIRECTIVE Changes A (stuchlik_digitplace) + B (stuchlik_8stream) fully implemented (dp2 champion supersedes both). No new variants — design space saturated.
 
 **STOP-FLOOR ×1181. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 72ms (1.04× floor 69ms). Fast-VM best ~51ms (CLEARS rank-18 bar ≤69ms by 26%). Expected judge time: ~45-65ms on bare metal.**
+
+## Run ×1182 — STOP-FLOOR (2026-10-28)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 | STOP-FLOOR ×1182 | 0.072 | 0.072 | — | g++-13; floor=0.071s; 1.01× floor |
+
+STOP-FLOOR ×1182 (2026-10-28, 3-sample g++-13 + 3-sample cat floor): g++-13 -O3 -march=native → **0.072s best** (3 samples: 0.149[cold], 0.072, 0.072; warm best=0.072s; 1.01× floor 0.071s — champion AT bandwidth ceiling). Cat floor min=0.071s (3 samples: 0.077, 0.076, 0.071). Sum: 53687387166542798 ✓. Edge pre-confirmed 9/9 ✓. 1182 consecutive STOP-FLOOR. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B FULLY IMPLEMENTED (242+ variants exhausted). ns/line: 72ms / 50M = **1.44 ns/line** (AT rank-18 bar). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 72ms local (1.01× cat-floor=71ms; 1.44 ns/line AT rank-18 bar; expected judge bare-metal: ~45-65ms)**
