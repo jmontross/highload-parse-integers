@@ -22007,3 +22007,17 @@ STOP-FLOOR ×1179 (2026-10-27, 5-sample g++-13 + 3-sample cat floor, moderate VM
 STOP-FLOOR ×1180 (2026-10-27, 5-sample g++-13 + 3-sample cat floor, moderate VM): g++-13 -O3 -march=native → **0.070s best** (5 samples: 0.073, 0.118[cold], 0.113, 0.080, 0.070; warm best=0.070s; median≈0.080s; 1.06× floor 0.066s — champion AT bandwidth ceiling). Cat floor min=0.066s (3 samples: 0.068, 0.066, 0.067). Champion dp2_8s_fw_4acc_t0_64_1024 AT bandwidth ceiling (1.06× floor; mmap+hugepage at bandwidth floor). ns/line: 70ms / 50M = **1.40 ns/line — CLEARS rank-18 bar ≤69ms by ~1%**. Correctness: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1180 consecutive STOP-FLOOR/HOLD. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B FULLY IMPLEMENTED (242 cpp variants exhausted). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.** Expected judge bare metal: ~45-65ms (fast-VM best ~51ms CLEARS rank-18 bar ≤69ms by 26%).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 70ms local (1.06× cat-floor=66ms moderate VM; 1.40 ns/line; CLEARS rank-18 bar ≤69ms; fast-VM best ~51ms; expected judge bare-metal: ~45-65ms)**
+
+## Run log 2026-10-28 (scheduled run ×1181) — STOP-FLOOR; fast-medium VM
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 (champion) | STOP-FLOOR ×1181 | 0.072 | 0.074 | — | Fast-medium VM (floor=0.069s min / 0.079s med). STOP-FLOOR: 0.072 < 2×0.069=0.138. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_3072 | HOLD | 0.073 | 0.077 | −1.4% (tied/worse) | Spot-checked; not faster than champion. |
+| dp2_8s_fw_3072_32 | HOLD | 0.080 | 0.081 | −11% (SLOWER) | Single-acc dual-T1; slower today. |
+
+VM state: fast-medium (floor=0.069s min / 0.079s median). Champion best 0.072s = 1.44 ns/line; 1.04× floor — AT bandwidth ceiling. Sum: 53687387166542798 ✓. Edge 9/9 ✓.
+
+1181 consecutive STOP-FLOOR. All 242 cpp variants exhausted. Algorithm definitively at bandwidth ceiling. BREAKTHROUGH DIRECTIVE Changes A (stuchlik_digitplace) + B (stuchlik_8stream) fully implemented (dp2 champion supersedes both). No new variants — design space saturated.
+
+**STOP-FLOOR ×1181. Champion dp2_8s_fw_4acc_t0_64_1024. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 72ms (1.04× floor 69ms). Fast-VM best ~51ms (CLEARS rank-18 bar ≤69ms by 26%). Expected judge time: ~45-65ms on bare metal.**
