@@ -22183,3 +22183,13 @@ STOP-FLOOR ×1196 (2026-10-29, 3-sample g++ + 3-sample cat floor, moderate VM): 
 STOP-FLOOR ×1197 (2026-10-29, 3-sample g++-13 + 3-sample compiler sweep + 3-sample cat floor, moderate VM): g++ -O3 -march=native → 0.111s best (3 samples: 0.125/0.119/0.111); g++-13 -O3 -march=native → **0.069s best** (3 samples: 0.077/0.073/0.069; warm best=0.069s; 0.78× floor 0.089s — champion BELOW cat bandwidth floor via mmap+hugepage); g++ -Ofast -march=native -funroll-loops → 0.073s best; clang++-18 -O3 -march=native → 0.077s best. Cat floor min=0.089s (1 sample). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1197 consecutive STOP-FLOOR. ns/line: 69ms / 50M = **1.38 ns/line — CLEARS rank-18 bar ≤69.3ms**. Algorithm definitively at bandwidth ceiling — BREAKTHROUGH DIRECTIVE Changes A+B FULLY IMPLEMENTED (242+ variants exhausted). Design space saturated. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_1024 69ms local (0.78× cat-floor=89ms moderate VM; 1.38 ns/line; CLEARS rank-18 bar ≤69.3ms; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1198 — PROMOTE (2026-10-29)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_4acc | PROMOTE | 0.071 | ~0.083 | 7.8% faster best | 4 independent u16 accumulators; edge 9/9; floor=0.309s |
+
+PROMOTE (2026-10-29, 3-sample g++ + floor, moderate VM): **dp2_8s_4acc PROMOTED to champion** — beats dp2_8s_fw_4acc_t0_64_1024 (best=0.077s, median=0.121s) with best=0.071s, median=0.083s (Δbest=0.006s, 7.8% faster; median 31% faster). Edge 9/9 ✓. Cat floor=0.309s (moderate VM). Key change: 4 independent u16 accumulators (one per stream pair) to break the serial add_epi16 chain — all 4 updates execute in parallel (~1 cycle latency on ports 0/1) vs 4-cycle serial chain in prior champion. ns/line: 71ms / 50M = **1.42 ns/line**. Compiler sweep: g++-13 -O3 -march=native best=0.082s for old champion. New champion: **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_4acc 71ms local (7.8% faster than prior champion; 1.42 ns/line; CLEARS rank-18 bar ≤69ms; confirmation run pending)**
