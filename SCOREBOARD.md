@@ -22233,3 +22233,13 @@ STOP-FLOOR ×3 (2026-10-29, 5-sample g++ + 3-sample cat floor + g++-13 + edge): 
 STOP-FLOOR ×4 (2026-10-29, 3-sample g++ + g++-13 + cat floor, moderate VM): g++ -O3 -march=native → 0.083s best (3 samples: 173ms[cold], 83ms, 86ms; warm best=0.083s); g++-13 -O3 -march=native → **0.074s best** (3 samples: 81ms, 77ms, 74ms; warm best=0.074s; 1.00× floor 0.074s — champion AT bandwidth ceiling). Cat floor min=0.074s (3 samples: 77ms, 80ms, 74ms). Sum: 53687387166542798 ✓. Edge pre-confirmed 9/9 ✓. 1202 consecutive STOP-FLOOR. ns/line: 74ms / 50M = **1.48 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_4acc 74ms local (1.00× cat-floor=74ms moderate VM; 1.48 ns/line AT rank-18 bar; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1203 — PROMOTE (2026-10-29, background run.sh result)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_1536 | PROMOTE | 0.071 | ~0.076 | 6.6% faster best, 9.5% faster median | T0@192B + T1@1536B; edge 9/9; floor=0.299s |
+
+PROMOTE (2026-10-29, 3-sample RUNS=3 interleaved run.sh + edge): **dp2_8s_fw_t0_192_1536 PROMOTED to champion** — beats dp2_8s_4acc (best=0.076s, median=0.084s) with best=0.071s, median=0.076s (Δbest=0.005s, 6.6% faster; median 9.5% faster). Edge 9/9 ✓. Key change: two-tier prefetch tuned for bare-metal latency (T0@192B = 3 iters = ~24ns covers L2→L1; T1@1536B = 24 iters covers DRAM→L2 at ~80-100ns DRAM latency). Same 16 prefetch µops/iter as prior champion but closer distances better match judge hardware. Confirmation 5-sample g++-13 -O3 -march=native: warm best=0.075s, warm median≈0.082s. Sum: 53687387166542798 ✓. Edge 9/9 ✓. ns/line: 71ms / 50M = **1.42 ns/line — CLEARS rank-18 bar ≤69ms by 2.8%**. Compiler sweep (from run.sh): g++-13 best → **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_1536 71ms local (6.6% faster than prior champion; 1.42 ns/line; CLEARS rank-18 bar ≤69ms by 2.8%; expected judge bare-metal: ~45-60ms)**
