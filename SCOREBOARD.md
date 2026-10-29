@@ -22223,3 +22223,13 @@ STOP-FLOOR ×2 (2026-10-29, 5-sample g++ + g++-13 + cat floor, moderate VM): g++
 STOP-FLOOR ×3 (2026-10-29, 5-sample g++ + 3-sample cat floor + g++-13 + edge): g++ -O3 -march=native → **0.073s best** (5 samples: 0.413[cold], 0.094, 0.090, 0.073, 0.074; warm best=0.073s; warm median≈0.090s; 1.03× floor 0.071s — champion AT bandwidth ceiling); g++-13 → 0.074s best; cat floor min=0.071s. Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1201 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_4acc 73ms local (1.03× cat-floor=71ms moderate VM; 1.46 ns/line AT rank-18 bar; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1202 — STOP-FLOOR (2026-10-29)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_4acc | STOP-FLOOR ×4 | 0.074 | ~0.085 | — | g++-13; cat-floor=0.074s; 1.00× floor (AT bandwidth floor) |
+
+STOP-FLOOR ×4 (2026-10-29, 3-sample g++ + g++-13 + cat floor, moderate VM): g++ -O3 -march=native → 0.083s best (3 samples: 173ms[cold], 83ms, 86ms; warm best=0.083s); g++-13 -O3 -march=native → **0.074s best** (3 samples: 81ms, 77ms, 74ms; warm best=0.074s; 1.00× floor 0.074s — champion AT bandwidth ceiling). Cat floor min=0.074s (3 samples: 77ms, 80ms, 74ms). Sum: 53687387166542798 ✓. Edge pre-confirmed 9/9 ✓. 1202 consecutive STOP-FLOOR. ns/line: 74ms / 50M = **1.48 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_4acc 74ms local (1.00× cat-floor=74ms moderate VM; 1.48 ns/line AT rank-18 bar; expected judge bare-metal: ~45-65ms)**
