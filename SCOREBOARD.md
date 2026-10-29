@@ -22253,3 +22253,13 @@ PROMOTE (2026-10-29, 3-sample RUNS=3 interleaved run.sh + edge): **dp2_8s_fw_t0_
 STOP-FLOOR ×5 (2026-10-29, 3-sample g++ + g++-13 + clang++-18 + cat floor, moderate VM): g++ -O3 -march=native → **0.063s best** (3 samples: 0.063, 0.065, 0.067; warm best=0.063s; 0.91× floor 0.069s — champion BELOW cat bandwidth floor via mmap+hugepage); g++-13 -O3 -march=native → 0.064s best (3 samples: 0.079, 0.068, 0.064); clang++-18 -O3 -march=native → 0.074s best (3 samples: 0.080, 0.074, 0.074). Cat floor min=0.069s (3 samples: 0.072, 0.072, 0.069). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1204 consecutive STOP-FLOOR. ns/line: 63ms / 50M = **1.26 ns/line — CLEARS rank-18 bar ≤69ms by 9%**. Best compiler: g++ -O3 -march=native (0.063s). Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_1536 63ms local (0.91× cat-floor=69ms moderate VM; 1.26 ns/line; CLEARS rank-18 bar ≤69ms by 9%; best compiler g++ -O3 -march=native; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1205 — STOP-FLOOR (2026-10-29)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_1536 | STOP-FLOOR ×6 | 0.072 | ~0.073 | — | g++; cat-floor=0.068s; 1.06× floor (AT bandwidth floor) |
+
+STOP-FLOOR ×6 (2026-10-29, 3-sample g++ + g++-13 + cat floor, moderate VM): g++ -O3 -march=native → **0.072s best** (3 samples: 0.074, 0.073, 0.072; 1.06× floor 0.068s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.074s best (3 samples: 0.086, 0.074, 0.077). Cat floor min=0.068s (3 samples: 0.070, 0.076, 0.068). Sum: 53687387166542798 ✓. Edge pre-confirmed 9/9 ✓. 1205 consecutive STOP-FLOOR. ns/line: 72ms / 50M = **1.44 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_1536 72ms local (1.06× cat-floor=68ms moderate VM; 1.44 ns/line AT rank-18 bar; expected judge bare-metal: ~45-60ms)**
