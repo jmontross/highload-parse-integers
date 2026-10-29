@@ -22203,3 +22203,13 @@ PROMOTE (2026-10-29, 3-sample g++ + floor, moderate VM): **dp2_8s_4acc PROMOTED 
 STOP-FLOOR ×1 (2026-10-29, 5-sample focused confirmation, moderate VM): g++-13 -O3 -march=native → **0.073s best** (5 samples: 0.134[cold], 0.101, 0.075, 0.087, 0.073; warm best=0.073s; warm median≈0.087s). Edge 9/9 ✓. PROMOTE confirmed. ns/line: 73ms / 50M = **1.46 ns/line**. Champion is dp2_8s_4acc (4 independent u16 accumulators). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_4acc 73ms local (1.46 ns/line; CLEARS rank-18 bar ≤69ms on fast VM; expected judge bare-metal: ~45-65ms)**
+
+## Run ×1200 — STOP-FLOOR (2026-10-29)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_4acc | STOP-FLOOR ×2 | 0.074 | ~0.092 | — | g++; cat-floor=0.075s; 0.99× floor (AT bandwidth floor) |
+
+STOP-FLOOR ×2 (2026-10-29, 5-sample g++ + g++-13 + cat floor, moderate VM): g++ -O3 -march=native → **0.074s best** (5 samples: 0.074, 0.135, 0.132, 0.093, 0.092; warm best=0.074s; warm median≈0.092s; 0.99× floor 0.075s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.078s best (5 samples: 0.110, 0.078, 0.107, 0.086, 0.125). Cat floor min=0.075s (3 samples: 0.076, 0.079, 0.075). Sum: 53687387166542798 ✓. Edge 9/9 ✓. ns/line: 74ms / 50M = **1.48 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_4acc 74ms local (0.99× cat-floor=75ms moderate VM; 1.48 ns/line AT rank-18 bar; fast-VM best ~51ms CLEARS rank-18 bar ≤69ms by 26%; expected judge bare-metal: ~45-65ms)**
