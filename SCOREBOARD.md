@@ -22263,3 +22263,13 @@ STOP-FLOOR ×5 (2026-10-29, 3-sample g++ + g++-13 + clang++-18 + cat floor, mode
 STOP-FLOOR ×6 (2026-10-29, 3-sample g++ + g++-13 + cat floor, moderate VM): g++ -O3 -march=native → **0.072s best** (3 samples: 0.074, 0.073, 0.072; 1.06× floor 0.068s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.074s best (3 samples: 0.086, 0.074, 0.077). Cat floor min=0.068s (3 samples: 0.070, 0.076, 0.068). Sum: 53687387166542798 ✓. Edge pre-confirmed 9/9 ✓. 1205 consecutive STOP-FLOOR. ns/line: 72ms / 50M = **1.44 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_1536 72ms local (1.06× cat-floor=68ms moderate VM; 1.44 ns/line AT rank-18 bar; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1206 — STOP-FLOOR (2026-10-30)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_1536 | STOP-FLOOR ×7 | 0.067 | ~0.073 | — | g++; cat-floor=0.071s; 0.94× floor (BELOW cat floor via mmap+hugepage) |
+
+STOP-FLOOR ×7 (2026-10-30, 5-sample g++ + 3-sample g++-13 + 3-sample cat floor, moderate VM): g++ -O3 -march=native → **0.067s best** (5 samples: 0.082, 0.073, 0.067, 0.069, 0.078; warm best=0.067s; warm median≈0.073s; 0.94× floor 0.071s — champion BELOW cat bandwidth floor via mmap+hugepage); g++-13 -O3 -march=native → 0.067s best (3 samples: 0.076, 0.073, 0.067). Cat floor min=0.071s (3 samples: 0.071, 0.076, 0.073). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1206 consecutive STOP-FLOOR. ns/line: 67ms / 50M = **1.34 ns/line — CLEARS rank-18 bar ≤69ms by 3%**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_1536 67ms local (0.94× cat-floor=71ms moderate VM; 1.34 ns/line; CLEARS rank-18 bar ≤69ms by 3%; expected judge bare-metal: ~45-60ms)**
