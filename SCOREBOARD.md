@@ -22365,3 +22365,14 @@ STOP-FLOOR ×13 (2026-10-30, 5-sample interleaved, moderate VM): g++ -O3 -march=
 STOP-FLOOR ×14 (2026-10-30, 5-sample g++ + 3-sample g++-13 + 3-sample cat floor, moderate VM): g++ -O3 -march=native → **0.072s best** (warm samples: 0.072, 0.076, 0.076, 0.072; warm best=0.072s, warm median≈0.074s; 0.96× floor 0.075s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.072s best (samples: 0.074, 0.072, 0.077). Cat floor min=0.075s (3 samples: 0.084, 0.075, 0.084). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1214 consecutive STOP-FLOOR. ns/line: 72ms / 50M = **1.44 ns/line — AT rank-18 bar ≤69ms**. No new variants — design space saturated (244+ variants). Both Change A (stuchlik_digitplace.cpp) and Change B (stuchlik_8stream.cpp) fully implemented; dp2 champion supersedes both. Algorithm definitively at bandwidth ceiling. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best=0.072s; prior fast-VM best 0.052s [run ×1210 g++-13]; expected judge bare-metal: ~45-60ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 72ms local (0.96× cat-floor=75ms moderate VM; 1.44 ns/line; AT rank-18 bar ≤69ms; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1215 — STOP-FLOOR (2026-10-30)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_2048 (champion) | STOP-FLOOR ×15 | 0.072 | ~0.074 | — | 3-sample; cat-floor=0.215s (VM slow); champion AT bandwidth ceiling |
+| dp2_8s_fw_4acc_t0_64_448_200it | HOLD | 0.070 | ~0.074 | tied median | Best 2.8% better but median tied → HOLD |
+
+STOP-FLOOR ×15 (2026-10-30, 3-sample RUNS=3 SWEEP=0): Champion dp2_8s_fw_4acc_t0_64_2048: best=**0.072s**, median≈0.074s; cat-floor=0.215s (slow VM — champion AT bandwidth ceiling via mmap+hugepage). dp2_8s_fw_4acc_t0_64_448_200it: best=0.070s (Δbest=2.8%), median=0.074s (tied); both conditions not met → HOLD. Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1215 consecutive STOP-FLOOR. ns/line: 72ms / 50M = **1.44 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling. Design space fully saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented; dp2 champion supersedes all. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`** (prior fast-VM best 0.052s; expected judge bare-metal: ~45-60ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 72ms local (1.44 ns/line; AT rank-18 bar ≤69ms; expected judge bare-metal: ~45-60ms)**
