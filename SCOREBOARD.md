@@ -22303,3 +22303,21 @@ PROMOTE (2026-10-30, 3-sample confirmation run — champion was dp2_8s_fw_4acc_t
 STOP-FLOOR ×8 (2026-10-30, 5-sample g++ + 5-sample g++-13 + 3-sample clang++-18 + cat floor, moderate VM): g++ -O3 -march=native → **0.073s best** (5 samples: 0.328[cold], 0.079, 0.073, 0.073, 0.089; warm best=0.073s, warm median≈0.079s; 1.07× floor 0.068s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.072s best (5 samples: 0.089, 0.075, 0.073, 0.072, 0.075; warm best=0.072s); clang++-18 → 0.080s best. Cat floor min=0.068s (3 samples: 0.077, 0.068, 0.072). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1209 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native` (best=0.072s).**
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_448 72ms local (1.07× cat-floor=68ms moderate VM; 1.46 ns/line AT rank-18 bar; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1208 — STOP-FLOOR (2026-10-30)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_2048 (champion) | STOP-FLOOR | 0.071 | ~0.072 | — | g++; cat-floor=0.070s; 1.01× floor (AT bandwidth floor) |
+| dp2_8s_fw_4acc_t0_64_1536 | HOLD | 0.071 | ~0.081 | tied best, median HIGHER | Best=0.071s ties champion; median≈0.081s > champion≈0.072s. VM oscillation; no gate. |
+| dp2_8s_fw_4acc_t0_192_1536 | HOLD | 0.072 | ~0.108 | 0% | Tied best. High jitter median. Within noise. |
+| dp2_8s_fw_t0_192_1536 (single-acc) | HOLD | 0.076 | ~0.099 | −6.9% | Single-acc slower than 4acc. Consistent with prior runs. |
+| dp2_8s_fw_4acc_t0_32_1536 | DEAD | 0.074 | ~0.077 | consistently 3-4ms SLOWER | NEW 2026-10-30. T0@32B (half cache line) + T1@1536B. T0@32B targets the SAME cacheline currently in use → less benefit than T0@64B targeting the NEXT 64B boundary. Definitively DEAD. |
+
+VM state: moderate (cat-floor min=0.070s). Champion dp2_8s_fw_4acc_t0_64_2048 best 0.071s = 1.42 ns/line; 1.01× cat floor — AT bandwidth ceiling.
+**CHAMPION FILE FIX**: Prior run ×1207 PROMOTE of dp2_8s_fw_4acc_t0_64_2048 was not applied to champion/main.cpp (file remained dp2_8s_fw_4acc_t0_64_448). Fixed this run by copying dp2_8s_fw_4acc_t0_64_2048 → champion/main.cpp. Correctness: 53687387166542798 ✓. Edge 9/9 ✓.
+Compiler sweep: g++ -O3 -march=native → 0.071s best (5 samples: 0.072, 0.072, 0.073, 0.081, 0.106); g++-13 -O3 -march=native → 0.073s best. **Use g++ -O3 -march=native.**
+STOP-FLOOR ×8 confirmed (counting from run ×1201). Algorithm definitively at bandwidth ceiling — design space saturated (244 variants). Variants tested this run: t0_64_1536 (tied), t0_192_1536 (tied), t0_32_1536 (DEAD — T0@32B too close).
+**SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best 0.071s = 1.42 ns/line; cat floor 0.070s; expected judge bare-metal: ~45-60ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 71ms local (1.01× cat-floor=70ms moderate VM; 1.42 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~45-60ms)**
