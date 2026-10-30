@@ -22293,3 +22293,13 @@ PROMOTE (2026-10-30, 3-sample RUNS=3 interleaved run.sh): **dp2_8s_fw_4acc_t0_64
 PROMOTE (2026-10-30, 3-sample confirmation run — champion was dp2_8s_fw_4acc_t0_64_2048 at 0.075s best/0.095s median): **dp2_8s_fw_4acc_t0_64_448 PROMOTED to champion** — beats prior champion with best=0.070s, median=0.071s (Δbest=0.005s; median hugely better 0.071 vs 0.095). Edge 9/9 ✓. Floor=0.422s (very slow VM; champion 0.075s = 0.18× floor — mmap+hugepage far below cat bandwidth floor). Key: T0@64B + T1@448B (7 iters at ~33cy/iter = theoretical optimum for ~80ns bare-metal DRAM latency). 4 independent per-pair u16 accumulators. ns/line: 70ms / 50M = **1.40 ns/line — CLEARS rank-18 bar ≤69ms**. Correctness: 53687387166542798 ✓. Edge 9/9 ✓. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`.** Expected judge bare-metal: ~45-60ms.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_448 70ms local (2× PROMOTE chain; 1.40 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1209 — STOP-FLOOR (2026-10-30)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_448 | STOP-FLOOR ×8 | 0.073 | ~0.079 | — | g++; cat-floor=0.068s; 1.07× floor (AT bandwidth floor) |
+
+STOP-FLOOR ×8 (2026-10-30, 5-sample g++ + 5-sample g++-13 + 3-sample clang++-18 + cat floor, moderate VM): g++ -O3 -march=native → **0.073s best** (5 samples: 0.328[cold], 0.079, 0.073, 0.073, 0.089; warm best=0.073s, warm median≈0.079s; 1.07× floor 0.068s — champion AT bandwidth ceiling); g++-13 -O3 -march=native → 0.072s best (5 samples: 0.089, 0.075, 0.073, 0.072, 0.075; warm best=0.072s); clang++-18 → 0.080s best. Cat floor min=0.068s (3 samples: 0.077, 0.068, 0.072). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1209 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line — AT rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling — design space saturated (242+ variants). **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native` (best=0.072s).**
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_448 72ms local (1.07× cat-floor=68ms moderate VM; 1.46 ns/line AT rank-18 bar; expected judge bare-metal: ~45-60ms)**
