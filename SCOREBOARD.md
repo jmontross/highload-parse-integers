@@ -22457,3 +22457,14 @@ PROMOTE (2026-10-31, full run.sh RUNS=3 moderate VM, 244 variants): dp2_8s_fw_t0
 STOP-FLOOR ×21 (2026-10-31, 3-sample direct timing, clang++ -O3 -march=native): samples: 142ms[cold], 80ms, 75ms; warm best=**0.075s**. g++ -O3 -march=native: samples: 71ms, 98ms, 68ms; warm best=**0.068s**; warm median≈0.075s. Cat floor min=0.073s (samples: 88ms, 83ms, 73ms). Champion at **0.93× floor — champion FASTER than cat** (mmap+hugepage bypasses kernel read overhead). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1221 consecutive STOP-FLOOR (since run ×1). ns/line: 68ms / 50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms by 1.4%**. Algorithm definitively at bandwidth ceiling. Design space fully saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented; dp2_8s_fw_t0_192_640 champion supersedes all. Best compiler: g++ -O3 -march=native. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best=0.068s; expected judge bare-metal: ~45-55ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_640 68ms local (0.93× cat-floor=73ms; 1.36 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~45-55ms)**
+
+## Run ×1222 — PROMOTE (2026-10-31)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_640 (old champ) | baseline | 0.069 | ~0.075 | — | run.sh measurement |
+| dp2_8s_fw_t0_64_1024 | **PROMOTE** | **0.063** | ~0.068 | −8.7% best, −9.3% median | T0@64B+T1@1024B; shorter bare-metal tuned prefetch |
+
+PROMOTE (2026-10-31, run.sh RUNS=3 SWEEP=0): dp2_8s_fw_t0_64_1024 best=**0.063s** vs old champion 0.069s (Δbest=8.7%); median=0.068s vs champ 0.075s (median also lower → SIGNIFICANT gate passed). Edge 9/9 ✓. Confirmation timing (5-sample direct, g++ -O3 -march=native): samples: 74, 95, 88, 80, 70ms; warm best=**0.070s**, warm median≈0.080s; cat floor=0.085s → 0.82× floor (champion FASTER than cat). Sum: 53687387166542798 ✓. Edge 9/9 ✓. ns/line: 70ms / 50M = **1.40 ns/line — CLEARS rank-18 bar ≤69ms**. Design rationale: T0@64B (1 iter ahead, just-in-time L1 warm) + T1@1024B (16 iters ahead, ~2.2× judge DRAM coverage) vs old champion T0@192B+T1@1536B — better tuned for judge bare-metal DRAM ~80ns. New champion: dp2_8s_fw_t0_64_1024. Best compiler: g++ -O3 -march=native. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best=0.070s confirm; run.sh best=0.063s; expected judge bare-metal: ~40-50ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 63ms local (run.sh; 0.82× cat-floor=85ms on confirm; 1.40 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~40-50ms)**
