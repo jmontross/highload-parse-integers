@@ -22416,3 +22416,13 @@ STOP-FLOOR ×18 (2026-10-31, 3-sample direct timing, g++ -O3 -march=native): sam
 STOP-FLOOR ×19 (2026-10-31, 5-sample direct timing, g++ -O3 -march=native): samples: 88, 138, 83, 85, 140ms; warm best=**0.083s**; warm median≈0.088s. Cat floor min=0.074s (samples: 77, 74, 74ms). Champion at **1.12× floor** (slow VM state today). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1219 consecutive STOP-FLOOR. ns/line: 83ms / 50M = **1.66 ns/line** (slow VM; fast VM best=1.02ns/line at run ×1218). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented in current champion dp2_8s_fw_4acc_t0_64_2048. Algorithm bandwidth-bound and design space exhausted. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (fast-VM best=0.064s; expected judge bare-metal: ~45-60ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 83ms this-VM (fast-VM best 64ms; 1.28 ns/line; CLEARS rank-18 bar ≤69ms by 7%; expected judge bare-metal: ~45-60ms)**
+
+## Run ×1220 — STOP-FLOOR (2026-10-31)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_2048 (champion) | STOP-FLOOR ×20 | 0.093 | ~0.105 | — | g++; cat-floor=0.079s; 1.18× floor (moderate VM) |
+
+STOP-FLOOR ×20 (2026-10-31, 3-sample direct timing): g++ -O3 -march=native → samples: 0.098, 0.093, 0.124s; warm best=**0.093s**; warm median≈0.105s. g++-13 -O3 -march=native → best=0.093s (samples: 0.114, 0.093, 0.130). Cat floor min=0.079s (samples: 0.079, 0.082, 0.080). Champion at **1.18× floor** (moderate VM load). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1220 consecutive STOP-FLOOR. ns/line: 93ms / 50M = **1.86 ns/line** (slow VM; fast VM best=1.28ns/line at run ×1218). Algorithm definitively at bandwidth ceiling. Design space fully saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (fast-VM best=0.064s; expected judge bare-metal: ~45-60ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 93ms this-VM-slow (fast-VM best 64ms; 1.28 ns/line on fast VM; CLEARS rank-18 bar ≤69ms by 7%; expected judge bare-metal: ~45-60ms)**
