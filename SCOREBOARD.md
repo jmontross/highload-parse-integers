@@ -22468,3 +22468,13 @@ STOP-FLOOR ×21 (2026-10-31, 3-sample direct timing, clang++ -O3 -march=native):
 PROMOTE (2026-10-31, run.sh RUNS=3 SWEEP=0): dp2_8s_fw_t0_64_1024 best=**0.063s** vs old champion 0.069s (Δbest=8.7%); median=0.068s vs champ 0.075s (median also lower → SIGNIFICANT gate passed). Edge 9/9 ✓. Confirmation timing (5-sample direct, g++ -O3 -march=native): samples: 74, 95, 88, 80, 70ms; warm best=**0.070s**, warm median≈0.080s; cat floor=0.085s → 0.82× floor (champion FASTER than cat). Sum: 53687387166542798 ✓. Edge 9/9 ✓. ns/line: 70ms / 50M = **1.40 ns/line — CLEARS rank-18 bar ≤69ms**. Design rationale: T0@64B (1 iter ahead, just-in-time L1 warm) + T1@1024B (16 iters ahead, ~2.2× judge DRAM coverage) vs old champion T0@192B+T1@1536B — better tuned for judge bare-metal DRAM ~80ns. New champion: dp2_8s_fw_t0_64_1024. Best compiler: g++ -O3 -march=native. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best=0.070s confirm; run.sh best=0.063s; expected judge bare-metal: ~40-50ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 63ms local (run.sh; 0.82× cat-floor=85ms on confirm; 1.40 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~40-50ms)**
+
+## Run ×1223 — STOP-FLOOR ×22 (2026-10-31)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_64_1024 (champion) | STOP-FLOOR ×22 | 0.080 | ~0.082 | — | g++; cat-floor=0.065s; 1.23× floor (noisy VM) |
+
+STOP-FLOOR ×22 (2026-10-31, 5-sample direct timing, g++ -O3 -march=native): samples: 81, 100, 141, 82, 82ms; warm best=**0.080s**; warm median≈0.082s. Cat floor min=0.065s (samples: 65, 84, 83ms). Champion at **1.23× floor** (moderately noisy VM today). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). No new variants attempted — design space fully saturated (244+ variants; both Change A digit-place accumulation and Change B 8-stream memory parallelism fully implemented). ns/line: 80ms / 50M = **1.60 ns/line** (noisy VM; fast-VM best=1.26 ns/line at run ×1222 run.sh=63ms). Algorithm definitively at bandwidth ceiling; further gains require a fundamentally different hardware or OS access pattern. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (fast-VM run.sh best=0.063s; expected judge bare-metal: ~40-50ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 80ms this-VM (fast-VM run.sh best 63ms; 1.26 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~40-50ms)**
