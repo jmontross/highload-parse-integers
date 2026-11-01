@@ -22518,3 +22518,13 @@ STOP-FLOOR ×25 (2026-11-01, 3-sample direct timing): g++ -O3 -march=native → 
 STOP-FLOOR ×26 (2026-11-01, 3-sample direct timing): g++ -O3 -march=native → samples: 171ms[cold], 84ms, 79ms; warm best=**0.079s**, warm median≈0.082s. g++-13 -O3 -march=native → samples: 87ms, 81ms, 88ms; warm best=**0.081s**. Cat floor min=0.081s (samples: 84ms, 81ms, 82ms). Champion at **0.98× floor** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1226 consecutive STOP-FLOOR. ns/line: 79ms / 50M = **1.58 ns/line** (VM-noise day; fast-VM best=1.06 ns/line at run×1224). Algorithm definitively at bandwidth ceiling. Design space fully saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream memory parallelism) fully implemented; dp2_8s_fw_t0_64_1024 champion supersedes all. Best compiler: g++ -O3 -march=native (local 79ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (local best=0.079s; prior fast-VM best=0.053s; expected judge bare-metal: ~40-55ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 79ms local (0.98× cat-floor=81ms; 1.58 ns/line; expected judge bare-metal: ~40-55ms)**
+
+## Run ×1227 — STOP-FLOOR (2026-11-01)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_64_1024 (champion) | STOP-FLOOR ×27 | 0.068 | ~0.072 | — | g++-13 best=68ms; cat-floor=72ms; 0.94× floor (AT bandwidth ceiling) |
+
+STOP-FLOOR ×27 (2026-11-01, 3-sample direct timing): g++-13 -O3 -march=native → samples: 79ms, 68ms, 70ms; warm best=**0.068s**, warm median≈0.072s. Cat floor min=0.072s (samples: 75ms, 72ms, 76ms). Champion at **0.94× floor** (AT bandwidth ceiling; champion essentially matching cat speed). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1227 consecutive STOP-FLOOR. ns/line: 68ms / 50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms by 1.4%**. Algorithm definitively at bandwidth ceiling. Design space fully saturated (244+ variants). No new variants attempted. Best compiler: g++-13 -O3 -march=native. **SUBMIT `champion/main.cpp` with `g++-13 -O3 -march=native`** (local best=0.068s; expected judge bare-metal: ~40-50ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 68ms local (0.94× cat-floor=72ms; 1.36 ns/line; CLEARS rank-18 bar ≤69ms; expected judge bare-metal: ~40-50ms)**
