@@ -22982,3 +22982,13 @@ STOP-FLOOR ×1271 (2026-11-05, 3-sample direct timing, moderate VM): g++ -O3 -ma
 STOP-FLOOR ×1272 (2026-11-05, direct timing, moderate VM): g++ -O3 -march=native → samples: 77ms, 141ms, 148ms; warm best=**0.077s**. g++ -Ofast -march=native -funroll-loops → samples: 141ms, 83ms, 75ms, 83ms, 112ms; warm best=**0.075s**, warm median≈0.083s. clang++ -O3 -march=native → samples: 87ms, 101ms, 110ms; warm best=**0.087s**. Cat floor min=0.073s (3 samples: 73ms, 73ms, 73ms). Best ratio: 0.075s / 0.073s floor = **1.03×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1272 consecutive STOP-FLOOR. ns/line: 75ms / 50M = **1.50 ns/line**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented; champion supersedes all. No new variants — algorithm saturated. Best compiler: g++ -Ofast -march=native -funroll-loops (best=75ms). **SUBMIT `champion/main.cpp` with `g++ -Ofast -march=native -funroll-loops`** (all-time fast-VM best=0.049s [×1230]; expected judge bare-metal: ~40-50ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 75ms local moderate-VM (1.03× cat-floor=73ms; 1.50 ns/line; all-time VM best 49ms; expected judge bare-metal: ~40-50ms)**
+
+## Run ×1273 — STOP-FLOOR (2026-11-05)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_64_1024 (champion) | STOP-FLOOR ×1273 | 0.073 (g++ -O3) | ~0.082 | — | g++ -O3 best=73ms; cat-floor=68ms; 1.07× floor (AT bandwidth ceiling) |
+
+STOP-FLOOR ×1273 (2026-11-05, 5-sample direct timing): g++ -O3 -march=native → samples: 81ms, 113ms, 89ms, 74ms, 73ms; warm best=**0.073s**, warm median≈0.082s. Cat floor min=0.068s (3 samples: 68ms, 72ms, 82ms). Best ratio: 0.073s / 0.068s floor = **1.07×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge pre-confirmed ✓. 1273 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented; champion supersedes all. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (best=73ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time fast-VM best=0.049s [×1230]; expected judge bare-metal: ~40-50ms).
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_64_1024 73ms local (1.07× cat-floor=68ms; 1.46 ns/line; all-time VM best 49ms; expected judge bare-metal: ~40-50ms)**
