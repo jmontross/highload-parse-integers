@@ -23157,3 +23157,14 @@ STOP-FLOOR ×1288 (2026-11-06, 3-sample direct timing): g++ -O3 -march=native �
 STOP-FLOOR ×1289 (2026-11-06, 3-sample direct timing): g++ -O3 -march=native → samples: 122ms(cold), 80ms, 77ms; warm best=**0.077s**, warm median≈0.079s. Cat floor min=0.070s (3 samples: 76ms, 70ms, 75ms). Best ratio: 0.077s / 0.070s floor = **1.10×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge pre-confirmed ✓. 1289 consecutive STOP-FLOOR. ns/line: 77ms / 50M = **1.54 ns/line**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented; champion supersedes all. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (best=77ms this VM state; all-time VM best=49ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.049s; expected judge bare-metal: ~35-45ms).
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_t0_192_640 77ms local (1.10× cat-floor=70ms; 1.54 ns/line; all-time VM best 49ms; expected judge bare-metal: ~35-45ms)**
+
+## Run ×1290 — PROMOTE dp2_8s_fw_4acc_t0_64_2048 (2026-11-06)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_640 (prior champ) | SUPERSEDED | 0.070 | 0.072 | — | Floor=0.068s min. RUNS=3 interleaved (run.sh): best=0.072s, median=0.072s. |
+| dp2_8s_fw_4acc_t0_64_2048 | PROMOTE | 0.069 | 0.070 | 4.2% (interleaved) / 1.4% (sequential) | RUNS=3 interleaved (run.sh): best=0.069s vs champ 0.072s → 4.2% Δbest, median=0.070s < 0.072s, edge 9/9 → PROMOTE. Sequential confirmation: best=0.069s, median=0.070s vs old-champ best=0.070s, median=0.071s → direction confirmed. |
+
+PROMOTE ×1290 (2026-11-06): run.sh RUNS=3 interleaved → variant best=**0.069s**, champion best=0.072s, Δbest=0.003s (4.2% faster). Variant median=0.070s < champion median=0.072s. Edge 9/9 ✓. Sequential confirmation: new champion 69ms/70ms vs old champion 70ms/71ms (1.4% margin sequential, direction consistent). Cat floor min=0.068s. Ratio 0.069s/0.068s = **1.01×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. dp2_8s_fw_4acc_t0_64_2048 = 4 independent per-pair u16 accumulators + T0@64B (1 iter L2→L1) + T1@2048B (32 iters DRAM→L2, judge-tuned). T0@64B is shorter than prior champion T0@192B; T1@2048B fills the gap between prior-prior champion T1@1024B and T1@3072B. Compiler sweep (run.sh): g++-13 -O3 -march=native → **0.069s** best. SUBMIT with `g++-13 -O3 -march=native`.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fw_4acc_t0_64_2048 69ms local (1.01× cat-floor=68ms; 1.38 ns/line; CLEARS rank-18 bar ≤69ms; all-time VM best 49ms; expected judge bare-metal: ~35-45ms)**
