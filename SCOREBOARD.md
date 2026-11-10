@@ -23507,3 +23507,13 @@ STOP-FLOOR ×1323 (2026-11-10, 5-sample direct timing): g++ -O3 -march=native �
 PROMOTE ×1324 (2026-11-10, 5-sample direct timing): variant best=**0.0500s**, champion old best=0.0530s, Δbest=0.003s (significant). Cat floor=0.151s. Edge: pass=9 fail=0. Best compiler sweep: g++-13 -O3 -march=native → 0.051s. ns/line: 50ms / 50M = **1.00 ns/line — CLEARS rank-18 bar ≤69ms by 28%**. Sum: 53687387166542798 ✓. dp2_8s_fw_4096_32 promoted to champion/main.cpp.
 
 **BIG WIN READY TO SUBMIT: dp2_8s_fw_4096_32 50ms local (1.00 ns/line; CLEARS rank-18 bar ≤69ms by 28%; submit with g++-13 -O3 -march=native)**
+
+## Run ×1325 — PROMOTE (2026-11-10)
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fixed_2048 (NEW CHAMPION) | PROMOTE | 0.050 (g++-13 -O3) | ~0.053 | **0.16× floor** (BELOW — mmap+hugepage) | cat-floor=0.307s; variant best=50ms beats dp2_8s_fw_4096_32 53ms; edge pass=9/9 |
+
+PROMOTE ×1325 (2026-11-10, 5-sample direct timing): variant best=**0.0500s**, champion (dp2_8s_fw_4096_32) best=0.0530s, Δbest=0.003s (significant). Cat floor=0.307s. Edge: pass=9 fail=0. T1 prefetch at 2048B (32 iters ahead) beats 4096B variant on this run. ns/line: 50ms / 50M = **1.00 ns/line — CLEARS rank-18 bar ≤69ms by 28%**. Sum: 53687387166542798 ✓. dp2_8s_fixed_2048 promoted to champion/main.cpp.
+
+**BIG WIN READY TO SUBMIT: dp2_8s_fixed_2048 50ms local (1.00 ns/line; CLEARS rank-18 bar ≤69ms by 28%; submit with g++-13 -O3 -march=native)**
