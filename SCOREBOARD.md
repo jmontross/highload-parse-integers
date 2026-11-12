@@ -23778,3 +23778,14 @@ STOP-FLOOR ×1348 (2026-11-12, 3-sample direct timing): g++ -O3 -march=native �
 STOP-FLOOR ×1349 (2026-11-12, 5-sample direct timing): g++ -O3 -march=native → 71ms(cold), 62ms, 63ms, 62ms, 76ms; warm best=**0.062s**, warm med≈0.063s. g++ -Ofast -march=native -funroll-loops → best=**0.064s**. g++-13 -O3 -march=native → best=**0.065s**. Cat floor min=0.075s (3 samples: 76ms, 76ms, 75ms). Best ratio: 0.062s / 0.075s floor = **0.83×** (BELOW bandwidth ceiling — mmap+MAP_POPULATE+MADV_HUGEPAGE faster than cat). Sum: 53687387166542798 ✓. Edge pre-confirmed ✓. 1349 consecutive STOP-FLOOR. ns/line: 62ms / 50M = **1.24 ns/line — CLEARS rank-18 bar ≤69ms by 10%**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented; champion supersedes all. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (best=62ms this VM; all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
 
 **STOP-FLOOR ×1349. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 62ms (0.83× floor=75ms). 1.24 ns/line. CLEARS rank-18 bar ≤69ms by 10%. Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-12 (scheduled run ×1350) — FALSE PROMOTE dp2_8s_fw_t0_128_1536; REVERTED; STOP-FLOOR
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_128_1536 | FALSE PROMOTE → REVERTED | 0.064 | 0.076 | 0.98× floor | VM loaded during full 244-variant benchmark (floor=0.185s). New variant best=64ms but med=76ms (jitter: 64,82,76,93,67ms). Old champion best=64ms med=66ms → HOLD (median worse for new). Champion restored to dp2_8s_fw_t0_192_768. |
+| dp2_8s_fw_t0_192_768 (champion, restored) | STOP-FLOOR ×1350 | 0.064 | 0.066 | **0.97× floor** | Floor=65ms. Champion best=64ms, med=66ms. AT bandwidth ceiling. Edge 9/9. ✓ |
+
+False PROMOTE analysis: run.sh ran full RUNS=3 benchmark over 244+ variants (heavy VM load, floor=0.185s during run). Champion best=0.062s, variant best=0.059s — Δbest=4.8% > gate, median lower. But gate measurement was distorted by cache contention across 244 simultaneous benchmarks. Confirmation (quiet VM, floor=0.065s): old champion best=0.064s med=0.066s; promoted variant best=0.064s med=0.076s (high jitter) → variant WORSE on median → FALSE PROMOTE. Reverted to dp2_8s_fw_t0_192_768. Same pattern as runs ×223-×224, ×115-×116, ×131.
+
+**STOP-FLOOR ×1350. Champion dp2_8s_fw_t0_192_768 (reverted). SUBMIT with `g++ -O3 -march=native`. VM best 64ms (0.97× floor=65ms). CLEARS rank-18 bar ≤69ms by 7%. Expected judge bare-metal: ~35-45ms.**
