@@ -23892,3 +23892,13 @@ STOP-FLOOR ×1358 (2026-11-13, 5-sample direct timing): g++ -O3 -march=native �
 VM state: moderate (floor min=0.062s, 3 samples: 0.062s, 0.068s, 0.067s). Champion 3-run times — g++ -O3 -march=native: 0.075s(cold), 0.063s, 0.062s; warm best=**0.062s**. clang++-18 -O3 -march=native: warm best=0.069s. Ratio 1.00× floor → AT BANDWIDTH CEILING → STOP-FLOOR ×1359. No new variants — 244+ cpp/rs variants exhausted. Design space fully saturated. Both Change A (digit-place accumulation) and Change B (8-stream MLP) implemented in champion. Correctness ✓ (53687387166542798). ns/line: 62ms/50M = **1.24 ns/line — CLEARS rank-18 bar ≤69ms by 10%**.
 
 **STOP-FLOOR ×1359. Champion dp2_8s_fw_t0_192_768. SUBMIT with `g++ -O3 -march=native`. VM best 62ms (1.00× floor=62ms — AT BANDWIDTH CEILING). 1.24 ns/line. CLEARS rank-18 bar ≤69ms by 10%. Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-13 (scheduled run ×1360) — STOP-FLOOR; champion 68ms (g++ -O3), 1.06× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (champion) | STOP-FLOOR ×1360 | 0.068 (g++ -O3) | ~0.072 | **1.06× floor** (AT bandwidth ceiling) | cat-floor=0.064s min; champion best=0.068s. Discrepancy between champion/main.cpp (t0_192_768) and SCOREBOARD (dp2_8s_fw_2w) reconciled — t0_192_768 is correct champion (better median today). Edge 9/9 ✓. Sum=53687387166542798 ✓. |
+
+STOP-FLOOR ×1360 (2026-11-13, 15-sample interleaved): champion (dp2_8s_fw_t0_192_768) min=0.068s med=0.072s; dp2_8s_fw_2w min=0.068s med=0.076s. Cat floor min=0.064s med=0.065s. Ratio: 0.068/0.064=1.06× — AT bandwidth ceiling → STOP-FLOOR ×1360. Compiler sweep: g++ -O3 -march=native best=0.069s (winner); g++-13 0.070s; Ofast+funroll 0.070s; clang++ 0.081-0.085s. Champion discrepancy resolved: champion/main.cpp holds dp2_8s_fw_t0_192_768 (judge-tuned T0@192B+T1@768B), which matches or beats dp2_8s_fw_2w (VM-tuned dual T1@3072+32B) on today's VM; keeping t0_192_768 as actual champion. Both Change A+B fully implemented. 244+ variants exhausted. Design space saturated. Sum ✓. Edge 9/9 ✓. ns/line: 68ms/50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms by 1.4%**.
+
+**STOP-FLOOR ×1360. Champion dp2_8s_fw_t0_192_768. SUBMIT with `g++ -O3 -march=native`. VM best 68ms (1.06× floor=64ms). 1.36 ns/line. CLEARS rank-18 bar ≤69ms by 1.4%. Expected judge bare-metal: ~35-45ms.**
