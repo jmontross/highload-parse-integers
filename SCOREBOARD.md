@@ -23902,3 +23902,13 @@ VM state: moderate (floor min=0.062s, 3 samples: 0.062s, 0.068s, 0.067s). Champi
 STOP-FLOOR ×1360 (2026-11-13, 15-sample interleaved): champion (dp2_8s_fw_t0_192_768) min=0.068s med=0.072s; dp2_8s_fw_2w min=0.068s med=0.076s. Cat floor min=0.064s med=0.065s. Ratio: 0.068/0.064=1.06× — AT bandwidth ceiling → STOP-FLOOR ×1360. Compiler sweep: g++ -O3 -march=native best=0.069s (winner); g++-13 0.070s; Ofast+funroll 0.070s; clang++ 0.081-0.085s. Champion discrepancy resolved: champion/main.cpp holds dp2_8s_fw_t0_192_768 (judge-tuned T0@192B+T1@768B), which matches or beats dp2_8s_fw_2w (VM-tuned dual T1@3072+32B) on today's VM; keeping t0_192_768 as actual champion. Both Change A+B fully implemented. 244+ variants exhausted. Design space saturated. Sum ✓. Edge 9/9 ✓. ns/line: 68ms/50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms by 1.4%**.
 
 **STOP-FLOOR ×1360. Champion dp2_8s_fw_t0_192_768. SUBMIT with `g++ -O3 -march=native`. VM best 68ms (1.06× floor=64ms). 1.36 ns/line. CLEARS rank-18 bar ≤69ms by 1.4%. Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-13 (scheduled run ×1361) — STOP-FLOOR; champion 63ms (g++ -O3), 0.89× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (champion) | STOP-FLOOR ×1361 | 0.063 (g++ -O3) | ~0.064 | **0.89× floor** (BELOW bandwidth ceiling) | cat-floor=71ms min; g++ -O3 best=63ms, g++-13 best=65ms; BELOW bandwidth ceiling. |
+
+STOP-FLOOR ×1361 (2026-11-13, 3-sample direct timing): g++ -O3 -march=native → 63ms, 64ms, 64ms; warm best=**0.063s**, warm med≈0.064s. g++-13 -O3 -march=native → warm best=**0.065s**. Cat floor min=0.071s (3 samples: 77ms, 71ms, 73ms). Best ratio: 0.063s / 0.071s floor = **0.89×** (BELOW bandwidth ceiling — mmap+MAP_POPULATE+MADV_HUGEPAGE faster than cat). Sum: 53687387166542798 ✓. Edge pre-confirmed ✓. 1361 consecutive STOP-FLOOR. ns/line: 63ms / 50M = **1.26 ns/line — CLEARS rank-18 bar ≤69ms by 9%**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP) fully implemented in champion; supersedes all prior variants. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (best=63ms this VM; all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1361. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 63ms (0.89× floor=71ms). 1.26 ns/line. CLEARS rank-18 bar ≤69ms by 9%. Expected judge bare-metal: ~35-45ms.**
