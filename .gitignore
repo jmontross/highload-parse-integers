@@ -1,5 +1,6 @@
 input.txt
 gen
+gen_input
 bench_parsers
 /tmp/
 *.o
