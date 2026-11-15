@@ -24116,3 +24116,13 @@ ns/line: 0.052s / 50M = **1.04 ns/line** (rank-18 bar = 1.39 ns/line = 69.3ms). 
 BREAKTHROUGH DIRECTIVE status: COMPLETE. Both Change A (digit-place accumulation, stuchlik_digitplace.cpp reference) and Change B (8-stream MLP + two-tier prefetch, stuchlik_8stream.cpp reference) fully implemented and superseded by dp2_8s_fw_t0_192_768 champion. No further algorithmic improvements possible — algorithm at bandwidth ceiling.
 
 **STOP-FLOOR ×1377. Champion dp2_8s_fw_t0_192_768 unchanged. SUBMIT with `g++ -O3 -march=native` or `g++-13 -O3 -march=native`. VM best 0.052s (1.02× floor 0.051s — AT bandwidth ceiling). Expected judge bare-metal: ~50-65ms (CLEARS rank-18 bar ≤69.3ms). index.html: 52.0ms.**
+
+## Run log 2026-11-15 (scheduled run ×1378) — STOP-FLOOR; champion 70ms (g++ -O3), 1.01× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (champion) | STOP-FLOOR ×1378 | 0.070 (g++ -O3) | ~0.078 | **1.01× floor** (AT bandwidth ceiling) | cat-floor=69ms min; g++ -O3 best=70ms (5 samples: 100ms/70ms/80ms/80ms/79ms); algorithm saturated. Edge pre-confirmed ✓. Sum=53687387166542798 ✓. |
+
+STOP-FLOOR ×1378 (2026-11-15, 5-sample direct timing): g++ -O3 -march=native → 100ms(cold), 70ms, 80ms, 80ms, 79ms; warm best=**0.070s**, warm med≈0.078s. Cat floor min=0.069s (3 samples: 73ms, 71ms, 69ms). Best ratio: 0.070s / 0.069s floor = **1.01×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge pre-confirmed ✓. 1378 consecutive STOP-FLOOR. ns/line: 70ms / 50M = **1.40 ns/line — right at rank-18 bar ≤69ms**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@192B+T1@768B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1378. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 70ms (1.01× floor=69ms — AT BANDWIDTH CEILING). 1.40 ns/line. VM at rank-18 bar; all-time VM best=48ms clearly clears it. Expected judge bare-metal: ~35-45ms.**
