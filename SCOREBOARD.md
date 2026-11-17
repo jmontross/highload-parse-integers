@@ -24336,3 +24336,13 @@ Compiler sweep (3-sample best per compiler):
 - g++ -Ofast -march=native -funroll-loops → 0.070s best
 
 **STOP-FLOOR ×1395. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 70ms (1.08× floor=65ms — AT BANDWIDTH CEILING). 1.40 ns/line this run; all-time VM best=48ms (0.96 ns/line). CLEARS rank-18 bar on fast VM. Expected judge bare-metal: ~35-45ms. index.html: 70.0ms.**
+
+## Run log 2026-11-17 (scheduled run ×1396) — STOP-FLOOR; champion 59ms (g++ -O3), 0.95× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (champion) | STOP-FLOOR ×1396 | 0.059 (g++ -O3) | ~0.063 | **0.95× floor** (BELOW bandwidth ceiling) | cat-floor=62ms min; g++ -O3 best=59ms (7 samples: 89ms(cold)/64ms/73ms/64ms/59ms/60ms/62ms, warm best=59ms); algorithm saturated. Edge 9/9 ✓. Sum=53687387166542798 ✓. |
+
+STOP-FLOOR ×1396 (2026-11-17, 7-sample direct timing, g++ -O3 -march=native): 89ms(cold), 64ms, 73ms, 64ms, 59ms, 60ms, 62ms; warm best=**0.059s**, warm med≈0.063s. Cat floor min=0.062s (5 samples: 68ms, 66ms, 62ms, 70ms, 70ms). Best ratio: 0.059s / 0.062s floor = **0.95×** (BELOW bandwidth ceiling — mmap+MAP_POPULATE+MADV_HUGEPAGE faster than cat). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1396 consecutive STOP-FLOOR. ns/line: 59ms / 50M = **1.18 ns/line — CLEARS rank-18 bar ≤69ms by 15%**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@192B+T1@768B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1396. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 59ms (0.95× floor=62ms — BELOW BANDWIDTH CEILING). 1.18 ns/line. CLEARS rank-18 bar ≤69ms by 15%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
