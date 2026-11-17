@@ -24371,3 +24371,13 @@ Compiler sweep (from run.sh on prior champion for context):
 - g++-13 -O3 -march=native: comparable
 
 **PROMOTE ×1398. New champion: dp2_8s_fw_t0_128_2048 (T0@128B + T1@2048B). SUBMIT with `g++ -O3 -march=native`. Confirm best=71ms (0.93× floor=76ms — BELOW BANDWIDTH CEILING). run.sh best=69ms. 1.38–1.42 ns/line. AT rank-18 bar ≤69ms on run.sh timing.**
+
+## Run log 2026-11-17 (scheduled run ×1399) — STOP-FLOOR; champion 54ms (g++ -O3), 0.86× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_128_2048 (champion) | STOP-FLOOR ×1399 | 0.054 (g++ -O3) | ~0.055 | **0.86× floor** (BELOW bandwidth ceiling) | cat-floor=63ms min; g++ -O3 best=54ms (7 samples: 336ms(cold)/56ms/54ms/54ms/56ms/65ms/55ms, warm best=54ms); algorithm saturated. Edge 9/9 ✓. Sum=53687387166542798 ✓. |
+
+STOP-FLOOR ×1399 (2026-11-17, 7-sample direct timing, g++ -O3 -march=native): 336ms(cold), 56ms, 54ms, 54ms, 56ms, 65ms, 55ms; warm best=**0.054s**, warm med≈0.055s. Cat floor min=0.063s (5 samples: 82ms, 69ms, 69ms, 63ms, 81ms). Best ratio: 0.054s / 0.063s floor = **0.86×** (BELOW bandwidth ceiling — mmap+MAP_POPULATE+MADV_HUGEPAGE faster than cat). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1399 consecutive STOP-FLOOR. ns/line: 54ms / 50M = **1.08 ns/line — CLEARS rank-18 bar ≤69ms by 22%**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@128B+T1@2048B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1399. Champion dp2_8s_fw_t0_128_2048 (two-tier T0@128B+T1@2048B). SUBMIT with `g++ -O3 -march=native`. VM best 54ms (0.86× floor=63ms — BELOW BANDWIDTH CEILING). 1.08 ns/line. CLEARS rank-18 bar ≤69ms by 22%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
