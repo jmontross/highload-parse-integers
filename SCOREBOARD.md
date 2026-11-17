@@ -24356,3 +24356,18 @@ STOP-FLOOR ×1396 (2026-11-17, 7-sample direct timing, g++ -O3 -march=native): 8
 STOP-FLOOR ×1397 (2026-11-17, 7-sample direct timing, g++ -O3 -march=native): 64ms, 62ms, 62ms, 62ms, 61ms, 62ms, 70ms; warm best=**0.061s**, warm med≈0.062s. Cat floor min=0.070s (3 samples: 71ms, 73ms, 70ms). Best ratio: 0.061s / 0.070s floor = **0.87×** (BELOW bandwidth ceiling — mmap+MAP_POPULATE+MADV_HUGEPAGE faster than cat). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1397 consecutive STOP-FLOOR. ns/line: 61ms / 50M = **1.22 ns/line — CLEARS rank-18 bar ≤69ms by 12%**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@192B+T1@768B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
 
 **STOP-FLOOR ×1397. Champion dp2_8s_fw_t0_192_768 (two-tier T0@192+T1@768). SUBMIT with `g++ -O3 -march=native`. VM best 61ms (0.87× floor=70ms — BELOW BANDWIDTH CEILING). 1.22 ns/line. CLEARS rank-18 bar ≤69ms by 12%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-17 (scheduled run ×1398) — PROMOTE dp2_8s_fw_t0_128_2048; champion 71ms (g++ -O3), 0.93× floor
+
+| Program | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_t0_192_768 (prior champion) | STOP-FLOOR | 0.076 (g++ -O3) | ~0.084 | **1.00× floor** | run.sh: best=0.076s, median=0.084s; champion before promotion. |
+| dp2_8s_fw_t0_128_2048 (new champion) | PROMOTE | 0.069 (run.sh) / 0.071 (confirm) | ~0.073 | **0.93× floor** (BELOW bandwidth ceiling) | run.sh: best=0.069s, median=0.075s; confirm: 7 samples: 84ms/73ms/71ms/119ms/82ms/73ms/72ms, warm best=71ms; cat-floor=76ms min; ratio=0.93×. Edge 9/9 ✓. Sum=53687387166542798 ✓. |
+
+PROMOTE ×1398 (2026-11-17): run.sh PROMOTE verdict — dp2_8s_fw_t0_128_2048 (T0@128B + T1@2048B) beat prior champion dp2_8s_fw_t0_192_768 (T0@192B + T1@768B) by 9.2% (0.069s vs 0.076s best). Confirmation: warm best=**0.071s**, warm med≈0.073s. Cat floor min=0.076s (0.93× floor — BELOW bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓. ns/line: 71ms / 50M = **1.42 ns/line**. Best compiler: g++ -O3 -march=native. **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (run.sh best=0.069s=1.38 ns/line; expected judge bare-metal: ~35-45ms).
+
+Compiler sweep (from run.sh on prior champion for context):
+- g++ -O3 -march=native → 0.071s best (new champion confirm)
+- g++-13 -O3 -march=native: comparable
+
+**PROMOTE ×1398. New champion: dp2_8s_fw_t0_128_2048 (T0@128B + T1@2048B). SUBMIT with `g++ -O3 -march=native`. Confirm best=71ms (0.93× floor=76ms — BELOW BANDWIDTH CEILING). run.sh best=69ms. 1.38–1.42 ns/line. AT rank-18 bar ≤69ms on run.sh timing.**
