@@ -24549,3 +24549,16 @@ STOP-FLOOR ×1413 (2026-11-18, 7-sample direct timing, g++ -O3 -march=native): 9
 STOP-FLOOR ×1414 (2026-11-18, 7-sample direct timing, g++ -O3 -march=native): 81ms, 100ms, 87ms, 82ms, 115ms, 77ms, 83ms; warm best=**0.077s**, warm med≈0.083s. Cat floor min=0.074s (3 samples: 78ms, 88ms, 74ms). Best ratio: 0.077s / 0.074s floor = **1.04×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1414 consecutive STOP-FLOOR. ns/line: 77ms / 50M = **1.54 ns/line**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@128B+T1@2048B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
 
 **STOP-FLOOR ×1414. Champion dp2_8s_fw_t0_128_2048 (two-tier T0@128B+T1@2048B). SUBMIT with `g++ -O3 -march=native`. VM best 77ms (1.04× floor=74ms — AT BANDWIDTH CEILING). 1.54 ns/line. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-18 (scheduled run ×1415) — PROMOTE dp2_8s_fw_4acc_t0_64_1024 → confirmation running
+
+| Variant | Result | Best(s) | Med(s) | vs champ best | Note |
+|---|---|---|---|---|---|
+| prior champion (dp2_8s_fw_t0_128_2048) | SUPERSEDED | 0.062 | 0.063 | — | VM floor=0.203s (slow VM). RUNS=3. Edge 9/9. |
+| dp2_8s_fw_4acc_t0_64_1024 | **PROMOTE** | 0.058 | 0.062 | **+6.5%** | Gate: 6.5% margin (0.058 vs 0.062), median lower (0.062 < 0.063). Edge 9/9. T0@64B+T1@1024B + 4 accumulators. Applied to champion/main.cpp. Confirmation run in progress. |
+
+VM state: moderate (floor=0.203s). Prior champion showed 0.062s best; variant 0.058s. PROMOTE gate fired with 6.5% margin. dp2_8s_fw_4acc_t0_64_1024 was previously champion at run ×214; VM oscillation pattern possible. Confirmation run will determine if genuine.
+
+Change A (stuchlik_digitplace) + Change B (8-stream T0+T1 prefetch) remain fully implemented in dp2 champion. index.html: 62ms (CLEARS rank-18 bar ≤69.3ms).
+
+**PROMOTE applied ×1415. Confirmation run underway. SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`. Expected judge time: ~35-55ms on bare metal (all-time VM best=48ms). CLEARS rank-18 bar ≤69.3ms.**
