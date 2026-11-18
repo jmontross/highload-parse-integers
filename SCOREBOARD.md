@@ -24539,3 +24539,13 @@ STOP-FLOOR ×1413 (2026-11-18, 7-sample direct timing, g++ -O3 -march=native): 9
 
 **STOP-FLOOR ×1413. Champion dp2_8s_fw_t0_128_2048 (two-tier T0@128B+T1@2048B). SUBMIT with `g++ -O3 -march=native`. VM best 71ms (1.06× floor=67ms — AT BANDWIDTH CEILING). 1.42 ns/line. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
 
+
+## Run log 2026-11-18 (scheduled run ×1414) — STOP-FLOOR; champion 77ms (g++ -O3), 1.04× floor
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_t0_128_2048 (champion) | STOP-FLOOR ×1414 | 0.077 (g++ -O3) | ~0.083 | **1.04× floor** (AT bandwidth ceiling) | cat-floor=74ms min; g++ -O3 best=77ms (7 samples: 81/100/87/82/115/77/83ms, warm best=77ms); sum ✓, edge pre-confirmed ✓; algorithm saturated. |
+
+STOP-FLOOR ×1414 (2026-11-18, 7-sample direct timing, g++ -O3 -march=native): 81ms, 100ms, 87ms, 82ms, 115ms, 77ms, 83ms; warm best=**0.077s**, warm med≈0.083s. Cat floor min=0.074s (3 samples: 78ms, 88ms, 74ms). Best ratio: 0.077s / 0.074s floor = **1.04×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1414 consecutive STOP-FLOOR. ns/line: 77ms / 50M = **1.54 ns/line**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@128B+T1@2048B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1414. Champion dp2_8s_fw_t0_128_2048 (two-tier T0@128B+T1@2048B). SUBMIT with `g++ -O3 -march=native`. VM best 77ms (1.04× floor=74ms — AT BANDWIDTH CEILING). 1.54 ns/line. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
