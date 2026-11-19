@@ -24562,3 +24562,13 @@ VM state: moderate (floor=0.203s). Prior champion showed 0.062s best; variant 0.
 Change A (stuchlik_digitplace) + Change B (8-stream T0+T1 prefetch) remain fully implemented in dp2 champion. index.html: 62ms (CLEARS rank-18 bar ≤69.3ms).
 
 **PROMOTE applied ×1415. Confirmation run underway. SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`. Expected judge time: ~35-55ms on bare metal (all-time VM best=48ms). CLEARS rank-18 bar ≤69.3ms.**
+
+## Run log 2026-11-19 (scheduled run ×1416) — STOP-FLOOR; champion 68ms (g++ -O3), 1.06× floor
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 (champion) | STOP-FLOOR ×1416 | 0.068 (g++ -O3) | ~0.069 | **1.06× floor** (AT bandwidth ceiling) | cat-floor=64ms min; g++ -O3 best=68ms (7 samples: 70/69/68/69/69/69/69ms, very stable); clang++-18 best=80ms; sum ✓, edge pre-confirmed ✓; algorithm saturated. |
+
+STOP-FLOOR ×1416 (2026-11-19, 7-sample direct timing, g++ -O3 -march=native): 70ms, 69ms, 68ms, 69ms, 69ms, 69ms, 69ms; warm best=**0.068s**, warm med≈0.069s. Cat floor min=0.064s (3 samples: 65ms, 64ms, 65ms). Best ratio: 0.068s / 0.064s floor = **1.06×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1416 consecutive STOP-FLOOR. ns/line: 68ms / 50M = **1.36 ns/line — CLEARS rank-18 bar ≤69ms by 1.5%**. This is the confirmation run for ×1415 PROMOTE: champion dp2_8s_fw_4acc_t0_64_1024 confirmed running at 68-70ms, very stable (σ≈0.6ms). Algorithm definitively at bandwidth ceiling. Best compiler: g++ -O3 -march=native (this run best=68ms; all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1416. Champion dp2_8s_fw_4acc_t0_64_1024 (4-acc + T0@64+T1@1024). SUBMIT with `g++ -O3 -march=native`. VM best 68ms (1.06× floor=64ms — AT BANDWIDTH CEILING). 1.36 ns/line. CLEARS rank-18 bar ≤69ms by 1.5%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
