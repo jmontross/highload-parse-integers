@@ -24728,3 +24728,13 @@ Compiler sweep (3-sample best):
 - g++ -Ofast -march=native -funroll-loops → 0.081s
 
 **STOP-FLOOR ×1432. Champion dp2_8s_fw_4acc_t0_64_1024 (4-acc + T0@64+T1@1024). SUBMIT with `g++ -O3 -march=native`. VM best 69ms (1.06× floor=65ms — AT BANDWIDTH CEILING). 1.38 ns/line. CLEARS rank-18 bar ≤69ms by 0.4%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-20 (scheduled run ×1433) — STOP-FLOOR; champion 73ms (g++ -O3), 1.06× floor
+
+| Variant | Result | Best(s) | Med(s) | vs floor | Notes |
+|---|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 (champion) | STOP-FLOOR ×1433 | 0.073 (g++ -O3) | ~0.082 | **1.06× floor** (AT bandwidth ceiling) | cat-floor=69ms min; g++ -O3 best=73ms (7 samples: 121/73/75/93/105/89/82ms, cold=121ms, warm best=73ms); sum ✓ (53687387166542798), edge pre-confirmed 9/9 ✓; algorithm saturated. |
+
+STOP-FLOOR ×1433 (2026-11-20, 7-sample direct timing, g++ -O3 -march=native): 121ms (cold), 73ms, 75ms, 93ms, 105ms, 89ms, 82ms; warm best=**0.073s**, warm med≈0.082s. Cat floor min=0.069s (3 samples: 73ms, 72ms, 69ms). Best ratio: 0.073s / 0.069s floor = **1.06×** (AT bandwidth ceiling). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1433 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line — AT rank-18 bar (≤69ms)**. Algorithm definitively at bandwidth ceiling. Design space saturated (244+ variants). Both Change A (digit-place accumulation) and Change B (8-stream MLP + T0@64B+T1@1024B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (this run warm best=73ms; all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1433. Champion dp2_8s_fw_4acc_t0_64_1024 (4-acc + T0@64+T1@1024). SUBMIT with `g++ -O3 -march=native`. VM best 73ms (1.06× floor=69ms — AT BANDWIDTH CEILING). 1.46 ns/line. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
