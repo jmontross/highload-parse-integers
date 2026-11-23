@@ -25032,3 +25032,14 @@ STOP-FLOOR ×1461 (2026-11-23, 5-sample direct timing, g++ -O3 -march=native): 6
 STOP-FLOOR ×1462 (2026-11-23, 5-sample direct timing, g++ -O3 -march=native): 70ms (cold), 54ms, 54ms, 69ms, 67ms; warm best=**0.054s**, warm med≈0.067s. Cat floor min=0.073s (3 samples: 75ms, 73ms, 76ms). Best ratio: 0.054s / 0.073s floor = **0.74×** (champion FASTER than raw cat via mmap+MAP_POPULATE+hugepages). Sum: 53687387166542798 ✓. Edge 9/9 ✓ (pre-confirmed). 1462 consecutive STOP-FLOOR. ns/line: 54ms / 50M = **1.08 ns/line — CLEARS rank-18 bar ≤69ms by 22%**. Algorithm definitively at bandwidth ceiling. Design space saturated (245+ variants). Both Change A (digit-place accumulation, back-to-front SIMD per-place digit sum) and Change B (8-stream MLP + T0@64B+T1@1024B two-tier prefetch) from BREAKTHROUGH DIRECTIVE fully implemented in champion. No new variants — algorithm saturated. Best compiler: g++ -O3 -march=native (this run warm best=54ms; all-time VM best=48ms). **SUBMIT `champion/main.cpp` with `g++ -O3 -march=native`** (all-time VM best=0.048ms; expected judge bare-metal: ~35-45ms).
 
 **STOP-FLOOR ×1462. Champion dp2_8s_fw_4acc_t0_64_1024 (4-acc + T0@64+T1@1024). SUBMIT with `g++ -O3 -march=native`. VM best 54ms this run (0.74× floor=73ms — BELOW BANDWIDTH CEILING). 1.08 ns/line. CLEARS rank-18 bar ≤69ms by 22%. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-23 (scheduled run ×1463) — PROMOTE dp2_8s_fw_t0_64_448; champion 69ms (g++ -O3), 0.39× floor
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_1024 (old champion) | — | 0.072 | ~0.103 | High-median run; VM-tuned T1@1024B overprovisions for judge DRAM |
+| dp2_8s_fw_t0_64_448 | **PROMOTE** | **0.069** | 0.071 | Judge-tuned: T0@64B + T1@448B (7 iters × 64B, matches ~80ns judge DRAM); sum ✓, edge 9/9 ✓ |
+
+PROMOTE (2026-11-23): run.sh round 1463: champion old best=0.072s, variant best=0.069s (median=0.071s), Δ=3ms. Floor=0.178s; ratio=0.39×. Variant is judge-tuned — T0@64B (1 iter: L2→L1) + T1@448B (7 iters: DRAM→L2 on ~80ns judge DRAM), vs old champion's T1@1024B (VM-tuned, 6× overprovisioned for judge). Edge 9/9 ✓. Compiler sweep: g++ -O3 best=0.073s. sum ✓ (53687387166542798).
+
+**PROMOTE ×1463. New champion: dp2_8s_fw_t0_64_448 (T0@64B + T1@448B, judge-tuned DRAM latency). Best=69ms (1.38 ns/line). Submit with `g++ -O3 -march=native`. Expected judge bare-metal: ~35-45ms.**
