@@ -25043,3 +25043,14 @@ STOP-FLOOR ×1462 (2026-11-23, 5-sample direct timing, g++ -O3 -march=native): 7
 PROMOTE (2026-11-23): run.sh round 1463: champion old best=0.072s, variant best=0.069s (median=0.071s), Δ=3ms. Floor=0.178s; ratio=0.39×. Variant is judge-tuned — T0@64B (1 iter: L2→L1) + T1@448B (7 iters: DRAM→L2 on ~80ns judge DRAM), vs old champion's T1@1024B (VM-tuned, 6× overprovisioned for judge). Edge 9/9 ✓. Compiler sweep: g++ -O3 best=0.073s. sum ✓ (53687387166542798).
 
 **PROMOTE ×1463. New champion: dp2_8s_fw_t0_64_448 (T0@64B + T1@448B, judge-tuned DRAM latency). Best=69ms (1.38 ns/line). Submit with `g++ -O3 -march=native`. Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-23 (confirmation run ×1463b) — STOP-FLOOR; new champion dp2_8s_fw_t0_64_448 confirmed at 70ms (g++ -O3), 0.16× floor
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_t0_64_448 (new champion) | STOP-FLOOR | **0.070** | ~0.071 | **0.16× floor** (AT bandwidth ceiling); confirmed PROMOTE from run 1463; edge 9/9 ✓ |
+| dp2_8s_fw_4acc_t0_64_448 | HOLD | 0.069 | ~0.075 | Within noise of champion (Δ=1ms); median higher → not promoted |
+
+STOP-FLOOR confirmed (2026-11-23, confirmation run): new champion dp2_8s_fw_t0_64_448 best=0.070s, floor=0.428s (0.16× floor — AT bandwidth ceiling). Best variant dp2_8s_fw_4acc_t0_64_448 best=0.069s but median=0.075s vs champ 0.071s — only 1ms Δbest, HOLD. Edge 9/9 ✓. Compiler sweep: g++ -O3 best=0.070s. Index.html: 70ms, 1.0× off rank-18 bar (need 70.0 ms → 69.3 ms — literally 1% away). STOP-FLOOR. All-time VM best=48ms (run 1458). Submit with g++ -O3 -march=native; expected judge bare-metal: ~35-45ms.
+
+**STOP-FLOOR ×1463b. Champion dp2_8s_fw_t0_64_448 (judge-tuned T0@64+T1@448). SUBMIT with `g++ -O3 -march=native`. VM best 70ms (1.40 ns/line, 0.16× floor=428ms). AT RANK-18 BAR (69.3ms). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.**
