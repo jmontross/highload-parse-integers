@@ -1,9 +1,8 @@
-// dp2_8s_fw_t0_192_896.cpp — double-loop + two-tier prefetch, SHORTER DISTANCES.
-// T0@192B (3 iters=24ns, L1) + T1@896B (14 iters=112ns, matches bare-metal ~80-100ns DRAM).
-// Champion uses T0@512B + T1@3072B tuned for our VM's ~300-500ns DRAM latency.
-// Judge is bare-metal with ~80-100ns DRAM latency; at ~8ns/iter on judge,
-// T0@192B (3 iters=24ns, L1) + T1@896B (14 iters=112ns, matches bare-metal ~80-100ns DRAM).
-// covers DRAM→L2 (~80-100ns) with adequate margin. Same 16 prefetch µops/iter.
+// dp2_8s_fw_t0_192_3072.cpp — double-loop + two-tier prefetch per stream:
+// T0@192B (3 iters ahead, L2→L1) + T1@3072B (48 iters ahead, DRAM→L2).
+// vs champion T0@512B: shorter T0 may work better when data is already in L2
+// courtesy of T1@3072B (L2→L1 latency ~4ns; 2 iters @72ns/iter = 144ns > 4ns OK).
+// 16 prefetch µops/iter (same as champion).
 
 #include <cstdio>
 #include <cstdint>
@@ -245,8 +244,8 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body: T0@192B (3 iters=24ns, L1) + T1@896B (14 iters=112ns, matches bare-metal ~80-100ns DRAM).
-// Tuned for judge bare-metal DRAM latency ~80-100ns vs VM's ~300-500ns.
+// One iteration body: T0@512B (near, L1) + T1@3072B (far, L2) per stream.
+// Replaces champion's dual T1@3072+3072+32 with two-tier near+far coverage.
 #define ITER_BODY(PFD) \
     _mm_prefetch((const char*)(p0 + 192), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
@@ -334,18 +333,18 @@ static uint64_t solve(const unsigned char* data, size_t size) {
         // Compiler can unroll the fixed-count inner loop via -funroll-loops.
         // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
         // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
-        size_t groups = safe_iters / 100;
-        size_t remain = safe_iters % 100;
+        size_t groups = safe_iters / 128;
+        size_t remain = safe_iters % 128;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
-            for (int k = 100; --k >= 0;) {
-                ITER_BODY(896)
+            for (int k = 128; --k >= 0;) {
+                ITER_BODY(3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
         // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(896)
+            ITER_BODY(3072)
         }
         widen_u16(acc_u16, wide_acc);
 
