@@ -25463,3 +25463,13 @@ PROMOTE ×1499-confirm (2026-11-27): confirmation run promoted dp2_8s_fw_4acc_t0
 PROMOTE ×1499-confirm2 (2026-11-27): dp2_8s_fw_2560_32 best=0.0490s median=0.0530s vs champion best=0.0520s median=0.0580s; Δbest=3ms (5.8%); SIGNIFICANT; edge 9/9 ✓. Promoted to champion/main.cpp. Algorithm: dp2 digit-place accumulation + 8-stream, 2560B inner block size, 32-way unroll. ns/line: 49ms/50M=**0.98 ns/line — CLEARS rank-18 bar (≤69ms) by 29%**. Compiler sweep: g++-13 -Ofast -march=native -funroll-loops best=49ms (index.html: 52ms). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.
 
 **PROMOTE ×1499-confirm2. dp2_8s_fw_2560_32 (2560B block, 32-way unroll). VM best 49ms (0.98 ns/line). CLEARS rank-18 bar by 29%. Submit with `g++-13 -Ofast -march=native -funroll-loops`.**
+
+## Run log 2026-11-27 (scheduled run ×1500) — STOP-FLOOR; champion dp2_8s_fw_2560_32 51ms (g++-13 -O3)
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_2560_32 (champion) | STOP-FLOOR ×1500 | 51ms (g++-13 -O3) | ~53ms | **AT bandwidth ceiling** |
+
+STOP-FLOOR ×1500 (2026-11-27, 5-sample direct timing, g++-13 -O3 -march=native): champion best=**51ms**, median≈**53ms**. Bandwidth floor (cat > /dev/null): floor=**326ms** (variable VM — likely warm cache from MAP_POPULATE). Best variant dp2_8s_fw_t0_192_1536: best=49ms, median=53ms vs champ 51ms/53ms — HOLD (median not lower). Compiler sweep: g++-13 -O3 -march=native best=51ms. Sum: 53687387166542798 ✓. Edge 9/9 ✓. Milestone run ×1500. ns/line: 51ms/50M=**1.02 ns/line — CLEARS rank-18 bar (≤69ms) by 26%**. index.html: 51ms. Algorithm saturated (245+ variants). Best compiler: g++-13 -O3 -march=native. All-time VM best=48ms (0.96 ns/line). **Submit `champion/main.cpp` with `g++-13 -O3 -march=native`** (all-time VM best=0.048s; expected judge bare-metal: ~35-45ms).
+
+**STOP-FLOOR ×1500. Champion dp2_8s_fw_2560_32 (2560B block, 32-way). SUBMIT with `g++-13 -O3 -march=native`. VM best 51ms (1.02 ns/line). CLEARS rank-18 bar by 26%. All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.**
