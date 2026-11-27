@@ -25452,3 +25452,14 @@ PROMOTE ×1499 (2026-11-27): variant dp2_8s_fw_4acc_t0_64_3072 best=0.0490s medi
 PROMOTE ×1499-confirm (2026-11-27): confirmation run promoted dp2_8s_fw_4acc_t0_64_2048. variant best=0.0490s median=0.0520s vs champion best=0.0500s median=0.0530s; Δbest=1ms (2%); SIGNIFICANT; edge 9/9 ✓. Promoted to champion/main.cpp. Algorithm: dp2 digit-place accumulation + 8-stream, 4-accumulator inner loop, T0@64B + T1@2048B (shorter T1 distance vs 3072B). ns/line: 49ms/50M=**0.98 ns/line — CLEARS rank-18 bar (≤69ms) by 29%**. Compiler sweep: g++ -Ofast -march=native -funroll-loops best=50ms (index.html: 50ms). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.
 
 **PROMOTE ×1499-confirm. dp2_8s_fw_4acc_t0_64_2048 (4-acc, T0@64B+T1@2048B). VM best 49ms (0.98 ns/line). CLEARS rank-18 bar by 29%. Submit with `g++ -Ofast -march=native -funroll-loops`.**
+
+## Run log 2026-11-27 (scheduled run ×1499 confirmation 2) — PROMOTE again; new champion dp2_8s_fw_2560_32
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_2560_32 (NEW champion) | PROMOTE | 49ms | 53ms | Beats dp2_8s_fw_4acc_t0_64_2048 52ms/58ms |
+| dp2_8s_fw_4acc_t0_64_2048 (prev champion) | replaced | 52ms | 58ms | Confirmed in this run |
+
+PROMOTE ×1499-confirm2 (2026-11-27): dp2_8s_fw_2560_32 best=0.0490s median=0.0530s vs champion best=0.0520s median=0.0580s; Δbest=3ms (5.8%); SIGNIFICANT; edge 9/9 ✓. Promoted to champion/main.cpp. Algorithm: dp2 digit-place accumulation + 8-stream, 2560B inner block size, 32-way unroll. ns/line: 49ms/50M=**0.98 ns/line — CLEARS rank-18 bar (≤69ms) by 29%**. Compiler sweep: g++-13 -Ofast -march=native -funroll-loops best=49ms (index.html: 52ms). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.
+
+**PROMOTE ×1499-confirm2. dp2_8s_fw_2560_32 (2560B block, 32-way unroll). VM best 49ms (0.98 ns/line). CLEARS rank-18 bar by 29%. Submit with `g++-13 -Ofast -march=native -funroll-loops`.**
