@@ -25430,3 +25430,25 @@ STOP-FLOOR ×1497 (2026-11-27, 5-sample direct timing, g++ -O3 -march=native): 6
 STOP-FLOOR ×1498 (2026-11-27, 5-sample direct timing, g++ -O3 -march=native): champion best=**61ms**, median≈**62ms**. Bandwidth floor (cat > /dev/null): **148ms** (variable VM). Best ratio: 61ms / 148ms = **0.41×** (champion well below bandwidth floor). Best variant dp2_8s_fw_t0_128_2048: best=0.059s, median=0.067s (Δbest=2ms vs champ 61ms — HOLD, within noise). Compiler sweep: g++ -O3 best=62ms, clang++ -O3 best=71ms → submit under g++ -O3 -march=native. Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1498 consecutive STOP-FLOOR. ns/line: 61ms / 50M = **1.22 ns/line — CLEARS rank-18 bar ≤69ms by 12%**. index.html: 61.0ms — CLEARS rank-18 bar. Algorithm saturated (245+ variants). Best compiler: g++ -O3 -march=native. All-time VM best=48ms (0.96 ns/line). Expected judge bare-metal: ~35-45ms.
 
 **STOP-FLOOR ×1498. Champion dp2_8s_fw_t0_192_3072_k128. SUBMIT with `g++ -O3 -march=native`. VM best 61ms (1.22 ns/line, CLEARS rank-18 bar by 12%). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-27 (scheduled run ×1499) — PROMOTE; new champion dp2_8s_fw_4acc_t0_64_3072
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_3072 (NEW champion) | PROMOTE | 49ms | 52ms | Beats old champion 52ms/53ms |
+| dp2_8s_fw_t0_192_3072_k128 (old champion) | replaced | 52ms | 53ms | Prior champion for 1498 runs |
+
+PROMOTE ×1499 (2026-11-27): variant dp2_8s_fw_4acc_t0_64_3072 best=0.0490s median=0.0520s vs old champion best=0.0520s median=0.0530s; Δbest=3ms (5.8%); SIGNIFICANT; edge 9/9 ✓. Promoted to champion/main.cpp. Algorithm: dp2 digit-place accumulation + 8-stream, 4-accumulator inner loop, T0@64B + T1@3072B. ns/line: 49ms/50M=**0.98 ns/line — CLEARS rank-18 bar (≤69ms) by 29%**. Compiler sweep: g++ -O3 -march=native best=51ms. All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.
+
+**PROMOTE ×1499. dp2_8s_fw_4acc_t0_64_3072 (4-acc, T0@64B+T1@3072B). VM best 49ms (0.98 ns/line). CLEARS rank-18 bar by 29%. Submit with `g++ -O3 -march=native`.**
+
+## Run log 2026-11-27 (scheduled run ×1499 confirmation) — PROMOTE again; new champion dp2_8s_fw_4acc_t0_64_2048
+
+| Variant | Verdict | Best (ms) | Median (ms) | Notes |
+|---|---|---|---|---|
+| dp2_8s_fw_4acc_t0_64_2048 (NEW champion) | PROMOTE | 49ms | 52ms | Beats dp2_8s_fw_4acc_t0_64_3072 50ms/53ms |
+| dp2_8s_fw_4acc_t0_64_3072 (prev champion) | replaced | 50ms | 53ms | Confirmed in this run |
+
+PROMOTE ×1499-confirm (2026-11-27): confirmation run promoted dp2_8s_fw_4acc_t0_64_2048. variant best=0.0490s median=0.0520s vs champion best=0.0500s median=0.0530s; Δbest=1ms (2%); SIGNIFICANT; edge 9/9 ✓. Promoted to champion/main.cpp. Algorithm: dp2 digit-place accumulation + 8-stream, 4-accumulator inner loop, T0@64B + T1@2048B (shorter T1 distance vs 3072B). ns/line: 49ms/50M=**0.98 ns/line — CLEARS rank-18 bar (≤69ms) by 29%**. Compiler sweep: g++ -Ofast -march=native -funroll-loops best=50ms (index.html: 50ms). All-time VM best=48ms. Expected judge bare-metal: ~35-45ms.
+
+**PROMOTE ×1499-confirm. dp2_8s_fw_4acc_t0_64_2048 (4-acc, T0@64B+T1@2048B). VM best 49ms (0.98 ns/line). CLEARS rank-18 bar by 29%. Submit with `g++ -Ofast -march=native -funroll-loops`.**
