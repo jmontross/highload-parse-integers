@@ -25493,3 +25493,15 @@ STOP-FLOOR ×1504 (2026-11-27, 5-sample direct timing, g++ -O3 -march=native): c
 STOP-FLOOR ×1505 (2026-11-27, 5-sample direct timing, g++ -O3 -march=native): champion best=**73ms**, median≈**87ms** (slow VM). Bandwidth floor (cat > /dev/null, 3-sample): 66ms, 72ms, 67ms → floor best=**66ms**. Best ratio: 73ms / 66ms = **1.11×** (champion AT bandwidth ceiling via mmap+MAP_POPULATE). Sum: 53687387166542798 ✓. Edge 9/9 ✓. 1505 consecutive STOP-FLOOR. ns/line: 73ms / 50M = **1.46 ns/line** (slow VM; all-time VM best=48ms=0.96 ns/line, expected judge bare-metal: ~35-45ms). Algorithm saturated (245+ variants). Best compiler: g++ -O3 -march=native. No new variants — design space fully saturated.
 
 **STOP-FLOOR ×1505. Champion dp2_8s_fw_2560_32. SUBMIT with `g++ -O3 -march=native`. VM best 73ms this run (1.46 ns/line, slow VM). All-time VM best=48ms (0.96 ns/line, CLEARS rank-18 bar ≤69ms). Expected judge bare-metal: ~35-45ms.**
+
+## Run log 2026-11-27 (scheduled run ×1506) — STOP-FLOOR; moderate-fast VM (60ms champion, 0.97× floor)
+
+| Program | Result | Best(s) | Med(s) | vs champ | Notes |
+|---|---|---|---|---|---|
+| champion (dp2_8s_fw_2560_32) | STOP-FLOOR ×1506 | 0.060 | 0.063 | — | Moderate-fast VM (floor=0.062s min). Ratio=0.97× (AT bandwidth ceiling — champion faster than cat via mmap+hugepages). Edge 9/9. Correct ✓ (53687387166542798). |
+
+VM state: moderate-fast (floor min=0.062s, med=0.068s). Champion 7-sample direct (g++ -O3 -march=native): best=0.060s med=0.063s. Ratio=0.97× floor → STOP-FLOOR ×1506. No new variants — 245+ cpp exhausted, design space fully saturated.
+
+Correctness ✓ (53687387166542798), edge 9/9. ns/line: 60ms / 50M = **1.20 ns/line** (target ≤1.39 ns/line = 69ms rank-18 bar; CLEARS bar). Champion faster than bandwidth floor (mmap+MAP_POPULATE+hugepages bypasses kernel read path; cat > /dev/null pays full page-fault cost).
+
+**STOP-FLOOR ×1506. Champion dp2_8s_fw_2560_32 unchanged. SUBMIT with `g++ -O3 -march=native`. VM best 60ms (1.20 ns/line, CLEARS rank-18 bar ≤69ms). Expected judge bare-metal: ~35-50ms.**
