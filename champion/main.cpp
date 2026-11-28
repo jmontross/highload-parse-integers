@@ -1,8 +1,9 @@
-// dp2_8s_fw_2560_32.cpp — double-loop + dual T1 prefetch at p+2560 AND p+2560+32.
-// Fills the grid gap between fw_2048_32 (promoted ×98) and fw_3072_32 (current champion).
-// dp2_8s_pf2560 (single-loop, single T1@2560B) was HOLD at ×63-64.
-// This combines the double-loop structure with dual T1@2560+32 (never tested together).
-// 2560B = 40 iterations ahead (between 2048B/32iter and 3072B/48iter prefetch distances).
+// dp2_8s_fw_t0_384_3072.cpp — T0@384B + T1@3072B (single accumulator).
+// Grid gap: champion=T0@256+T1@3072; tried T0@320+T1@3072 (HOLD, +1ms med).
+// T0@384B = 6 iters ahead. Tests whether the L2→L1 T0 distance plateau is
+// between 256-320B or whether 384B (one more cache line stride) can win.
+// T0@256 is 4 iters × 64B = 256B. T0@320 = 5 iters. T0@384 = 6 iters.
+// L2 latency ~12cy. At ~20cy/iter → 6 iters = 120cy headroom. Should be ample.
 
 #include <cstdio>
 #include <cstdint>
@@ -244,25 +245,23 @@ static void scalar_tail(const unsigned char* from, const unsigned char* end,
     for (int k = 0; k < 10; k++) wide_acc[k] += ps[k];
 }
 
-// One iteration body (prefetch + mask + process + accumulate).
-// Macro to avoid duplicating the inner body three times.
-#define ITER_BODY(PFD) \
+#define ITER_BODY(T0D, PFD) \
+    _mm_prefetch((const char*)(p0 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p0 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p0 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p1 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p1 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p1 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p2 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p2 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p2 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p3 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p3 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p3 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p4 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p4 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p4 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p5 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p5 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p5 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p6 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p6 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p6 + (PFD) + 32), _MM_HINT_T1); \
+    _mm_prefetch((const char*)(p7 + (T0D)), _MM_HINT_T0); \
     _mm_prefetch((const char*)(p7 + (PFD)), _MM_HINT_T1); \
-    _mm_prefetch((const char*)(p7 + (PFD) + 32), _MM_HINT_T1); \
     { \
     uint64_t m0 = nl_mask64(p0); \
     uint64_t m1 = nl_mask64(p1); \
@@ -328,23 +327,17 @@ static uint64_t solve(const unsigned char* data, size_t size) {
 
         __m256i acc_u16 = _mm256_setzero_si256();
 
-        // Double-loop: outer iterates widen groups, inner is exactly 100 iters.
-        // Key: no iter_count variable or conditional in the inner loop.
-        // Compiler can unroll the fixed-count inner loop via -funroll-loops.
-        // Safety: per iter max u16 contribution = 4 pairs × max_pair_u8(~144) = 576
-        // Over 100 iters: 576×100 = 57,600 < 65,535 per lane.
         size_t groups = safe_iters / 100;
         size_t remain = safe_iters % 100;
 
         for (size_t g = groups; __builtin_expect(g > 0, 1); --g) {
             for (int k = 100; --k >= 0;) {
-                ITER_BODY(2560)
+                ITER_BODY(384, 3072)
             }
             widen_u16(acc_u16, wide_acc);
         }
-        // Remainder (< 100 iterations, safe without widening mid-loop)
         for (size_t k = remain; k-- > 0;) {
-            ITER_BODY(2560)
+            ITER_BODY(384, 3072)
         }
         widen_u16(acc_u16, wide_acc);
 
